@@ -33,6 +33,7 @@ model Organization {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   members     OrgMember[]
+  doctrineTemplates DoctrineTemplate[]
   missions    Mission[]
   intel       IntelReport[]
   rescues     RescueRequest[]
@@ -56,6 +57,7 @@ model OrgMember {
 model Mission {
   id              String               @id @default(cuid())
   orgId           String
+  doctrineTemplateId String?
   callsign        String
   title           String
   missionType     String
@@ -75,13 +77,34 @@ model Mission {
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
   org             Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  doctrineTemplate DoctrineTemplate?   @relation(fields: [doctrineTemplateId], references: [id], onDelete: SetNull)
   lead            User?                @relation("mission_lead", fields: [leadId], references: [id], onDelete: SetNull)
   intelLinks      MissionIntelLink[]
   logs            MissionLog[]
   participants    MissionParticipant[]
 
   @@index([orgId, status])
+  @@index([doctrineTemplateId])
   @@index([missionType])
+}
+
+model DoctrineTemplate {
+  id         String       @id @default(cuid())
+  orgId      String
+  code       String
+  title      String
+  category   String
+  summary    String
+  body       String
+  escalation String?
+  isDefault  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  missions   Mission[]
+
+  @@unique([orgId, code])
+  @@index([orgId, category])
 }
 
 model MissionLog {

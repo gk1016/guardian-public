@@ -20,6 +20,17 @@ type MissionWithParticipants = {
   participants: unknown[];
 };
 
+type DoctrineTemplateRecord = {
+  id: string;
+  code: string;
+  title: string;
+  category: string;
+  summary: string;
+  body: string;
+  escalation: string | null;
+  isDefault: boolean;
+};
+
 type MissionParticipantRecord = {
   id: string;
   handle: string;
@@ -133,6 +144,23 @@ type PagePayload<T> = {
   error?: string;
 };
 
+type DoctrinePagePayload = {
+  ok: boolean;
+  orgName: string;
+  items: {
+    id: string;
+    code: string;
+    title: string;
+    category: string;
+    summary: string;
+    body: string;
+    escalation: string | null;
+    isDefault: boolean;
+    missionCount: number;
+  }[];
+  error?: string;
+};
+
 type MissionDetailPayload = {
   ok: boolean;
   orgName: string;
@@ -148,9 +176,26 @@ type MissionDetailPayload = {
     missionBrief: string | null;
     closeoutSummary: string | null;
     aarSummary: string | null;
+    roeCode: string | null;
     completedAtLabel: string | null;
     leadDisplay: string;
     updatedAtLabel: string;
+    doctrineTemplate: {
+      id: string;
+      code: string;
+      title: string;
+      category: string;
+      summary: string;
+      body: string;
+      escalation: string | null;
+    } | null;
+    availableDoctrineTemplates: {
+      id: string;
+      code: string;
+      title: string;
+      category: string;
+      summary: string;
+    }[];
     linkedIntel: {
       id: string;
       intelId: string;
@@ -384,6 +429,17 @@ export async function getMissionDetailPageData(
         orgId: org.id,
       },
       include: {
+        doctrineTemplate: {
+          select: {
+            id: true,
+            code: true,
+            title: true,
+            category: true,
+            summary: true,
+            body: true,
+            escalation: true,
+          },
+        },
         lead: {
           select: {
             handle: true,
@@ -433,6 +489,20 @@ export async function getMissionDetailPageData(
       };
     }
 
+    const availableDoctrineTemplates = await prisma.doctrineTemplate.findMany({
+      where: {
+        orgId: org.id,
+      },
+      orderBy: [{ isDefault: "desc" }, { category: "asc" }, { code: "asc" }],
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        category: true,
+        summary: true,
+      },
+    });
+
     const availableIntel = await prisma.intelReport.findMany({
       where: {
         orgId: org.id,
@@ -466,6 +536,7 @@ export async function getMissionDetailPageData(
         missionBrief: mission.missionBrief,
         closeoutSummary: mission.closeoutSummary,
         aarSummary: mission.aarSummary,
+        roeCode: mission.roeCode,
         completedAtLabel: mission.completedAt
           ? mission.completedAt.toLocaleString("en-US", {
               month: "short",
@@ -481,6 +552,8 @@ export async function getMissionDetailPageData(
           hour: "2-digit",
           minute: "2-digit",
         }),
+        doctrineTemplate: mission.doctrineTemplate,
+        availableDoctrineTemplates,
         linkedIntel: mission.intelLinks.map((link) => ({
           id: link.id,
           intelId: link.intel.id,
@@ -519,6 +592,50 @@ export async function getMissionDetailPageData(
       orgName: "Guardian",
       mission: null,
       error: error instanceof Error ? error.message : "Failed to load mission detail.",
+    };
+  }
+}
+
+export async function getDoctrinePageData(userId: string): Promise<DoctrinePagePayload> {
+  try {
+    const org = await getOrgForUser(userId);
+    if (!org) {
+      return { ok: true, orgName: "Guardian", items: [] };
+    }
+
+    const templates = await prisma.doctrineTemplate.findMany({
+      where: { orgId: org.id },
+      orderBy: [{ isDefault: "desc" }, { category: "asc" }, { code: "asc" }],
+      include: {
+        _count: {
+          select: {
+            missions: true,
+          },
+        },
+      },
+    });
+
+    return {
+      ok: true,
+      orgName: org.name,
+      items: templates.map((template: DoctrineTemplateRecord & { _count: { missions: number } }) => ({
+        id: template.id,
+        code: template.code,
+        title: template.title,
+        category: template.category,
+        summary: template.summary,
+        body: template.body,
+        escalation: template.escalation,
+        isDefault: template.isDefault,
+        missionCount: template._count.missions,
+      })),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      orgName: "Guardian",
+      items: [],
+      error: error instanceof Error ? error.message : "Failed to load doctrine.",
     };
   }
 }

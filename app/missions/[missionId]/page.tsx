@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Radar, RotateCcw, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BookCheck, ClipboardList, Crosshair, FileCheck2, NotebookText, Radar, RotateCcw, Shield, Users } from "lucide-react";
 import { MissionCloseoutForm } from "@/components/mission-closeout-form";
+import { MissionDoctrineForm } from "@/components/mission-doctrine-form";
 import { MissionEditForm } from "@/components/mission-edit-form";
 import { MissionIntelLinkForm } from "@/components/mission-intel-link-form";
 import { MissionLogForm } from "@/components/mission-log-form";
@@ -179,6 +180,55 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
 
           <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
             <div className="flex items-center gap-3">
+              <BookCheck size={18} className="text-lime-300" />
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Doctrine Package
+              </p>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">ROE Code</p>
+                <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white">
+                  {mission.roeCode ?? "No ROE attached"}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Attached Doctrine</p>
+                {mission.doctrineTemplate ? (
+                  <>
+                    <p className="mt-3 font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+                      {mission.doctrineTemplate.title}
+                    </p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                      {mission.doctrineTemplate.code} / {mission.doctrineTemplate.category}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-300">
+                      {mission.doctrineTemplate.summary}
+                    </p>
+                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Execution Checklist</p>
+                      <p className="mt-3 text-sm leading-7 text-slate-300">
+                        {mission.doctrineTemplate.body}
+                      </p>
+                    </div>
+                    <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-4">
+                      <p className="text-xs uppercase tracking-[0.18em] text-amber-100">Escalation Guidance</p>
+                      <p className="mt-3 text-sm leading-7 text-amber-50">
+                        {mission.doctrineTemplate.escalation ?? "No escalation guidance attached."}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    No doctrine package attached to this sortie yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+            <div className="flex items-center gap-3">
               <Radar size={18} className="text-red-300" />
               <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
                 Linked Intel
@@ -347,6 +397,25 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                   </div>
                 </section>
               )}
+
+              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                <div className="flex items-center gap-3">
+                  <BookCheck size={18} className="text-lime-300" />
+                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                    Attach Doctrine
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  Attach a reusable ROE and execution package so this sortie carries more than free-text intent.
+                </p>
+                <div className="mt-6">
+                  <MissionDoctrineForm
+                    missionId={mission.id}
+                    selectedDoctrineTemplateId={mission.doctrineTemplate?.id ?? null}
+                    availableDoctrineTemplates={mission.availableDoctrineTemplates}
+                  />
+                </div>
+              </section>
 
               <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
                 <div className="flex items-center gap-3">

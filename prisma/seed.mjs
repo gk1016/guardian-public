@@ -105,6 +105,68 @@ async function main() {
 
   const [reaper, saber, viking] = users;
 
+  const doctrineSeeds = [
+    {
+      code: "weapons_hold",
+      title: "Weapons Hold / Visual PID Required",
+      category: "counter-piracy",
+      summary:
+        "Default civilian-lane posture. Positive identification is required before engagement, with priority on shielding noncombatants and controlling merge geometry.",
+      body:
+        "1. Hold weapons until hostile intent or hostile act is confirmed. 2. Push civilian traffic clear of the engagement lane before committing. 3. Maintain escort geometry and keep one element free to cover withdrawal or rescue. 4. Log contact, break direction, and hull type for the intel board immediately after merge.",
+      escalation:
+        "Escalate to Weapons Tight if hostile locks, interdiction posture, or bait-beacon behavior is confirmed in the AO.",
+      isDefault: true,
+    },
+    {
+      code: "weapons_tight",
+      title: "Weapons Tight / Hostile PID Confirmed",
+      category: "escort",
+      summary:
+        "Use when the threat picture is active and escort traffic is at direct risk. Friendly control and visual discipline remain mandatory.",
+      body:
+        "1. Engage only confirmed hostile contacts. 2. Preserve convoy integrity over pursuit. 3. One section fixes the threat while the second section screens civilian traffic and rescue assets. 4. Abort chase beyond the AO unless command explicitly retasks the package.",
+      escalation:
+        "Escalate to Weapons Free only when civilian loss is imminent, rescue assets are under attack, or command releases the package.",
+      isDefault: false,
+    },
+    {
+      code: "weapons_free",
+      title: "Weapons Free / Rescue Under Fire",
+      category: "csar",
+      summary:
+        "Emergency rescue doctrine for survivor recovery or QRF action under active hostile pressure.",
+      body:
+        "1. Suppress hostile contacts threatening the rescue corridor immediately. 2. Keep one element tied to the rescue ship and one element disrupting hostile re-attack geometry. 3. Do not let pursuit separate the package from the survivor or the medevac bird. 4. Log damage, survivor status, and egress heading before clear of the AO.",
+      escalation:
+        "Command review required before extending beyond survivor recovery into broader offensive pursuit.",
+      isDefault: false,
+    },
+  ];
+
+  for (const doctrineSeed of doctrineSeeds) {
+    const existingDoctrine = await prisma.doctrineTemplate.findFirst({
+      where: {
+        orgId: org.id,
+        code: doctrineSeed.code,
+      },
+    });
+
+    if (existingDoctrine) {
+      await prisma.doctrineTemplate.update({
+        where: { id: existingDoctrine.id },
+        data: doctrineSeed,
+      });
+    } else {
+      await prisma.doctrineTemplate.create({
+        data: {
+          orgId: org.id,
+          ...doctrineSeed,
+        },
+      });
+    }
+  }
+
   const missionSeedDefinitions = [
     {
       callsign: "REAPER 11",

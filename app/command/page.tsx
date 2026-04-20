@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Activity,
-  AlertTriangle,
+  BookCheck,
   Clock3,
   Crosshair,
   Siren,
@@ -175,6 +175,9 @@ export default async function CommandPage() {
               <li>
                 <Link href="/rescues" className="transition hover:text-white">Rescue board</Link>
               </li>
+              <li>
+                <Link href="/doctrine" className="transition hover:text-white">ROE and doctrine</Link>
+              </li>
             </ul>
           </article>
 
@@ -186,21 +189,19 @@ export default async function CommandPage() {
               </p>
             </div>
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              Seed data is now flowing through Prisma into the ops UI. The next meaningful correction is
-              adding auth, role gates, and write flows without wrecking the current visual direction.
+              Auth, mission mutation, intel linkage, closeout, reopen, and doctrine are now online. Next useful slice is participant readiness and deeper mission-package control, not more scaffolding theater.
             </p>
           </article>
 
           <article className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
             <div className="flex items-center gap-3">
-              <AlertTriangle size={18} className="text-red-300" />
+              <BookCheck size={18} className="text-lime-300" />
               <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Warning
+                Doctrine
               </p>
             </div>
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              This is still pre-auth. Do not mistake seeded demo data for a completed control plane.
-              Persistence is real; permissions and operational mutation flow are not done yet.
+              Doctrine templates now exist as reusable org assets. ROE and execution guidance can be attached directly to sorties instead of dying in mission briefs or chat fragments.
             </p>
           </article>
         </section>
