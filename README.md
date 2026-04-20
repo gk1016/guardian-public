@@ -77,7 +77,7 @@ docker compose up --build
 
 Default services:
 
-- Guardian web app on `127.0.0.1:3400`
+- Guardian web app on `127.0.0.1:3410`
 - PostgreSQL on `127.0.0.1:5441`
 
 ## Deployment Intent
