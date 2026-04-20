@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, Shield, Users } fro
 import { MissionEditForm } from "@/components/mission-edit-form";
 import { OpsShell } from "@/components/ops-shell";
 import { ParticipantAssignForm } from "@/components/participant-assign-form";
+import { ParticipantRosterManager } from "@/components/participant-roster-manager";
 import { requireSession } from "@/lib/auth";
 import { getMissionDetailPageData } from "@/lib/guardian-data";
 import { canManageMissions } from "@/lib/roles";
@@ -146,34 +147,43 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 Assigned Package
               </p>
             </div>
-            <div className="mt-5 space-y-3">
-              {mission.participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
-                >
-                  <div>
-                    <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
-                      {participant.handle}
-                    </p>
-                    <p className="mt-1 text-sm uppercase tracking-[0.14em] text-slate-400">
-                      {participant.role} / {participant.platform ?? "Platform pending"}
-                    </p>
-                    <p className="mt-2 text-sm text-slate-300">
-                      {participant.notes ?? "No notes logged."}
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                    {participant.status}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-5">
+              {canManageMission ? (
+                <ParticipantRosterManager
+                  missionId={mission.id}
+                  participants={mission.participants}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {mission.participants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                    >
+                      <div>
+                        <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+                          {participant.handle}
+                        </p>
+                        <p className="mt-1 text-sm uppercase tracking-[0.14em] text-slate-400">
+                          {participant.role} / {participant.platform ?? "Platform pending"}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-300">
+                          {participant.notes ?? "No notes logged."}
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
+                        {participant.status}
+                      </span>
+                    </div>
+                  ))}
 
-              {mission.participants.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                  No package assigned yet.
+                  {mission.participants.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                      No package assigned yet.
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
+              )}
             </div>
           </article>
         </div>
