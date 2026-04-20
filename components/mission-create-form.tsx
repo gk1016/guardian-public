@@ -57,6 +57,7 @@ export function MissionCreateForm() {
           body: JSON.stringify({
             callsign,
             title,
+            templateCode,
             missionType,
             status,
             priority,
@@ -121,6 +122,24 @@ export function MissionCreateForm() {
               <p className="mt-1 font-semibold uppercase tracking-[0.14em] text-white">
                 {selectedTemplate.recommendedDoctrine}
               </p>
+            </div>
+            <div>
+              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Seeded Slots</span>
+              <div className="mt-2 space-y-2">
+                {selectedTemplate.slots.map((slot) => (
+                  <div
+                    key={`${selectedTemplate.code}-${slot.role}`}
+                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                      {slot.role}
+                    </p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                      {slot.platform}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -228,7 +247,7 @@ export function MissionCreateForm() {
           {isPending ? "Creating mission" : "Create mission"}
         </button>
         <span className="text-sm text-slate-400">
-          Template selection only seeds the sortie. Command can still edit every field before launch.
+          Template selection seeds the sortie, attaches recommended doctrine when available, and opens the expected package slots for command to fill.
         </span>
       </div>
     </form>

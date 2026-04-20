@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
 
 const participantUpdateSchema = z.object({
-  status: z.enum(["assigned", "ready", "launched", "rtb"]),
+  handle: z.string().trim().min(2).max(32),
+  status: z.enum(["open", "assigned", "ready", "launched", "rtb"]),
   role: z.string().trim().min(2).max(40),
   platform: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(500).optional(),
@@ -80,6 +81,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   const updatedParticipant = await prisma.missionParticipant.update({
     where: { id: participantId },
     data: {
+      handle: payload.data.handle.toUpperCase(),
       status: payload.data.status,
       role: payload.data.role,
       platform: payload.data.platform || null,

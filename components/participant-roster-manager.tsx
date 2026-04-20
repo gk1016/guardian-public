@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, LoaderCircle, Save, Trash2 } from "lucide-react";
 
 const participantStatusOptions = [
+  { value: "open", label: "Open Slot" },
   { value: "assigned", label: "Assigned" },
   { value: "ready", label: "Ready" },
   { value: "launched", label: "Launched" },
@@ -33,12 +34,13 @@ export function ParticipantRosterManager({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [participantDrafts, setParticipantDrafts] = useState<
-    Record<string, { status: string; role: string; platform: string; notes: string }>
+    Record<string, { handle: string; status: string; role: string; platform: string; notes: string }>
   >(
     Object.fromEntries(
       participants.map((participant) => [
         participant.id,
         {
+          handle: participant.handle,
           status: participant.status,
           role: participant.role,
           platform: participant.platform ?? "",
@@ -50,7 +52,7 @@ export function ParticipantRosterManager({
 
   function setParticipantDraft(
     participantId: string,
-    field: "status" | "role" | "platform" | "notes",
+    field: "handle" | "status" | "role" | "platform" | "notes",
     value: string,
   ) {
     setParticipantDrafts((current) => ({
@@ -74,6 +76,7 @@ export function ParticipantRosterManager({
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              handle: draft.handle,
               status: draft.status,
               role: draft.role,
               platform: draft.platform,
@@ -180,6 +183,15 @@ export function ParticipantRosterManager({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Handle</span>
+              <input
+                value={participantDrafts[participant.id]?.handle ?? participant.handle}
+                onChange={(event) => setParticipantDraft(participant.id, "handle", event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+              />
+            </label>
+
             <label className="space-y-2">
               <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Role</span>
               <input

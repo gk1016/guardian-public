@@ -9,7 +9,7 @@ const participantCreateSchema = z.object({
   handle: z.string().trim().min(2).max(32),
   role: z.string().trim().min(2).max(40),
   platform: z.string().trim().max(60).optional(),
-  status: z.enum(["assigned", "ready", "launched", "rtb"]),
+  status: z.enum(["open", "assigned", "ready", "launched", "rtb"]),
   notes: z.string().trim().max(500).optional(),
 });
 

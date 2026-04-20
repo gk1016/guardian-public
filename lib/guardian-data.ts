@@ -43,6 +43,8 @@ type MissionParticipantRecord = {
 
 type PackageSummary = {
   total: number;
+  open: number;
+  staffedTotal: number;
   assigned: number;
   ready: number;
   launched: number;
@@ -253,7 +255,9 @@ async function getPrimaryOrg() {
 function summarizePackageStatus(participants: MissionParticipantRecord[]): PackageSummary {
   const summary = participants.reduce(
     (current, participant) => {
-      if (participant.status === "assigned") {
+      if (participant.status === "open") {
+        current.open += 1;
+      } else if (participant.status === "assigned") {
         current.assigned += 1;
       } else if (participant.status === "ready") {
         current.ready += 1;
@@ -267,6 +271,7 @@ function summarizePackageStatus(participants: MissionParticipantRecord[]): Packa
     },
     {
       total: participants.length,
+      open: 0,
       assigned: 0,
       ready: 0,
       launched: 0,
@@ -275,12 +280,22 @@ function summarizePackageStatus(participants: MissionParticipantRecord[]): Packa
   );
 
   const readyOrLaunched = summary.ready + summary.launched;
+  const staffedTotal = summary.total - summary.open;
 
   return {
     ...summary,
+    staffedTotal,
     readyOrLaunched,
     readinessLabel:
-      summary.total === 0 ? "unassigned" : readyOrLaunched === summary.total ? "green" : readyOrLaunched > 0 ? "partial" : "cold",
+      summary.total === 0
+        ? "unassigned"
+        : staffedTotal === 0
+          ? "skeleton"
+          : readyOrLaunched === staffedTotal && summary.open === 0
+            ? "green"
+            : readyOrLaunched > 0
+              ? "partial"
+              : "cold",
   };
 }
 
@@ -385,6 +400,9 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
             mission.lead?.displayName || mission.lead?.handle || "Unassigned",
             packageSummary.readinessLabel,
             packageSummary.readyOrLaunched,
+            packageSummary.total,
+            packageSummary.open,
+            packageSummary.staffedTotal,
           ),
         };
       }),
@@ -490,6 +508,9 @@ export async function getMissionPageData(userId: string): Promise<
             mission.lead?.displayName || mission.lead?.handle || "Unassigned",
             packageSummary.readinessLabel,
             packageSummary.readyOrLaunched,
+            packageSummary.total,
+            packageSummary.open,
+            packageSummary.staffedTotal,
           ),
         };
       }),
@@ -652,6 +673,9 @@ export async function getMissionDetailPageData(
           mission.lead?.displayName || mission.lead?.handle || "Unassigned",
           packageSummary.readinessLabel,
           packageSummary.readyOrLaunched,
+          packageSummary.total,
+          packageSummary.open,
+          packageSummary.staffedTotal,
         ),
         doctrineTemplate: mission.doctrineTemplate,
         availableDoctrineTemplates,

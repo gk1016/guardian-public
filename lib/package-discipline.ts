@@ -25,6 +25,8 @@ export type PackageRoleCheck = {
   requiredCount: number;
   matchedCount: number;
   matchedHandles: string[];
+  openCount: number;
+  openHandles: string[];
   shortfall: number;
 };
 
@@ -92,17 +94,27 @@ function selectProfile(missionType: string) {
   );
 }
 
-function buildReadinessWarnings(readinessLabel: string, readyOrLaunched: number, total: number) {
+function buildReadinessWarnings(
+  readinessLabel: string,
+  readyOrLaunched: number,
+  total: number,
+  openCount: number,
+  staffedTotal: number,
+) {
   if (total === 0) {
     return ["No package assigned to this mission."];
   }
 
+  if (staffedTotal === 0 && openCount > 0) {
+    return ["Template package seeded, but no slot is filled yet."];
+  }
+
   if (readinessLabel === "cold") {
-    return ["Package is staffed but no assigned element is ready or launched."];
+    return ["Package has staffed elements, but none are ready or launched."];
   }
 
   if (readinessLabel === "partial") {
-    return [`Only ${readyOrLaunched}/${total} assigned elements are ready or launched.`];
+    return [`Only ${readyOrLaunched}/${staffedTotal} staffed elements are ready or launched.`];
   }
 
   return [];
@@ -114,13 +126,26 @@ export function evaluatePackageDiscipline(
   missionLeadDisplay: string,
   readinessLabel: string,
   readyOrLaunched: number,
+  total: number,
+  openCount: number,
+  staffedTotal: number,
 ) {
   const profile = selectProfile(missionType);
-  const unassignedParticipantIndexes = new Set(participants.map((_, index) => index));
+  const staffedParticipantIndexes = new Set(
+    participants
+      .map((participant, index) => (normalize(participant.status) === "open" ? null : index))
+      .filter((value): value is number => value !== null),
+  );
+  const openParticipantIndexes = new Set(
+    participants
+      .map((participant, index) => (normalize(participant.status) === "open" ? index : null))
+      .filter((value): value is number => value !== null),
+  );
   const missionLeadAssigned = normalize(missionLeadDisplay) !== "unassigned";
 
   const roleChecks = profile.roles.map((role) => {
     const matchedHandles: string[] = [];
+    const openHandles: string[] = [];
     let matchedCount = 0;
 
     if (role.allowMissionLead && missionLeadAssigned && matchedCount < role.requiredCount) {
@@ -128,7 +153,7 @@ export function evaluatePackageDiscipline(
       matchedCount += 1;
     }
 
-    for (const index of Array.from(unassignedParticipantIndexes)) {
+    for (const index of Array.from(staffedParticipantIndexes)) {
       if (matchedCount >= role.requiredCount) {
         break;
       }
@@ -143,8 +168,28 @@ export function evaluatePackageDiscipline(
 
       matchedHandles.push(participant.handle);
       matchedCount += 1;
-      unassignedParticipantIndexes.delete(index);
+      staffedParticipantIndexes.delete(index);
     }
+
+    for (const index of Array.from(openParticipantIndexes)) {
+      if (matchedCount + openHandles.length >= role.requiredCount) {
+        break;
+      }
+
+      const participant = participants[index];
+      const searchTarget = `${normalize(participant.role)} ${normalize(participant.status)}`;
+      const matches = role.matchers.some((matcher) => searchTarget.includes(matcher));
+
+      if (!matches) {
+        continue;
+      }
+
+      openHandles.push(participant.handle);
+      openParticipantIndexes.delete(index);
+    }
+
+    const openRoleCount = Math.min(openHandles.length, Math.max(0, role.requiredCount - matchedCount));
+    const shortfall = Math.max(0, role.requiredCount - matchedCount - openRoleCount);
 
     return {
       key: role.key,
@@ -152,22 +197,41 @@ export function evaluatePackageDiscipline(
       requiredCount: role.requiredCount,
       matchedCount,
       matchedHandles,
-      shortfall: Math.max(0, role.requiredCount - matchedCount),
+      openCount: openRoleCount,
+      openHandles: openHandles.slice(0, openRoleCount),
+      shortfall,
     } satisfies PackageRoleCheck;
   });
 
-  const structuralWarnings = roleChecks
-    .filter((roleCheck) => roleCheck.shortfall > 0)
-    .map((roleCheck) => `Missing ${roleCheck.shortfall} ${roleCheck.label.toLowerCase()} slot${roleCheck.shortfall > 1 ? "s" : ""}.`);
+  const structuralWarnings = roleChecks.flatMap((roleCheck) => {
+    const warnings: string[] = [];
 
-  const warnings = [...structuralWarnings, ...buildReadinessWarnings(readinessLabel, readyOrLaunched, participants.length)];
-  const shortfallCount = structuralWarnings.length;
+    if (roleCheck.openCount > 0) {
+      warnings.push(
+        `Open ${roleCheck.openCount} ${roleCheck.label.toLowerCase()} slot${roleCheck.openCount > 1 ? "s" : ""}.`,
+      );
+    }
+
+    if (roleCheck.shortfall > 0) {
+      warnings.push(
+        `Missing ${roleCheck.shortfall} ${roleCheck.label.toLowerCase()} slot${roleCheck.shortfall > 1 ? "s" : ""}.`,
+      );
+    }
+
+    return warnings;
+  });
+
+  const warnings = [
+    ...structuralWarnings,
+    ...buildReadinessWarnings(readinessLabel, readyOrLaunched, total, openCount, staffedTotal),
+  ];
+  const issueCount = structuralWarnings.length;
 
   return {
     profileCode: profile.code,
     profileLabel: profile.label,
-    coverageLabel: shortfallCount === 0 ? "structured" : shortfallCount === 1 ? "degraded" : "insufficient",
-    shortfallCount,
+    coverageLabel: issueCount === 0 ? "structured" : issueCount === 1 ? "degraded" : "insufficient",
+    shortfallCount: issueCount,
     warnings,
     roleChecks,
   } satisfies PackageDiscipline;

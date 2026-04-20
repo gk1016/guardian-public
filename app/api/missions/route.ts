@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { getMissionTemplate } from "@/lib/mission-templates";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
 
 const missionCreateSchema = z.object({
   callsign: z.string().trim().min(2).max(24),
+  templateCode: z.string().trim().min(2).max(40).optional(),
   title: z.string().trim().min(4).max(120),
   missionType: z.string().trim().min(3).max(40),
   status: z.enum(["planning", "ready", "active"]),
@@ -35,24 +37,71 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No organization found for operator." }, { status: 400 });
   }
 
-  const mission = await prisma.mission.create({
-    data: {
+  const template = getMissionTemplate(payload.data.templateCode || payload.data.missionType);
+  const doctrineTemplate = await prisma.doctrineTemplate.findFirst({
+    where: {
       orgId: org.id,
-      leadId: session.userId,
-      callsign: payload.data.callsign.toUpperCase(),
-      title: payload.data.title,
-      missionType: payload.data.missionType,
-      status: payload.data.status,
-      priority: payload.data.priority,
-      areaOfOperation: payload.data.areaOfOperation || null,
-      missionBrief: payload.data.missionBrief || null,
+      code: template.doctrineCode,
     },
-    select: {
-      id: true,
-      callsign: true,
-      status: true,
-      title: true,
-    },
+  });
+
+  const mission = await prisma.$transaction(async (tx) => {
+    const createdMission = await tx.mission.create({
+      data: {
+        orgId: org.id,
+        leadId: session.userId,
+        doctrineTemplateId: doctrineTemplate?.id ?? null,
+        callsign: payload.data.callsign.toUpperCase(),
+        title: payload.data.title,
+        missionType: payload.data.missionType,
+        status: payload.data.status,
+        priority: payload.data.priority,
+        areaOfOperation: payload.data.areaOfOperation || null,
+        missionBrief: payload.data.missionBrief || null,
+        roeCode: doctrineTemplate?.code ?? null,
+      },
+      select: {
+        id: true,
+        callsign: true,
+        status: true,
+        title: true,
+      },
+    });
+
+    if (template.slots.length > 0) {
+      await tx.missionParticipant.createMany({
+        data: template.slots.map((slot) => ({
+          missionId: createdMission.id,
+          handle: "OPEN SLOT",
+          role: slot.role,
+          platform: slot.platform,
+          status: "open",
+          notes: slot.notes,
+        })),
+      });
+    }
+
+    await tx.missionLog.create({
+      data: {
+        missionId: createdMission.id,
+        authorId: session.userId,
+        entryType: "package",
+        message: `Template seeded: ${template.label} / ${template.slots.length} open slot${template.slots.length === 1 ? "" : "s"}.`,
+      },
+    });
+
+    if (doctrineTemplate) {
+      await tx.missionLog.create({
+        data: {
+          missionId: createdMission.id,
+          authorId: session.userId,
+          entryType: "doctrine",
+          message: `Doctrine attached automatically: ${doctrineTemplate.title} / ${doctrineTemplate.code}.`,
+        },
+      });
+    }
+
+    return createdMission;
   });
 
   return NextResponse.json({ ok: true, mission });

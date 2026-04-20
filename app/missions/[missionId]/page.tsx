@@ -149,7 +149,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                   Assigned {mission.packageSummary.assigned} / Ready {mission.packageSummary.ready}
                 </p>
                 <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                  Launched {mission.packageSummary.launched} / RTB {mission.packageSummary.rtb}
+                  Launched {mission.packageSummary.launched} / RTB {mission.packageSummary.rtb} / Open {mission.packageSummary.open}
                 </p>
               </div>
             </div>
@@ -201,8 +201,8 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-7 text-slate-300">
-                      {roleCheck.matchedHandles.length > 0
-                        ? roleCheck.matchedHandles.join(", ")
+                      {roleCheck.matchedHandles.length > 0 || roleCheck.openHandles.length > 0
+                        ? [...roleCheck.matchedHandles, ...roleCheck.openHandles].join(", ")
                         : "No assigned element currently matches this role."}
                     </p>
                   </div>

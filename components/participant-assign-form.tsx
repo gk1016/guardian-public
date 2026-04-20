@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, LoaderCircle, UserPlus } from "lucide-react";
 
 const participantStatusOptions = [
+  { value: "open", label: "Open Slot" },
   { value: "assigned", label: "Assigned" },
   { value: "ready", label: "Ready" },
   { value: "launched", label: "Launched" },
