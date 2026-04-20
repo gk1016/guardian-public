@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, NotebookText, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Shield, Users } from "lucide-react";
+import { MissionCloseoutForm } from "@/components/mission-closeout-form";
 import { MissionEditForm } from "@/components/mission-edit-form";
 import { MissionLogForm } from "@/components/mission-log-form";
 import { OpsShell } from "@/components/ops-shell";
@@ -125,6 +126,11 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
                   Updated {mission.updatedAtLabel}
                 </p>
+                {mission.completedAtLabel ? (
+                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-emerald-200">
+                    Closed {mission.completedAtLabel}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -138,6 +144,29 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               <p className="mt-4 text-sm leading-8 text-slate-300">
                 {mission.missionBrief ?? "Mission brief not yet recorded."}
               </p>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+            <div className="flex items-center gap-3">
+              <FileCheck2 size={18} className="text-emerald-300" />
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Closeout Package
+              </p>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Closeout Summary</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {mission.closeoutSummary ?? "Mission closeout not yet filed."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">AAR Package</p>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  {mission.aarSummary ?? "AAR package not yet filed."}
+                </p>
+              </div>
             </div>
           </article>
 
@@ -280,6 +309,32 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </p>
                 <div className="mt-6">
                   <MissionLogForm missionId={mission.id} />
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                <div className="flex items-center gap-3">
+                  <FileCheck2 size={18} className="text-emerald-300" />
+                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                    Close Mission
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  File the final disposition and package the after-action notes directly onto the sortie.
+                </p>
+                <div className="mt-6">
+                  <MissionCloseoutForm
+                    missionId={mission.id}
+                    initialFinalStatus={mission.status === "aborted" ? "aborted" : "complete"}
+                    initialCloseoutSummary={
+                      mission.closeoutSummary ??
+                      "Package completed assigned objectives, recovered aircraft, and cleared the lane."
+                    }
+                    initialAarSummary={
+                      mission.aarSummary ??
+                      "Threat picture stabilized after first merge. Escort geometry held, comms discipline remained solid, and civilian traffic cleared without additional loss."
+                    }
+                  />
                 </div>
               </section>
             </>

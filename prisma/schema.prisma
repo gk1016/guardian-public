@@ -63,6 +63,8 @@ model Mission {
   priority        String               @default("routine")
   areaOfOperation String?
   missionBrief    String?
+  closeoutSummary String?
+  aarSummary      String?
   mettTc          Json?
   phases          Json?
   roeCode         String?

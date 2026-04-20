@@ -9,6 +9,8 @@ type MissionWithParticipants = {
   priority: string;
   areaOfOperation: string | null;
   missionBrief: string | null;
+  closeoutSummary: string | null;
+  aarSummary: string | null;
   lead?: {
     handle: string;
     displayName: string | null;
@@ -134,6 +136,9 @@ type MissionDetailPayload = {
     priority: string;
     areaOfOperation: string | null;
     missionBrief: string | null;
+    closeoutSummary: string | null;
+    aarSummary: string | null;
+    completedAtLabel: string | null;
     leadDisplay: string;
     updatedAtLabel: string;
     logs: {
@@ -396,6 +401,16 @@ export async function getMissionDetailPageData(
         priority: mission.priority,
         areaOfOperation: mission.areaOfOperation,
         missionBrief: mission.missionBrief,
+        closeoutSummary: mission.closeoutSummary,
+        aarSummary: mission.aarSummary,
+        completedAtLabel: mission.completedAt
+          ? mission.completedAt.toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
         leadDisplay: mission.lead?.displayName || mission.lead?.handle || "Unassigned",
         updatedAtLabel: mission.updatedAt.toLocaleString("en-US", {
           month: "short",
