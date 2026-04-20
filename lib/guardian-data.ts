@@ -1,9 +1,12 @@
-import { Prisma, type IntelReport, type QrfReadiness, type RescueRequest } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type MissionWithParticipants = Prisma.MissionGetPayload<{
   include: { participants: true };
 }>;
+type IntelReportRecord = Prisma.IntelReportGetPayload<Record<string, never>>;
+type RescueRequestRecord = Prisma.RescueRequestGetPayload<Record<string, never>>;
+type QrfReadinessRecord = Prisma.QrfReadinessGetPayload<Record<string, never>>;
 
 export type OverviewPayload = {
   ok: boolean;
@@ -135,7 +138,7 @@ export async function getCommandOverview(): Promise<OverviewPayload> {
         areaOfOperation: mission.areaOfOperation,
         participantCount: mission.participants.length,
       })),
-      rescues: rescues.map((rescue: RescueRequest) => ({
+      rescues: rescues.map((rescue: RescueRequestRecord) => ({
         id: rescue.id,
         survivorHandle: rescue.survivorHandle,
         locationName: rescue.locationName,
@@ -143,7 +146,7 @@ export async function getCommandOverview(): Promise<OverviewPayload> {
         status: rescue.status,
         escortRequired: rescue.escortRequired,
       })),
-      intel: intel.map((report: IntelReport) => ({
+      intel: intel.map((report: IntelReportRecord) => ({
         id: report.id,
         title: report.title,
         severity: report.severity,
@@ -151,7 +154,7 @@ export async function getCommandOverview(): Promise<OverviewPayload> {
         locationName: report.locationName,
         confidence: report.confidence,
       })),
-      qrf: qrf.map((entry: QrfReadiness) => ({
+      qrf: qrf.map((entry: QrfReadinessRecord) => ({
         id: entry.id,
         callsign: entry.callsign,
         status: entry.status,
@@ -254,7 +257,7 @@ export async function getIntelPageData(): Promise<
     return {
       ok: true,
       orgName: org.name,
-      items: reports.map((report: IntelReport) => ({
+      items: reports.map((report: IntelReportRecord) => ({
         id: report.id,
         title: report.title,
         description: report.description,
@@ -304,7 +307,7 @@ export async function getRescuePageData(): Promise<
     return {
       ok: true,
       orgName: org.name,
-      items: rescues.map((rescue: RescueRequest) => ({
+      items: rescues.map((rescue: RescueRequestRecord) => ({
         id: rescue.id,
         survivorHandle: rescue.survivorHandle,
         locationName: rescue.locationName,
