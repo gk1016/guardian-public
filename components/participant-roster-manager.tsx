@@ -191,16 +191,37 @@ export function ParticipantRosterManager({
   }
 
   function applyCrewSuggestion(participantId: string, candidate: CrewCandidate) {
-    setParticipantDrafts((current) => ({
-      ...current,
-      [participantId]: {
-        ...current[participantId],
-        handle: candidate.handle,
-        platform: candidate.suggestedPlatform ?? current[participantId]?.platform ?? "",
-        status: current[participantId]?.status === "open" ? "assigned" : current[participantId]?.status ?? "assigned",
-        notes: candidate.notes ?? current[participantId]?.notes ?? "",
-      },
-    }));
+    const currentDraft = participantDrafts[participantId];
+    setError("");
+
+    startTransition(async () => {
+      try {
+        const response = await fetch(
+          `/api/missions/${missionId}/participants/${participantId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              handle: candidate.handle,
+              status: currentDraft?.status === "open" ? "assigned" : currentDraft?.status ?? "assigned",
+              role: currentDraft?.role ?? "",
+              platform: candidate.suggestedPlatform ?? currentDraft?.platform ?? "",
+              notes: candidate.notes ?? currentDraft?.notes ?? "",
+            }),
+          },
+        );
+
+        const payload = await response.json();
+        if (!response.ok) {
+          setError(payload.error || "Quick assign failed.");
+          return;
+        }
+
+        router.refresh();
+      } catch {
+        setError("Quick assign failed.");
+      }
+    });
   }
 
   function availabilityTone(availabilityLabel: CrewCandidate["availabilityLabel"]) {
@@ -338,6 +359,9 @@ export function ParticipantRosterManager({
                         {candidate.commitments[0].callsign} / {candidate.commitments[0].assignmentStatus} / {candidate.commitments[0].role}
                       </p>
                     ) : null}
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-200">
+                      Assign now
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className={`inline-flex rounded-full border px-3 py-1 text-xs uppercase tracking-[0.16em] ${availabilityTone(candidate.availabilityLabel)}`}>

@@ -4,7 +4,7 @@ import { Shield, Siren, Users } from "lucide-react";
 import type { GuardianSession } from "@/lib/auth";
 
 type OpsShellProps = {
-  currentPath: "/command" | "/missions" | "/intel" | "/rescues" | "/doctrine";
+  currentPath: "/command" | "/missions" | "/intel" | "/doctrine" | "/rescues" | "/roster";
   section: string;
   title: string;
   description: string;
@@ -22,6 +22,7 @@ const navItems: Array<{
   { href: "/intel", label: "Intel" },
   { href: "/doctrine", label: "Doctrine" },
   { href: "/rescues", label: "Rescue" },
+  { href: "/roster", label: "Roster" },
 ];
 
 export function OpsShell({

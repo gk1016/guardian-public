@@ -196,6 +196,13 @@ type DoctrinePagePayload = {
   error?: string;
 };
 
+type RosterPagePayload = {
+  ok: boolean;
+  orgName: string;
+  items: CrewCandidate[];
+  error?: string;
+};
+
 type MissionDetailPayload = {
   ok: boolean;
   orgName: string;
@@ -985,6 +992,91 @@ export async function getDoctrinePageData(userId: string): Promise<DoctrinePageP
       orgName: "Guardian",
       items: [],
       error: error instanceof Error ? error.message : "Failed to load doctrine.",
+    };
+  }
+}
+
+export async function getRosterPageData(userId: string): Promise<RosterPagePayload> {
+  try {
+    const org = await getOrgForUser(userId);
+    if (!org) {
+      return { ok: true, orgName: "Guardian", items: [] };
+    }
+
+    const [members, qrfEntries, activeMissionAssignments] = await Promise.all([
+      prisma.orgMember.findMany({
+        where: {
+          orgId: org.id,
+        },
+        orderBy: [{ rank: "asc" }, { joinedAt: "asc" }],
+        select: {
+          title: true,
+          user: {
+            select: {
+              handle: true,
+              displayName: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      prisma.qrfReadiness.findMany({
+        where: {
+          orgId: org.id,
+        },
+        orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+        select: {
+          id: true,
+          callsign: true,
+          status: true,
+          platform: true,
+          locationName: true,
+          availableCrew: true,
+          notes: true,
+        },
+      }),
+      prisma.mission.findMany({
+        where: {
+          orgId: org.id,
+          status: {
+            in: ["planning", "ready", "active"],
+          },
+        },
+        select: {
+          id: true,
+          callsign: true,
+          status: true,
+          lead: {
+            select: {
+              handle: true,
+              displayName: true,
+            },
+          },
+          participants: {
+            select: {
+              id: true,
+              handle: true,
+              role: true,
+              platform: true,
+              status: true,
+              notes: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      ok: true,
+      orgName: org.name,
+      items: buildCrewCandidates(members, qrfEntries, activeMissionAssignments, ""),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      orgName: "Guardian",
+      items: [],
+      error: error instanceof Error ? error.message : "Failed to load roster.",
     };
   }
 }
