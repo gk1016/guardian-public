@@ -158,7 +158,7 @@ export function evaluatePackageDiscipline(
 
   const structuralWarnings = roleChecks
     .filter((roleCheck) => roleCheck.shortfall > 0)
-    .map((roleCheck) => `Missing ${roleCheck.shortfall} ${roleCheck.label.toLowerCase()} element${roleCheck.shortfall > 1 ? "s" : ""}.`);
+    .map((roleCheck) => `Missing ${roleCheck.shortfall} ${roleCheck.label.toLowerCase()} slot${roleCheck.shortfall > 1 ? "s" : ""}.`);
 
   const warnings = [...structuralWarnings, ...buildReadinessWarnings(readinessLabel, readyOrLaunched, participants.length)];
   const shortfallCount = structuralWarnings.length;
