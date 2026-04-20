@@ -113,6 +113,12 @@ export default function Home() {
               >
                 Open Command Deck
               </Link>
+              <Link
+                href="/missions"
+                className="inline-flex items-center justify-center rounded-md border border-cyan-300/25 bg-cyan-300/10 px-5 py-3 font-semibold uppercase tracking-[0.18em] text-cyan-100 transition hover:bg-cyan-300/15"
+              >
+                Review Live Mission Board
+              </Link>
               <a
                 href="#modules"
                 className="inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-5 py-3 font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
@@ -246,8 +252,8 @@ export default function Home() {
           <div>
             <p className="text-sm uppercase tracking-[0.22em] text-slate-400">Bootstrap Status</p>
             <p className="mt-2 max-w-3xl text-lg leading-8 text-white">
-              Repo, landing page, command shell, Docker, and Prisma scaffolding are now the baseline.
-              Next slices should wire auth, mission CRUD, and the first live operational boards.
+              Repo, landing page, command shell, Docker, Prisma, and seeded operational boards are now
+              live. Next slices should wire auth, mission CRUD, and guarded mutation workflows.
             </p>
           </div>
           <Link

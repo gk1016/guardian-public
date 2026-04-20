@@ -34,6 +34,7 @@ model Organization {
   missions    Mission[]
   intel       IntelReport[]
   rescues     RescueRequest[]
+  qrfReadiness QrfReadiness[]
 }
 
 model OrgMember {
@@ -137,4 +138,20 @@ model RescueRequest {
 
   @@index([orgId, status])
   @@index([urgency])
+}
+
+model QrfReadiness {
+  id            String       @id @default(cuid())
+  orgId         String
+  callsign      String
+  status        String       @default("redcon4")
+  platform      String?
+  locationName  String?
+  availableCrew Int          @default(1)
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status])
 }

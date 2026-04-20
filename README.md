@@ -25,9 +25,11 @@ This first slice includes:
 
 - public landing page
 - authenticated-side command deck shell
+- data-backed mission, intel, and rescue pages
 - health endpoint
 - Docker and Postgres scaffolding
-- initial Prisma schema for org, mission, intel, and rescue workflows
+- initial Prisma schema for org, mission, intel, rescue, and QRF readiness workflows
+- seeded demo data for local and hosted bootstrap
 
 Not implemented yet:
 
@@ -67,12 +69,24 @@ Push schema to a local database:
 npm run db:push
 ```
 
+Seed demo data:
+
+```bash
+npm run db:seed
+```
+
 ## Docker
 
 Build and run:
 
 ```bash
 docker compose up --build
+```
+
+Apply schema and seed demo data inside Docker:
+
+```bash
+docker compose --profile tools run --rm guardian-tools
 ```
 
 Default services:

@@ -11,6 +11,18 @@ services:
       guardian-postgres:
         condition: service_healthy
 
+  guardian-tools:
+    build:
+      context: .
+      target: builder
+    profiles: ["tools"]
+    env_file:
+      - .env
+    depends_on:
+      guardian-postgres:
+        condition: service_healthy
+    command: sh -lc "npx prisma db push && npm run db:seed"
+
   guardian-postgres:
     image: postgres:16-alpine
     container_name: guardian-postgres
