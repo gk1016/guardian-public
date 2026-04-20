@@ -124,7 +124,7 @@ export default async function MissionsPage() {
             </p>
           </div>
           <p className="mt-4">
-            Mission creation, detail views, closeout, reopen, participant assignment, intel linkage, and doctrine attachment are live. Next up is deeper package control, not more placeholder pages.
+            Mission creation, detail views, closeout, reopen, participant assignment, intel linkage, doctrine attachment, and template-aware sortie seeding are live. Next up is deeper package control, not more placeholder pages.
           </p>
         </section>
     </OpsShell>

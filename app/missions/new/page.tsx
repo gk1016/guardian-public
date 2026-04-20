@@ -19,13 +19,13 @@ export default async function NewMissionPage() {
       currentPath="/missions"
       section="Missions"
       title="Create Mission"
-      description="Commander-only mission launch path for rapid tasking and immediate board population."
+      description="Commander-only mission launch path with mission-type templates, package expectations, and immediate board population."
       orgName={orgName}
       session={session}
     >
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
         <div className="text-sm text-slate-300">
-          Mission creation now writes straight to Postgres through the authenticated API surface.
+          Mission creation now writes straight to Postgres and seeds a sortie template before command refines tasking.
         </div>
         <Link
           href="/missions"
