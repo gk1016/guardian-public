@@ -24,6 +24,7 @@ This repository is intentionally separate from Cloud Core. It borrows useful ope
 This first slice includes:
 
 - public landing page
+- credential login with signed cookie sessions
 - authenticated-side command deck shell
 - data-backed mission, intel, and rescue pages
 - health endpoint
@@ -39,6 +40,22 @@ Not implemented yet:
 - real-time dispatch sync
 - production data wiring
 
+## Demo Access
+
+Bootstrap login:
+
+- email: `reaper11@guardian.local`
+- password: `GuardianDemo!2026`
+
+The seed script will also apply the same demo password to:
+
+- `saber1@guardian.local`
+- `viking2@guardian.local`
+
+Override the seeded password with:
+
+- `GUARDIAN_DEMO_PASSWORD`
+
 ## Local Development
 
 ```bash
@@ -50,6 +67,7 @@ npm run dev
 App URL:
 
 - `http://localhost:3000`
+- login: `http://localhost:3000/login`
 
 Health endpoint:
 

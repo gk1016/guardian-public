@@ -12,6 +12,7 @@ model User {
   email        String        @unique
   handle       String        @unique
   displayName  String?
+  passwordHash String?
   role         String        @default("pilot")
   status       String        @default("pending")
   createdAt    DateTime      @default(now())

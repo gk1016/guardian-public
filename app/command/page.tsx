@@ -2,34 +2,30 @@ import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
   Clock3,
   Crosshair,
-  Shield,
   Siren,
 } from "lucide-react";
 import { getCommandOverview } from "@/lib/guardian-data";
+import { requireSession } from "@/lib/auth";
+import { OpsShell } from "@/components/ops-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function CommandPage() {
-  const data = await getCommandOverview();
+  const session = await requireSession("/command");
+  const data = await getCommandOverview(session.userId);
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-6 py-8 text-[var(--color-text)] lg:px-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.26em] text-slate-400">{data.orgName} / Command Deck</p>
-            <h1 className="mt-3 font-[family:var(--font-display)] text-5xl uppercase tracking-[0.14em] text-white">
-              Watch Floor
-            </h1>
-            <p className="mt-3 max-w-3xl text-base leading-8 text-slate-300">
-              Guardian is now reading seeded operational data from Postgres. This is still pre-auth, but
-              the command surface is no longer a fake static mock.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
+    <OpsShell
+      currentPath="/command"
+      section="Command Deck"
+      title="Watch Floor"
+      description="Guardian is now reading seeded operational data from Postgres behind a signed session cookie and middleware gate."
+      orgName={data.orgName}
+      session={session}
+    >
+      <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
               <p className="text-xs uppercase tracking-[0.18em] text-emerald-100">Active Missions</p>
               <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
@@ -48,8 +44,7 @@ export default async function CommandPage() {
                 {data.openRescueCount.toString().padStart(2, "0")}
               </p>
             </div>
-          </div>
-        </header>
+      </div>
 
         {data.error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
@@ -60,20 +55,14 @@ export default async function CommandPage() {
         <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <Shield className="text-amber-300" size={20} />
-                <div>
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.18em] text-white">
-                    Mission Board
-                  </p>
-                  <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
-                    Current stack and status gates
-                  </p>
-                </div>
+              <div>
+                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.18em] text-white">
+                  Mission Board
+                </p>
+                <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+                  Current stack and status gates
+                </p>
               </div>
-              <Link href="/missions" className="text-slate-500 transition hover:text-white">
-                <ArrowRight size={18} />
-              </Link>
             </div>
 
             <div className="mt-5 space-y-4">
@@ -245,7 +234,6 @@ export default async function CommandPage() {
             ))}
           </div>
         </section>
-      </div>
-    </main>
+    </OpsShell>
   );
 }

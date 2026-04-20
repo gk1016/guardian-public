@@ -1,6 +1,7 @@
-import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Clock3, Crosshair, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock3, Crosshair, ShieldAlert } from "lucide-react";
 import { getMissionPageData } from "@/lib/guardian-data";
+import { requireSession } from "@/lib/auth";
+import { OpsShell } from "@/components/ops-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -11,28 +12,21 @@ const statusTone = {
 };
 
 export default async function MissionsPage() {
-  const data = await getMissionPageData();
+  const session = await requireSession("/missions");
+  const data = await getMissionPageData(session.userId);
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-6 py-8 text-[var(--color-text)] lg:px-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-6">
-          <Link href="/command" className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-slate-400 transition hover:text-white">
-            <ArrowLeft size={16} />
-            Back to Command
-          </Link>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-[0.24em] text-slate-400">{data.orgName} / Missions</p>
-              <h1 className="font-[family:var(--font-display)] text-5xl uppercase tracking-[0.14em] text-white">
-                Mission Board
-              </h1>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-              Seeded demo data is live. CRUD and auth gates are next.
-            </div>
-          </div>
-        </header>
+    <OpsShell
+      currentPath="/missions"
+      section="Missions"
+      title="Mission Board"
+      description="Mission views are now authenticated and scoped through the active operator session."
+      orgName={data.orgName}
+      session={session}
+    >
+      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+        Seeded demo data is live. CRUD and role-gated mutation are next.
+      </div>
 
         {data.error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
@@ -96,7 +90,6 @@ export default async function MissionsPage() {
             increment. The data model is already in place.
           </p>
         </section>
-      </div>
-    </main>
+    </OpsShell>
   );
 }

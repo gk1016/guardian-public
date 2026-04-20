@@ -1,27 +1,23 @@
-import Link from "next/link";
-import { ArrowLeft, HeartPulse, ShieldAlert } from "lucide-react";
+import { HeartPulse, ShieldAlert } from "lucide-react";
 import { getRescuePageData } from "@/lib/guardian-data";
+import { requireSession } from "@/lib/auth";
+import { OpsShell } from "@/components/ops-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function RescuesPage() {
-  const data = await getRescuePageData();
+  const session = await requireSession("/rescues");
+  const data = await getRescuePageData(session.userId);
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-6 py-8 text-[var(--color-text)] lg:px-10">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-6">
-          <Link href="/command" className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-slate-400 transition hover:text-white">
-            <ArrowLeft size={16} />
-            Back to Command
-          </Link>
-          <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-slate-400">{data.orgName} / Rescue</p>
-            <h1 className="font-[family:var(--font-display)] text-5xl uppercase tracking-[0.14em] text-white">
-              Rescue Board
-            </h1>
-          </div>
-        </header>
+    <OpsShell
+      currentPath="/rescues"
+      section="Rescue"
+      title="Rescue Board"
+      description="Active rescues now require authenticated access and carry the operator identity into the protected shell."
+      orgName={data.orgName}
+      session={session}
+    >
 
         {data.error ? (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
@@ -69,7 +65,6 @@ export default async function RescuesPage() {
             </article>
           ))}
         </section>
-      </div>
-    </main>
+    </OpsShell>
   );
 }

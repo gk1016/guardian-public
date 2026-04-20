@@ -85,8 +85,8 @@ export default function Home() {
             <a href="#ethos" className="transition hover:text-white">
               Ethos
             </a>
-            <Link href="/command" className="transition hover:text-white">
-              Command Deck
+            <Link href="/login" className="transition hover:text-white">
+              Sign In
             </Link>
           </nav>
         </header>
@@ -108,10 +108,10 @@ export default function Home() {
 
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
-                href="/command"
+                href="/login"
                 className="inline-flex items-center justify-center rounded-md border border-amber-300/35 bg-amber-300 px-5 py-3 font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-amber-200"
               >
-                Open Command Deck
+                Sign In To Command Deck
               </Link>
               <Link
                 href="/missions"
@@ -257,11 +257,11 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href="/command"
+            href="/login"
             className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white px-5 py-3 font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-slate-200"
           >
             <Users size={16} />
-            View Command Deck
+            Sign In
           </Link>
         </div>
       </section>

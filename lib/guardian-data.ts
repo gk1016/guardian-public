@@ -103,9 +103,19 @@ async function getPrimaryOrg() {
   });
 }
 
-export async function getCommandOverview(): Promise<OverviewPayload> {
+export async function getOrgForUser(userId: string) {
+  const membership = await prisma.orgMember.findFirst({
+    where: { userId },
+    include: { org: true },
+    orderBy: { joinedAt: "asc" },
+  });
+
+  return membership?.org ?? getPrimaryOrg();
+}
+
+export async function getCommandOverview(userId: string): Promise<OverviewPayload> {
   try {
-    const org = await getPrimaryOrg();
+    const org = await getOrgForUser(userId);
 
     if (!org) {
       return {
@@ -218,7 +228,7 @@ export async function getCommandOverview(): Promise<OverviewPayload> {
   }
 }
 
-export async function getMissionPageData(): Promise<
+export async function getMissionPageData(userId: string): Promise<
   PagePayload<{
     id: string;
     callsign: string;
@@ -232,7 +242,7 @@ export async function getMissionPageData(): Promise<
   }>
 > {
   try {
-    const org = await getPrimaryOrg();
+    const org = await getOrgForUser(userId);
     if (!org) {
       return { ok: true, orgName: "Guardian", items: [] };
     }
@@ -268,7 +278,7 @@ export async function getMissionPageData(): Promise<
   }
 }
 
-export async function getIntelPageData(): Promise<
+export async function getIntelPageData(userId: string): Promise<
   PagePayload<{
     id: string;
     title: string;
@@ -282,7 +292,7 @@ export async function getIntelPageData(): Promise<
   }>
 > {
   try {
-    const org = await getPrimaryOrg();
+    const org = await getOrgForUser(userId);
     if (!org) {
       return { ok: true, orgName: "Guardian", items: [] };
     }
@@ -317,7 +327,7 @@ export async function getIntelPageData(): Promise<
   }
 }
 
-export async function getRescuePageData(): Promise<
+export async function getRescuePageData(userId: string): Promise<
   PagePayload<{
     id: string;
     survivorHandle: string;
@@ -332,7 +342,7 @@ export async function getRescuePageData(): Promise<
   }>
 > {
   try {
-    const org = await getPrimaryOrg();
+    const org = await getOrgForUser(userId);
     if (!org) {
       return { ok: true, orgName: "Guardian", items: [] };
     }

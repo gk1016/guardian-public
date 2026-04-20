@@ -1,8 +1,13 @@
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const demoPassword =
+    process.env.GUARDIAN_DEMO_PASSWORD || "GuardianDemo!2026";
+  const passwordHash = await bcrypt.hash(demoPassword, 10);
+
   const org = await prisma.organization.upsert({
     where: { tag: "GUARD" },
     update: {
@@ -24,6 +29,7 @@ async function main() {
       update: {
         handle: "REAPER11",
         displayName: "Reaper 11",
+        passwordHash,
         role: "commander",
         status: "active",
       },
@@ -31,6 +37,7 @@ async function main() {
         email: "reaper11@guardian.local",
         handle: "REAPER11",
         displayName: "Reaper 11",
+        passwordHash,
         role: "commander",
         status: "active",
       },
@@ -40,6 +47,7 @@ async function main() {
       update: {
         handle: "SABER1",
         displayName: "Saber 1",
+        passwordHash,
         role: "pilot",
         status: "active",
       },
@@ -47,6 +55,7 @@ async function main() {
         email: "saber1@guardian.local",
         handle: "SABER1",
         displayName: "Saber 1",
+        passwordHash,
         role: "pilot",
         status: "active",
       },
@@ -56,6 +65,7 @@ async function main() {
       update: {
         handle: "VIKING2",
         displayName: "Viking 2",
+        passwordHash,
         role: "rescue_coordinator",
         status: "active",
       },
@@ -63,6 +73,7 @@ async function main() {
         email: "viking2@guardian.local",
         handle: "VIKING2",
         displayName: "Viking 2",
+        passwordHash,
         role: "rescue_coordinator",
         status: "active",
       },
