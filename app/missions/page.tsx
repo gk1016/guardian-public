@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { CheckCircle2, Clock3, Crosshair, ShieldAlert } from "lucide-react";
 import { getMissionPageData } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
+import { canManageMissions } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,7 @@ const statusTone = {
 export default async function MissionsPage() {
   const session = await requireSession("/missions");
   const data = await getMissionPageData(session.userId);
+  const canCreateMission = canManageMissions(session.role);
 
   return (
     <OpsShell
@@ -24,8 +27,16 @@ export default async function MissionsPage() {
       orgName={data.orgName}
       session={session}
     >
-      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        Seeded demo data is live. CRUD and role-gated mutation are next.
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
+        <span>Mission board is live. Commander-gated mission creation is now online.</span>
+        {canCreateMission ? (
+          <Link
+            href="/missions/new"
+            className="rounded-md border border-amber-300/30 bg-amber-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-amber-200"
+          >
+            Create mission
+          </Link>
+        ) : null}
       </div>
 
         {data.error ? (
@@ -86,8 +97,8 @@ export default async function MissionsPage() {
             </p>
           </div>
           <p className="mt-4">
-            Mission creation, approvals, ROE attachment, and assignment workflow should be the next build
-            increment. The data model is already in place.
+            Mission creation is live. Next up is approvals, ROE attachment, participant assignment, and
+            detail views for individual sorties.
           </p>
         </section>
     </OpsShell>
