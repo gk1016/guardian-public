@@ -19,6 +19,7 @@ model User {
   updatedAt    DateTime      @updatedAt
   memberships  OrgMember[]
   ledMissions  Mission[]     @relation("mission_lead")
+  missionLogs  MissionLog[]  @relation("mission_log_author")
   rescueOwned  RescueRequest[] @relation("rescue_requester")
   rescueOps    RescueRequest[] @relation("rescue_operator")
 }
@@ -72,10 +73,25 @@ model Mission {
   updatedAt       DateTime             @updatedAt
   org             Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   lead            User?                @relation("mission_lead", fields: [leadId], references: [id], onDelete: SetNull)
+  logs            MissionLog[]
   participants    MissionParticipant[]
 
   @@index([orgId, status])
   @@index([missionType])
+}
+
+model MissionLog {
+  id        String   @id @default(cuid())
+  missionId String
+  authorId  String?
+  entryType String   @default("status")
+  message   String
+  createdAt DateTime @default(now())
+  author    User?    @relation("mission_log_author", fields: [authorId], references: [id], onDelete: SetNull)
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId, createdAt])
+  @@index([entryType])
 }
 
 model MissionParticipant {

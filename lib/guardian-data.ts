@@ -26,6 +26,17 @@ type MissionParticipantRecord = {
   notes: string | null;
 };
 
+type MissionLogRecord = {
+  id: string;
+  entryType: string;
+  message: string;
+  createdAt: Date;
+  author: {
+    handle: string;
+    displayName: string | null;
+  } | null;
+};
+
 type IntelReportRecord = {
   id: string;
   title: string;
@@ -125,6 +136,13 @@ type MissionDetailPayload = {
     missionBrief: string | null;
     leadDisplay: string;
     updatedAtLabel: string;
+    logs: {
+      id: string;
+      entryType: string;
+      message: string;
+      createdAtLabel: string;
+      authorDisplay: string;
+    }[];
     participants: {
       id: string;
       handle: string;
@@ -343,6 +361,17 @@ export async function getMissionDetailPageData(
         participants: {
           orderBy: [{ status: "asc" }, { createdAt: "asc" }],
         },
+        logs: {
+          orderBy: [{ createdAt: "desc" }],
+          include: {
+            author: {
+              select: {
+                handle: true,
+                displayName: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -374,6 +403,18 @@ export async function getMissionDetailPageData(
           hour: "2-digit",
           minute: "2-digit",
         }),
+        logs: mission.logs.map((log: MissionLogRecord) => ({
+          id: log.id,
+          entryType: log.entryType,
+          message: log.message,
+          createdAtLabel: log.createdAt.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          authorDisplay: log.author?.displayName || log.author?.handle || "Guardian",
+        })),
         participants: mission.participants.map((participant: MissionParticipantRecord) => ({
           id: participant.id,
           handle: participant.handle,

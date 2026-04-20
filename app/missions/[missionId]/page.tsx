@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, NotebookText, Shield, Users } from "lucide-react";
 import { MissionEditForm } from "@/components/mission-edit-form";
+import { MissionLogForm } from "@/components/mission-log-form";
 import { OpsShell } from "@/components/ops-shell";
 import { ParticipantAssignForm } from "@/components/participant-assign-form";
 import { ParticipantRosterManager } from "@/components/participant-roster-manager";
@@ -186,6 +187,41 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               )}
             </div>
           </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+            <div className="flex items-center gap-3">
+              <NotebookText size={18} className="text-amber-300" />
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Mission Timeline
+              </p>
+            </div>
+            <div className="mt-5 space-y-3">
+              {mission.logs.map((log) => (
+                <div
+                  key={log.id}
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
+                      {log.entryType}
+                    </p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
+                      {log.authorDisplay} / {log.createdAtLabel}
+                    </p>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    {log.message}
+                  </p>
+                </div>
+              ))}
+
+              {mission.logs.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                  No mission timeline entries logged yet.
+                </div>
+              ) : null}
+            </div>
+          </article>
         </div>
 
         <div className="space-y-6">
@@ -229,6 +265,21 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </p>
                 <div className="mt-6">
                   <ParticipantAssignForm missionId={mission.id} />
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                <div className="flex items-center gap-3">
+                  <NotebookText size={18} className="text-amber-300" />
+                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                    Log Timeline Entry
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  Record command updates, contact reports, and post-mission notes directly against the sortie.
+                </p>
+                <div className="mt-6">
+                  <MissionLogForm missionId={mission.id} />
                 </div>
               </section>
             </>

@@ -103,144 +103,279 @@ async function main() {
     ),
   );
 
-  await prisma.missionParticipant.deleteMany();
-  await prisma.mission.deleteMany({ where: { orgId: org.id } });
-  await prisma.intelReport.deleteMany({ where: { orgId: org.id } });
-  await prisma.rescueRequest.deleteMany({ where: { orgId: org.id } });
-  await prisma.qrfReadiness.deleteMany({ where: { orgId: org.id } });
-
   const [reaper, saber, viking] = users;
 
-  const missions = await Promise.all([
-    prisma.mission.create({
-      data: {
-        orgId: org.id,
-        callsign: "REAPER 11",
-        title: "Convoy Escort for High-Risk Medical Lift",
-        missionType: "escort",
-        status: "ready",
-        priority: "priority",
-        areaOfOperation: "Stanton / OM-5 to Seraphim corridor",
-        missionBrief:
-          "Escort a vulnerable logistics lift through a corridor with repeated pirate interdiction reports.",
-        roeCode: "weapons_tight",
-        leadId: reaper.id,
-        phases: [
-          "Marshal",
-          "Escort Linkup",
-          "Transit",
-          "Threat Intercept",
-          "Recovery",
-        ],
-      },
-    }),
-    prisma.mission.create({
-      data: {
-        orgId: org.id,
-        callsign: "GUARD 21",
-        title: "Priority Rescue Package for Downed Pilot",
-        missionType: "csar",
-        status: "active",
-        priority: "flash",
-        areaOfOperation: "Daymar / Wolf Point approach",
-        missionBrief:
-          "Recover survivor and escort damaged hull clear of known hostile loiter area.",
-        roeCode: "weapons_free",
-        leadId: viking.id,
-        phases: ["Alert", "Launch", "Escort Join", "Extract", "Egress"],
-      },
-    }),
-    prisma.mission.create({
-      data: {
-        orgId: org.id,
-        callsign: "LANCER 06",
-        title: "Threat Reconnaissance of Pirate Holding Area",
-        missionType: "recon",
-        status: "planning",
-        priority: "routine",
-        areaOfOperation: "Crusader / Yela belt edge",
-        missionBrief:
-          "Confirm recent contact reports, identify repeated ambush geometry, and refine route guidance.",
-        roeCode: "weapons_hold",
-        leadId: saber.id,
-        phases: ["Pre-brief", "Ingress", "Observe", "Report", "RTB"],
-      },
-    }),
-  ]);
+  const missionSeedDefinitions = [
+    {
+      callsign: "REAPER 11",
+      title: "Convoy Escort for High-Risk Medical Lift",
+      missionType: "escort",
+      status: "ready",
+      priority: "priority",
+      areaOfOperation: "Stanton / OM-5 to Seraphim corridor",
+      missionBrief:
+        "Escort a vulnerable logistics lift through a corridor with repeated pirate interdiction reports.",
+      roeCode: "weapons_tight",
+      leadId: reaper.id,
+      phases: [
+        "Marshal",
+        "Escort Linkup",
+        "Transit",
+        "Threat Intercept",
+        "Recovery",
+      ],
+    },
+    {
+      callsign: "GUARD 21",
+      title: "Priority Rescue Package for Downed Pilot",
+      missionType: "csar",
+      status: "active",
+      priority: "flash",
+      areaOfOperation: "Daymar / Wolf Point approach",
+      missionBrief:
+        "Recover survivor and escort damaged hull clear of known hostile loiter area.",
+      roeCode: "weapons_free",
+      leadId: viking.id,
+      phases: ["Alert", "Launch", "Escort Join", "Extract", "Egress"],
+    },
+    {
+      callsign: "LANCER 06",
+      title: "Threat Reconnaissance of Pirate Holding Area",
+      missionType: "recon",
+      status: "planning",
+      priority: "routine",
+      areaOfOperation: "Crusader / Yela belt edge",
+      missionBrief:
+        "Confirm recent contact reports, identify repeated ambush geometry, and refine route guidance.",
+      roeCode: "weapons_hold",
+      leadId: saber.id,
+      phases: ["Pre-brief", "Ingress", "Observe", "Report", "RTB"],
+    },
+  ];
 
-  await Promise.all([
-    prisma.missionParticipant.createMany({
-      data: [
-        {
-          missionId: missions[0].id,
-          handle: "REAPER11",
-          role: "mission lead",
-          platform: "F7A Mk II",
-          status: "accepted",
+  const missions = [];
+  for (const missionSeed of missionSeedDefinitions) {
+    const existingMission = await prisma.mission.findFirst({
+      where: {
+        orgId: org.id,
+        callsign: missionSeed.callsign,
+      },
+    });
+
+    const mission = existingMission
+      ? await prisma.mission.update({
+          where: { id: existingMission.id },
+          data: missionSeed,
+        })
+      : await prisma.mission.create({
+          data: {
+            orgId: org.id,
+            ...missionSeed,
+          },
+        });
+
+    missions.push(mission);
+  }
+
+  const missionParticipants = [
+    {
+      missionCallsign: "REAPER 11",
+      handle: "REAPER11",
+      role: "mission lead",
+      platform: "F7A Mk II",
+      status: "ready",
+      notes: "Own escort package and keep the convoy intact.",
+    },
+    {
+      missionCallsign: "REAPER 11",
+      handle: "SABER1",
+      role: "escort wing",
+      platform: "F8C Lightning",
+      status: "ready",
+      notes: "Hold high cover and break pirate intercept geometry.",
+    },
+    {
+      missionCallsign: "GUARD 21",
+      handle: "VIKING2",
+      role: "rescue coordinator",
+      platform: "Cutlass Red",
+      status: "launched",
+      notes: "Own survivor pickup and coordinate egress route.",
+    },
+  ];
+
+  for (const participantSeed of missionParticipants) {
+    const mission = missions.find(
+      (missionRecord) => missionRecord.callsign === participantSeed.missionCallsign,
+    );
+
+    if (!mission) {
+      continue;
+    }
+
+    const existingParticipant = await prisma.missionParticipant.findFirst({
+      where: {
+        missionId: mission.id,
+        handle: participantSeed.handle,
+        role: participantSeed.role,
+      },
+    });
+
+    if (!existingParticipant) {
+      await prisma.missionParticipant.create({
+        data: {
+          missionId: mission.id,
+          handle: participantSeed.handle,
+          role: participantSeed.role,
+          platform: participantSeed.platform,
+          status: participantSeed.status,
+          notes: participantSeed.notes,
         },
-        {
-          missionId: missions[0].id,
-          handle: "SABER1",
-          role: "escort wing",
-          platform: "F8C Lightning",
-          status: "accepted",
+      });
+    }
+  }
+
+  const missionLogs = [
+    {
+      missionCallsign: "REAPER 11",
+      authorId: reaper.id,
+      entryType: "command",
+      message: "Escort package brief complete. Convoy launch window remains green.",
+    },
+    {
+      missionCallsign: "REAPER 11",
+      authorId: saber.id,
+      entryType: "contact",
+      message: "Two hostile contacts reported near the Seraphim lane. Expect intercept geometry on egress.",
+    },
+    {
+      missionCallsign: "GUARD 21",
+      authorId: viking.id,
+      entryType: "status",
+      message: "Rescue bird launched. Survivor beacon intermittent but still viable.",
+    },
+  ];
+
+  for (const logSeed of missionLogs) {
+    const mission = missions.find(
+      (missionRecord) => missionRecord.callsign === logSeed.missionCallsign,
+    );
+
+    if (!mission) {
+      continue;
+    }
+
+    const existingLog = await prisma.missionLog.findFirst({
+      where: {
+        missionId: mission.id,
+        entryType: logSeed.entryType,
+        message: logSeed.message,
+      },
+    });
+
+    if (!existingLog) {
+      await prisma.missionLog.create({
+        data: {
+          missionId: mission.id,
+          authorId: logSeed.authorId,
+          entryType: logSeed.entryType,
+          message: logSeed.message,
         },
-        {
-          missionId: missions[1].id,
-          handle: "VIKING2",
-          role: "rescue coordinator",
-          platform: "Cutlass Red",
-          status: "accepted",
-        },
-      ],
-    }),
-    prisma.intelReport.createMany({
-      data: [
-        {
+      });
+    }
+  }
+
+  const intelSeeds = [
+    {
+      reportType: "pirate_sighting",
+      title: "Interdiction pack working common convoy lane",
+      description:
+        "Three-ship hostile cell observed loitering near the medical convoy corridor with repeated pull-and-finish behavior.",
+      severity: 5,
+      locationName: "Seraphim transit lane",
+      hostileGroup: "Unknown pirate cell",
+      confidence: "high",
+      tags: ["pirates", "convoy", "interdiction"],
+      isActive: true,
+      isVerified: true,
+    },
+    {
+      reportType: "route_hazard",
+      title: "Bait distress calls likely being used as lure",
+      description:
+        "Recent rescue traffic suggests false distress beacons are being used to pull solo responders into kill boxes.",
+      severity: 4,
+      locationName: "Daymar / Wolf Point",
+      hostileGroup: "Unconfirmed",
+      confidence: "medium",
+      tags: ["csar", "trap", "beacon"],
+      isActive: true,
+      isVerified: false,
+    },
+    {
+      reportType: "ganker_activity",
+      title: "Repeat contact reports near orbital departure lanes",
+      description:
+        "Fast movers repeatedly engaging underprepared haulers on departure from major hubs.",
+      severity: 3,
+      locationName: "Crusader orbital exits",
+      hostileGroup: "Mixed opportunists",
+      confidence: "medium",
+      tags: ["gankers", "departure", "haulers"],
+      isActive: true,
+      isVerified: false,
+    },
+  ];
+
+  for (const intelSeed of intelSeeds) {
+    const existingIntel = await prisma.intelReport.findFirst({
+      where: {
+        orgId: org.id,
+        title: intelSeed.title,
+      },
+    });
+
+    if (existingIntel) {
+      await prisma.intelReport.update({
+        where: { id: existingIntel.id },
+        data: intelSeed,
+      });
+    } else {
+      await prisma.intelReport.create({
+        data: {
           orgId: org.id,
-          reportType: "pirate_sighting",
-          title: "Interdiction pack working common convoy lane",
-          description:
-            "Three-ship hostile cell observed loitering near the medical convoy corridor with repeated pull-and-finish behavior.",
-          severity: 5,
-          locationName: "Seraphim transit lane",
-          hostileGroup: "Unknown pirate cell",
-          confidence: "high",
-          tags: ["pirates", "convoy", "interdiction"],
-          isActive: true,
-          isVerified: true,
+          ...intelSeed,
         },
-        {
-          orgId: org.id,
-          reportType: "route_hazard",
-          title: "Bait distress calls likely being used as lure",
-          description:
-            "Recent rescue traffic suggests false distress beacons are being used to pull solo responders into kill boxes.",
-          severity: 4,
-          locationName: "Daymar / Wolf Point",
-          hostileGroup: "Unconfirmed",
-          confidence: "medium",
-          tags: ["csar", "trap", "beacon"],
-          isActive: true,
-          isVerified: false,
-        },
-        {
-          orgId: org.id,
-          reportType: "ganker_activity",
-          title: "Repeat contact reports near orbital departure lanes",
-          description:
-            "Fast movers repeatedly engaging underprepared haulers on departure from major hubs.",
-          severity: 3,
-          locationName: "Crusader orbital exits",
-          hostileGroup: "Mixed opportunists",
-          confidence: "medium",
-          tags: ["gankers", "departure", "haulers"],
-          isActive: true,
-          isVerified: false,
-        },
-      ],
-    }),
-    prisma.rescueRequest.create({
+      });
+    }
+  }
+
+  const existingRescue = await prisma.rescueRequest.findFirst({
+    where: {
+      orgId: org.id,
+      survivorHandle: "ORBITER-4",
+    },
+  });
+
+  if (existingRescue) {
+    await prisma.rescueRequest.update({
+      where: { id: existingRescue.id },
+      data: {
+        requesterId: saber.id,
+        operatorId: viking.id,
+        locationName: "Daymar / Wolf Point approach",
+        status: "en_route",
+        urgency: "urgent",
+        threatSummary: "Possible hostile overwatch in area. Escort required.",
+        rescueNotes: "Damaged ship, limited mobility, beacon intermittent.",
+        escortRequired: true,
+        medicalRequired: true,
+        offeredPayment: 250000,
+        roeCode: "weapons_free",
+      },
+    });
+  } else {
+    await prisma.rescueRequest.create({
       data: {
         orgId: org.id,
         requesterId: saber.id,
@@ -256,39 +391,58 @@ async function main() {
         offeredPayment: 250000,
         roeCode: "weapons_free",
       },
-    }),
-    prisma.qrfReadiness.createMany({
-      data: [
-        {
+    });
+  }
+
+  const qrfSeeds = [
+    {
+      callsign: "SABER 1",
+      status: "redcon2",
+      platform: "F7A Mk II",
+      locationName: "Seraphim",
+      availableCrew: 1,
+      notes: "Launch in five.",
+    },
+    {
+      callsign: "VIKING 2",
+      status: "redcon3",
+      platform: "Cutlass Red",
+      locationName: "Guardian watch floor",
+      availableCrew: 2,
+      notes: "Medical package standing by.",
+    },
+    {
+      callsign: "HAWK 5",
+      status: "redcon2",
+      platform: "Ares Inferno",
+      locationName: "Everus Harbor",
+      availableCrew: 1,
+      notes: "Strike escort available.",
+    },
+  ];
+
+  for (const qrfSeed of qrfSeeds) {
+    const existingQrf = await prisma.qrfReadiness.findFirst({
+      where: {
+        orgId: org.id,
+        callsign: qrfSeed.callsign,
+      },
+    });
+
+    if (existingQrf) {
+      await prisma.qrfReadiness.update({
+        where: { id: existingQrf.id },
+        data: qrfSeed,
+      });
+    } else {
+      await prisma.qrfReadiness.create({
+        data: {
           orgId: org.id,
-          callsign: "SABER 1",
-          status: "redcon2",
-          platform: "F7A Mk II",
-          locationName: "Seraphim",
-          availableCrew: 1,
-          notes: "Launch in five.",
+          ...qrfSeed,
         },
-        {
-          orgId: org.id,
-          callsign: "VIKING 2",
-          status: "redcon3",
-          platform: "Cutlass Red",
-          locationName: "Guardian watch floor",
-          availableCrew: 2,
-          notes: "Medical package standing by.",
-        },
-        {
-          orgId: org.id,
-          callsign: "HAWK 5",
-          status: "redcon2",
-          platform: "Ares Inferno",
-          locationName: "Everus Harbor",
-          availableCrew: 1,
-          notes: "Strike escort available.",
-        },
-      ],
-    }),
-  ]);
+      });
+    }
+  }
 
   console.log("Guardian seed complete.");
 }
