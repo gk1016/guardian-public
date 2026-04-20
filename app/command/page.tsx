@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Activity,
+  AlertTriangle,
   BookCheck,
   Clock3,
   Crosshair,
@@ -88,6 +89,15 @@ export default async function CommandPage() {
                   <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-400">
                     {mission.packageSummary.readyOrLaunched}/{mission.participantCount} ready or launched / AO {mission.areaOfOperation ?? "pending"}
                   </p>
+                  {mission.packageDiscipline.warnings.length > 0 ? (
+                    <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-red-200">
+                        <AlertTriangle size={14} />
+                        Package alert
+                      </div>
+                      <p className="mt-2 leading-7">{mission.packageDiscipline.warnings[0]}</p>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>

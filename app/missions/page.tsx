@@ -88,6 +88,24 @@ export default async function MissionsPage() {
                   <span>{mission.packageSummary.readyOrLaunched}/{mission.participantCount} package ready</span>
                 </div>
               </div>
+
+              {mission.packageDiscipline.warnings.length > 0 ? (
+                <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-200">
+                    Package alert / {mission.packageDiscipline.coverageLabel}
+                  </p>
+                  <p className="mt-2 leading-7">{mission.packageDiscipline.warnings[0]}</p>
+                </div>
+              ) : (
+                <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-4 text-sm text-emerald-100">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
+                    Package structured
+                  </p>
+                  <p className="mt-2 leading-7">
+                    Required package roles are currently covered for this mission profile.
+                  </p>
+                </div>
+              )}
             </Link>
           ))}
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { evaluatePackageDiscipline, type PackageDiscipline } from "@/lib/package-discipline";
 
 type MissionWithParticipants = {
   id: string;
@@ -120,6 +121,7 @@ export type OverviewPayload = {
     areaOfOperation: string | null;
     participantCount: number;
     packageSummary: PackageSummary;
+    packageDiscipline: PackageDiscipline;
   }[];
   rescues: {
     id: string;
@@ -192,6 +194,7 @@ type MissionDetailPayload = {
     leadDisplay: string;
     updatedAtLabel: string;
     packageSummary: PackageSummary;
+    packageDiscipline: PackageDiscipline;
     doctrineTemplate: {
       id: string;
       code: string;
@@ -316,7 +319,15 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
           where: { orgId: org.id },
           orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
           take: 4,
-          include: { participants: true },
+          include: {
+            participants: true,
+            lead: {
+              select: {
+                handle: true,
+                displayName: true,
+              },
+            },
+          },
         }),
         prisma.rescueRequest.findMany({
           where: { orgId: org.id },
@@ -354,18 +365,29 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
       openRescueCount,
       activeIntelCount,
       qrfReadyCount,
-      missions: missions.map((mission: MissionWithParticipants) => ({
-        id: mission.id,
-        callsign: mission.callsign,
-        title: mission.title,
-        missionType: mission.missionType,
-        status: mission.status,
-        priority: mission.priority,
-        revisionNumber: mission.revisionNumber,
-        areaOfOperation: mission.areaOfOperation,
-        participantCount: mission.participants.length,
-        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
-      })),
+      missions: missions.map((mission: MissionWithParticipants) => {
+        const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
+
+        return {
+          id: mission.id,
+          callsign: mission.callsign,
+          title: mission.title,
+          missionType: mission.missionType,
+          status: mission.status,
+          priority: mission.priority,
+          revisionNumber: mission.revisionNumber,
+          areaOfOperation: mission.areaOfOperation,
+          participantCount: mission.participants.length,
+          packageSummary,
+          packageDiscipline: evaluatePackageDiscipline(
+            mission.missionType,
+            mission.participants as MissionParticipantRecord[],
+            mission.lead?.displayName || mission.lead?.handle || "Unassigned",
+            packageSummary.readinessLabel,
+            packageSummary.readyOrLaunched,
+          ),
+        };
+      }),
       rescues: rescues.map((rescue: RescueRequestRecord) => ({
         id: rescue.id,
         survivorHandle: rescue.survivorHandle,
@@ -421,6 +443,7 @@ export async function getMissionPageData(userId: string): Promise<
     missionBrief: string | null;
     participantCount: number;
     packageSummary: PackageSummary;
+    packageDiscipline: PackageDiscipline;
   }>
 > {
   try {
@@ -432,25 +455,44 @@ export async function getMissionPageData(userId: string): Promise<
     const missions = await prisma.mission.findMany({
       where: { orgId: org.id },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      include: { participants: true },
+      include: {
+        participants: true,
+        lead: {
+          select: {
+            handle: true,
+            displayName: true,
+          },
+        },
+      },
     });
 
     return {
       ok: true,
       orgName: org.name,
-      items: missions.map((mission: MissionWithParticipants) => ({
-        id: mission.id,
-        callsign: mission.callsign,
-        title: mission.title,
-        missionType: mission.missionType,
-        status: mission.status,
-        priority: mission.priority,
-        revisionNumber: mission.revisionNumber,
-        areaOfOperation: mission.areaOfOperation,
-        missionBrief: mission.missionBrief,
-        participantCount: mission.participants.length,
-        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
-      })),
+      items: missions.map((mission: MissionWithParticipants) => {
+        const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
+
+        return {
+          id: mission.id,
+          callsign: mission.callsign,
+          title: mission.title,
+          missionType: mission.missionType,
+          status: mission.status,
+          priority: mission.priority,
+          revisionNumber: mission.revisionNumber,
+          areaOfOperation: mission.areaOfOperation,
+          missionBrief: mission.missionBrief,
+          participantCount: mission.participants.length,
+          packageSummary,
+          packageDiscipline: evaluatePackageDiscipline(
+            mission.missionType,
+            mission.participants as MissionParticipantRecord[],
+            mission.lead?.displayName || mission.lead?.handle || "Unassigned",
+            packageSummary.readinessLabel,
+            packageSummary.readyOrLaunched,
+          ),
+        };
+      }),
     };
   } catch (error) {
     return {
@@ -570,6 +612,8 @@ export async function getMissionDetailPageData(
       },
     });
 
+    const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
+
     return {
       ok: true,
       orgName: org.name,
@@ -601,7 +645,14 @@ export async function getMissionDetailPageData(
           hour: "2-digit",
           minute: "2-digit",
         }),
-        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
+        packageSummary,
+        packageDiscipline: evaluatePackageDiscipline(
+          mission.missionType,
+          mission.participants as MissionParticipantRecord[],
+          mission.lead?.displayName || mission.lead?.handle || "Unassigned",
+          packageSummary.readinessLabel,
+          packageSummary.readyOrLaunched,
+        ),
         doctrineTemplate: mission.doctrineTemplate,
         availableDoctrineTemplates,
         linkedIntel: mission.intelLinks.map((link) => ({

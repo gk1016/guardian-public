@@ -169,6 +169,67 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
 
           <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
             <div className="flex items-center gap-3">
+              <AlertTriangle size={18} className="text-amber-300" />
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Package Discipline
+              </p>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Profile</p>
+                <p className="mt-3 font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+                  {mission.packageDiscipline.profileLabel}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                  Coverage {mission.packageDiscipline.coverageLabel}
+                </p>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-2">
+                {mission.packageDiscipline.roleChecks.map((roleCheck) => (
+                  <div key={roleCheck.key} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+                        {roleCheck.label}
+                      </p>
+                      <span className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] ${
+                        roleCheck.shortfall === 0
+                          ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
+                          : "border-red-500/20 bg-red-500/10 text-red-100"
+                      }`}>
+                        {roleCheck.matchedCount}/{roleCheck.requiredCount}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-slate-300">
+                      {roleCheck.matchedHandles.length > 0
+                        ? roleCheck.matchedHandles.join(", ")
+                        : "No assigned element currently matches this role."}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Warnings</p>
+                <div className="mt-3 space-y-3">
+                  {mission.packageDiscipline.warnings.length > 0 ? (
+                    mission.packageDiscipline.warnings.map((warning) => (
+                      <div key={warning} className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                        {warning}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+                      Required package roles are covered and the current sortie profile is structurally sound.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+            <div className="flex items-center gap-3">
               <FileCheck2 size={18} className="text-emerald-300" />
               <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
                 Closeout Package
