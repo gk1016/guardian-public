@@ -21,14 +21,27 @@ type Participant = {
   notes: string | null;
 };
 
+type CrewCandidate = {
+  handle: string;
+  displayName: string | null;
+  orgRole: string;
+  membershipTitle: string | null;
+  qrfStatus: string | null;
+  suggestedPlatform: string | null;
+  sourceLabel: string;
+  notes: string | null;
+};
+
 type ParticipantRosterManagerProps = {
   missionId: string;
   participants: Participant[];
+  availableCrew: CrewCandidate[];
 };
 
 export function ParticipantRosterManager({
   missionId,
   participants,
+  availableCrew,
 }: ParticipantRosterManagerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -123,9 +136,63 @@ export function ParticipantRosterManager({
     });
   }
 
+  function scoreCrewCandidate(role: string, candidate: CrewCandidate) {
+    const roleText = role.toLowerCase();
+    const profile = `${candidate.orgRole} ${candidate.membershipTitle ?? ""} ${candidate.suggestedPlatform ?? ""} ${candidate.qrfStatus ?? ""}`.toLowerCase();
+    let score = candidate.qrfStatus ? 4 : 0;
+
+    if (roleText.includes("rescue") || roleText.includes("medical")) {
+      if (profile.includes("rescue") || profile.includes("medical") || profile.includes("cutlass red")) {
+        score += 6;
+      }
+    }
+
+    if (roleText.includes("escort") || roleText.includes("wing") || roleText.includes("cap")) {
+      if (profile.includes("pilot") || profile.includes("f7") || profile.includes("f8") || profile.includes("escort")) {
+        score += 5;
+      }
+    }
+
+    if (roleText.includes("recon") || roleText.includes("overwatch")) {
+      if (profile.includes("recon") || profile.includes("tracker") || profile.includes("overwatch")) {
+        score += 6;
+      }
+    }
+
+    if (roleText.includes("reserve") || roleText.includes("response")) {
+      if (profile.includes("redcon") || profile.includes("reserve") || profile.includes("pilot")) {
+        score += 5;
+      }
+    }
+
+    return score;
+  }
+
+  function getRecommendedCrew(role: string) {
+    return [...availableCrew]
+      .sort((left, right) => scoreCrewCandidate(role, right) - scoreCrewCandidate(role, left))
+      .slice(0, 3);
+  }
+
+  function applyCrewSuggestion(participantId: string, candidate: CrewCandidate) {
+    setParticipantDrafts((current) => ({
+      ...current,
+      [participantId]: {
+        ...current[participantId],
+        handle: candidate.handle,
+        platform: candidate.suggestedPlatform ?? current[participantId]?.platform ?? "",
+        status: current[participantId]?.status === "open" ? "assigned" : current[participantId]?.status ?? "assigned",
+        notes: candidate.notes ?? current[participantId]?.notes ?? "",
+      },
+    }));
+  }
+
   return (
     <div className="space-y-4">
       {participants.map((participant) => (
+        (() => {
+          const recommendedCrew = getRecommendedCrew(participantDrafts[participant.id]?.role ?? participant.role);
+          return (
         <div
           key={participant.id}
           className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
@@ -220,7 +287,40 @@ export function ParticipantRosterManager({
               className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
             />
           </label>
+
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Quick Fill Recommendations</p>
+            <div className="mt-3 grid gap-3">
+              {recommendedCrew.map((candidate) => (
+                <button
+                  key={`${participant.id}-${candidate.handle}`}
+                  type="button"
+                  onClick={() => applyCrewSuggestion(participant.id, candidate)}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+                >
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+                      {candidate.displayName ?? candidate.handle}
+                    </p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                      {candidate.handle} / {candidate.suggestedPlatform ?? "Platform pending"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs uppercase tracking-[0.16em] text-cyan-100">
+                      {candidate.qrfStatus ?? candidate.sourceLabel}
+                    </p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                      {candidate.orgRole}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+          );
+        })()
       ))}
 
       {participants.length === 0 ? (

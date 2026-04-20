@@ -53,6 +53,17 @@ type PackageSummary = {
   readinessLabel: string;
 };
 
+type CrewCandidate = {
+  handle: string;
+  displayName: string | null;
+  orgRole: string;
+  membershipTitle: string | null;
+  qrfStatus: string | null;
+  suggestedPlatform: string | null;
+  sourceLabel: string;
+  notes: string | null;
+};
+
 type MissionLogRecord = {
   id: string;
   entryType: string;
@@ -103,6 +114,7 @@ type QrfReadinessRecord = {
   platform: string | null;
   locationName: string | null;
   availableCrew: number;
+  notes: string | null;
 };
 
 export type OverviewPayload = {
@@ -242,6 +254,7 @@ type MissionDetailPayload = {
       status: string;
       notes: string | null;
     }[];
+    availableCrew: CrewCandidate[];
   } | null;
   error?: string;
 };
@@ -249,6 +262,72 @@ type MissionDetailPayload = {
 async function getPrimaryOrg() {
   return prisma.organization.findFirst({
     orderBy: { createdAt: "asc" },
+  });
+}
+
+function normalizeHandle(value: string | null | undefined) {
+  return (value ?? "").replaceAll(/\s+/g, "").trim().toUpperCase();
+}
+
+function buildCrewCandidates(
+  members: Array<{
+    title: string | null;
+    user: {
+      handle: string;
+      displayName: string | null;
+      role: string;
+    };
+  }>,
+  qrfEntries: QrfReadinessRecord[],
+) {
+  const qrfByHandle = new Map(
+    qrfEntries.map((entry) => [
+      normalizeHandle(entry.callsign),
+      entry,
+    ]),
+  );
+
+  const candidates = members.map((member) => {
+    const qrfEntry = qrfByHandle.get(normalizeHandle(member.user.handle)) ?? null;
+
+    return {
+      handle: member.user.handle,
+      displayName: member.user.displayName,
+      orgRole: member.user.role,
+      membershipTitle: member.title,
+      qrfStatus: qrfEntry?.status ?? null,
+      suggestedPlatform: qrfEntry?.platform ?? null,
+      sourceLabel: qrfEntry ? "QRF + Org" : "Org roster",
+      notes: qrfEntry?.notes ?? member.title ?? null,
+    } satisfies CrewCandidate;
+  });
+
+  for (const qrfEntry of qrfEntries) {
+    const handle = normalizeHandle(qrfEntry.callsign);
+    if (candidates.some((candidate) => normalizeHandle(candidate.handle) === handle)) {
+      continue;
+    }
+
+    candidates.push({
+      handle: qrfEntry.callsign.replaceAll(" ", "").toUpperCase(),
+      displayName: qrfEntry.callsign,
+      orgRole: "watchfloor",
+      membershipTitle: null,
+      qrfStatus: qrfEntry.status,
+      suggestedPlatform: qrfEntry.platform,
+      sourceLabel: "QRF board",
+      notes: qrfEntry.locationName ?? null,
+    });
+  }
+
+  return candidates.sort((left, right) => {
+    const leftQrf = left.qrfStatus ? 0 : 1;
+    const rightQrf = right.qrfStatus ? 0 : 1;
+    if (leftQrf !== rightQrf) {
+      return leftQrf - rightQrf;
+    }
+
+    return left.handle.localeCompare(right.handle);
   });
 }
 
@@ -633,6 +712,40 @@ export async function getMissionDetailPageData(
       },
     });
 
+    const [members, qrfEntries] = await Promise.all([
+      prisma.orgMember.findMany({
+        where: {
+          orgId: org.id,
+        },
+        orderBy: [{ rank: "asc" }, { joinedAt: "asc" }],
+        select: {
+          title: true,
+          user: {
+            select: {
+              handle: true,
+              displayName: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      prisma.qrfReadiness.findMany({
+        where: {
+          orgId: org.id,
+        },
+        orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+        select: {
+          id: true,
+          callsign: true,
+          status: true,
+          platform: true,
+          locationName: true,
+          availableCrew: true,
+          notes: true,
+        },
+      }),
+    ]);
+
     const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
 
     return {
@@ -709,6 +822,7 @@ export async function getMissionDetailPageData(
           status: participant.status,
           notes: participant.notes,
         })),
+        availableCrew: buildCrewCandidates(members, qrfEntries),
       },
     };
   } catch (error) {

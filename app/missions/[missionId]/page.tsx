@@ -354,6 +354,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 <ParticipantRosterManager
                   missionId={mission.id}
                   participants={mission.participants}
+                  availableCrew={mission.availableCrew}
                 />
               ) : (
                 <div className="space-y-3">
