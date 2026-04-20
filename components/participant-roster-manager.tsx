@@ -189,10 +189,10 @@ export function ParticipantRosterManager({
 
   return (
     <div className="space-y-4">
-      {participants.map((participant) => (
-        (() => {
-          const recommendedCrew = getRecommendedCrew(participantDrafts[participant.id]?.role ?? participant.role);
-          return (
+      {participants.map((participant) => {
+        const recommendedCrew = getRecommendedCrew(participantDrafts[participant.id]?.role ?? participant.role);
+
+        return (
         <div
           key={participant.id}
           className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
@@ -319,9 +319,8 @@ export function ParticipantRosterManager({
             </div>
           </div>
         </div>
-          );
-        })()
-      ))}
+        );
+      })}
 
       {participants.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
