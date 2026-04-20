@@ -30,6 +30,14 @@ type CrewCandidate = {
   suggestedPlatform: string | null;
   sourceLabel: string;
   notes: string | null;
+  commitments: {
+    missionId: string;
+    callsign: string;
+    missionStatus: string;
+    assignmentStatus: string;
+    role: string;
+  }[];
+  availabilityLabel: "available" | "tasked" | "engaged";
 };
 
 type ParticipantRosterManagerProps = {
@@ -165,6 +173,14 @@ export function ParticipantRosterManager({
       }
     }
 
+    if (candidate.availabilityLabel === "tasked") {
+      score -= 4;
+    }
+
+    if (candidate.availabilityLabel === "engaged") {
+      score -= 10;
+    }
+
     return score;
   }
 
@@ -185,6 +201,18 @@ export function ParticipantRosterManager({
         notes: candidate.notes ?? current[participantId]?.notes ?? "",
       },
     }));
+  }
+
+  function availabilityTone(availabilityLabel: CrewCandidate["availabilityLabel"]) {
+    if (availabilityLabel === "engaged") {
+      return "border-red-500/20 bg-red-500/10 text-red-100";
+    }
+
+    if (availabilityLabel === "tasked") {
+      return "border-amber-400/20 bg-amber-400/10 text-amber-100";
+    }
+
+    return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
   }
 
   return (
@@ -305,9 +333,17 @@ export function ParticipantRosterManager({
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
                       {candidate.handle} / {candidate.suggestedPlatform ?? "Platform pending"}
                     </p>
+                    {candidate.commitments.length > 0 ? (
+                      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                        {candidate.commitments[0].callsign} / {candidate.commitments[0].assignmentStatus} / {candidate.commitments[0].role}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="text-right">
-                    <p className="text-xs uppercase tracking-[0.16em] text-cyan-100">
+                    <p className={`inline-flex rounded-full border px-3 py-1 text-xs uppercase tracking-[0.16em] ${availabilityTone(candidate.availabilityLabel)}`}>
+                      {candidate.availabilityLabel}
+                    </p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-cyan-100">
                       {candidate.qrfStatus ?? candidate.sourceLabel}
                     </p>
                     <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">

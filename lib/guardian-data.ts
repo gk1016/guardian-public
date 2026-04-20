@@ -62,6 +62,14 @@ type CrewCandidate = {
   suggestedPlatform: string | null;
   sourceLabel: string;
   notes: string | null;
+  commitments: {
+    missionId: string;
+    callsign: string;
+    missionStatus: string;
+    assignmentStatus: string;
+    role: string;
+  }[];
+  availabilityLabel: "available" | "tasked" | "engaged";
 };
 
 type MissionLogRecord = {
@@ -279,7 +287,65 @@ function buildCrewCandidates(
     };
   }>,
   qrfEntries: QrfReadinessRecord[],
+  activeMissionAssignments: Array<{
+    id: string;
+    callsign: string;
+    status: string;
+    lead: {
+      handle: string;
+      displayName: string | null;
+    } | null;
+    participants: MissionParticipantRecord[];
+  }>,
+  currentMissionId: string,
 ) {
+  const commitmentsByHandle = new Map<
+    string,
+    {
+      missionId: string;
+      callsign: string;
+      missionStatus: string;
+      assignmentStatus: string;
+      role: string;
+    }[]
+  >();
+
+  for (const mission of activeMissionAssignments) {
+    if (mission.id === currentMissionId) {
+      continue;
+    }
+
+    if (mission.lead?.handle) {
+      const normalizedLead = normalizeHandle(mission.lead.handle);
+      const existingLeadCommitments = commitmentsByHandle.get(normalizedLead) ?? [];
+      existingLeadCommitments.push({
+        missionId: mission.id,
+        callsign: mission.callsign,
+        missionStatus: mission.status,
+        assignmentStatus: "lead",
+        role: "mission lead",
+      });
+      commitmentsByHandle.set(normalizedLead, existingLeadCommitments);
+    }
+
+    for (const participant of mission.participants) {
+      if (participant.status === "open") {
+        continue;
+      }
+
+      const normalizedHandle = normalizeHandle(participant.handle);
+      const existingCommitments = commitmentsByHandle.get(normalizedHandle) ?? [];
+      existingCommitments.push({
+        missionId: mission.id,
+        callsign: mission.callsign,
+        missionStatus: mission.status,
+        assignmentStatus: participant.status,
+        role: participant.role,
+      });
+      commitmentsByHandle.set(normalizedHandle, existingCommitments);
+    }
+  }
+
   const qrfByHandle = new Map(
     qrfEntries.map((entry) => [
       normalizeHandle(entry.callsign),
@@ -289,6 +355,10 @@ function buildCrewCandidates(
 
   const candidates = members.map((member) => {
     const qrfEntry = qrfByHandle.get(normalizeHandle(member.user.handle)) ?? null;
+    const commitments = commitmentsByHandle.get(normalizeHandle(member.user.handle)) ?? [];
+    const hasEngagedCommitment = commitments.some((commitment) =>
+      ["ready", "launched", "lead"].includes(commitment.assignmentStatus),
+    );
 
     return {
       handle: member.user.handle,
@@ -299,6 +369,8 @@ function buildCrewCandidates(
       suggestedPlatform: qrfEntry?.platform ?? null,
       sourceLabel: qrfEntry ? "QRF + Org" : "Org roster",
       notes: qrfEntry?.notes ?? member.title ?? null,
+      commitments,
+      availabilityLabel: hasEngagedCommitment ? "engaged" : commitments.length > 0 ? "tasked" : "available",
     } satisfies CrewCandidate;
   });
 
@@ -317,6 +389,14 @@ function buildCrewCandidates(
       suggestedPlatform: qrfEntry.platform,
       sourceLabel: "QRF board",
       notes: qrfEntry.locationName ?? null,
+      commitments: commitmentsByHandle.get(handle) ?? [],
+      availabilityLabel: (commitmentsByHandle.get(handle) ?? []).some((commitment) =>
+        ["ready", "launched", "lead"].includes(commitment.assignmentStatus),
+      )
+        ? "engaged"
+        : (commitmentsByHandle.get(handle) ?? []).length > 0
+          ? "tasked"
+          : "available",
     });
   }
 
@@ -746,6 +826,36 @@ export async function getMissionDetailPageData(
       }),
     ]);
 
+    const activeMissionAssignments = await prisma.mission.findMany({
+      where: {
+        orgId: org.id,
+        status: {
+          in: ["planning", "ready", "active"],
+        },
+      },
+      select: {
+        id: true,
+        callsign: true,
+        status: true,
+        lead: {
+          select: {
+            handle: true,
+            displayName: true,
+          },
+        },
+        participants: {
+          select: {
+            id: true,
+            handle: true,
+            role: true,
+            platform: true,
+            status: true,
+            notes: true,
+          },
+        },
+      },
+    });
+
     const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
 
     return {
@@ -822,7 +932,7 @@ export async function getMissionDetailPageData(
           status: participant.status,
           notes: participant.notes,
         })),
-        availableCrew: buildCrewCandidates(members, qrfEntries),
+        availableCrew: buildCrewCandidates(members, qrfEntries, activeMissionAssignments, mission.id),
       },
     };
   } catch (error) {
