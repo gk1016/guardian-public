@@ -72,7 +72,8 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch {
+  } catch (error) {
+    console.error("Guardian login failed", error);
     return NextResponse.json(
       { error: "Failed to sign in." },
       { status: 500 },
