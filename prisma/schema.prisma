@@ -22,6 +22,9 @@ model User {
   missionLogs  MissionLog[]  @relation("mission_log_author")
   rescueOwned  RescueRequest[] @relation("rescue_requester")
   rescueOps    RescueRequest[] @relation("rescue_operator")
+  qrfDispatches QrfDispatch[] @relation("qrf_dispatch_author")
+  incidentsReported Incident[] @relation("incident_reporter")
+  incidentsReviewed Incident[] @relation("incident_reviewer")
 }
 
 model Organization {
@@ -38,6 +41,8 @@ model Organization {
   intel       IntelReport[]
   rescues     RescueRequest[]
   qrfReadiness QrfReadiness[]
+  qrfDispatches QrfDispatch[]
+  incidents   Incident[]
 }
 
 model OrgMember {
@@ -82,6 +87,8 @@ model Mission {
   intelLinks      MissionIntelLink[]
   logs            MissionLog[]
   participants    MissionParticipant[]
+  qrfDispatches   QrfDispatch[]
+  incidents       Incident[]
 
   @@index([orgId, status])
   @@index([doctrineTemplateId])
@@ -184,6 +191,8 @@ model RescueRequest {
   urgency           String       @default("routine")
   threatSummary     String?
   rescueNotes       String?
+  survivorCondition String?
+  outcomeSummary    String?
   escortRequired    Boolean      @default(false)
   medicalRequired   Boolean      @default(false)
   offeredPayment    Int?
@@ -193,6 +202,8 @@ model RescueRequest {
   org               Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
   requester         User         @relation("rescue_requester", fields: [requesterId], references: [id], onDelete: Cascade)
   operator          User?        @relation("rescue_operator", fields: [operatorId], references: [id], onDelete: SetNull)
+  dispatches        QrfDispatch[]
+  incidents         Incident[]
 
   @@index([orgId, status])
   @@index([urgency])
@@ -210,6 +221,62 @@ model QrfReadiness {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  dispatches    QrfDispatch[]
 
   @@index([orgId, status])
+}
+
+model QrfDispatch {
+  id             String        @id @default(cuid())
+  orgId          String
+  qrfId          String
+  missionId      String?
+  rescueId       String?
+  dispatchedById String
+  status         String        @default("tasked")
+  notes          String?
+  dispatchedAt   DateTime      @default(now())
+  arrivedAt      DateTime?
+  rtbAt          DateTime?
+  updatedAt      DateTime      @updatedAt
+  org            Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  qrf            QrfReadiness  @relation(fields: [qrfId], references: [id], onDelete: Cascade)
+  mission        Mission?      @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  rescue         RescueRequest? @relation(fields: [rescueId], references: [id], onDelete: SetNull)
+  dispatchedBy   User          @relation("qrf_dispatch_author", fields: [dispatchedById], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status])
+  @@index([qrfId, dispatchedAt])
+  @@index([missionId])
+  @@index([rescueId])
+}
+
+model Incident {
+  id             String        @id @default(cuid())
+  orgId          String
+  missionId      String?
+  rescueId       String?
+  reporterId     String
+  reviewerId     String?
+  title          String
+  category       String        @default("contact")
+  severity       Int           @default(3)
+  status         String        @default("open")
+  summary        String
+  lessonsLearned String?
+  actionItems    String?
+  publicSummary  String?
+  closedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  org            Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  mission        Mission?      @relation(fields: [missionId], references: [id], onDelete: SetNull)
+  rescue         RescueRequest? @relation(fields: [rescueId], references: [id], onDelete: SetNull)
+  reporter       User          @relation("incident_reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewer       User?         @relation("incident_reviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status])
+  @@index([missionId])
+  @@index([rescueId])
+  @@index([severity])
 }

@@ -79,12 +79,11 @@ export default function Home() {
             </p>
           </div>
           <nav className="hidden gap-6 text-sm uppercase tracking-[0.24em] text-slate-300 md:flex">
-            <a href="#modules" className="transition hover:text-white">
-              Modules
-            </a>
-            <a href="#ethos" className="transition hover:text-white">
-              Ethos
-            </a>
+            <Link href="/about" className="transition hover:text-white">About</Link>
+            <Link href="/ops" className="transition hover:text-white">Ops</Link>
+            <Link href="/standards" className="transition hover:text-white">Standards</Link>
+            <Link href="/recruit" className="transition hover:text-white">Recruit</Link>
+            <Link href="/aar" className="transition hover:text-white">AAR</Link>
             <Link href="/login" className="transition hover:text-white">
               Sign In
             </Link>
@@ -119,12 +118,12 @@ export default function Home() {
               >
                 Review Live Mission Board
               </Link>
-              <a
-                href="#modules"
+              <Link
+                href="/ops"
                 className="inline-flex items-center justify-center rounded-md border border-white/15 bg-white/5 px-5 py-3 font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
               >
-                Review Modules
-              </a>
+                Review Workflows
+              </Link>
             </div>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -252,8 +251,8 @@ export default function Home() {
           <div>
             <p className="text-sm uppercase tracking-[0.22em] text-slate-400">Bootstrap Status</p>
             <p className="mt-2 max-w-3xl text-lg leading-8 text-white">
-              Repo, landing page, command shell, Docker, Prisma, and seeded operational boards are now
-              live. Next slices should wire auth, mission CRUD, and guarded mutation workflows.
+              Guardian now carries missions, QRF dispatch, CSAR workflow, incidents, doctrine, and
+              public after-action pages. The remaining work is hardening and expanding, not proving the shape.
             </p>
           </div>
           <Link

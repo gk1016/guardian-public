@@ -180,10 +180,16 @@ export default async function CommandPage() {
                 <Link href="/missions" className="transition hover:text-white">Mission board</Link>
               </li>
               <li>
+                <Link href="/qrf" className="transition hover:text-white">QRF dispatch</Link>
+              </li>
+              <li>
                 <Link href="/intel" className="transition hover:text-white">Threat picture</Link>
               </li>
               <li>
                 <Link href="/rescues" className="transition hover:text-white">Rescue board</Link>
+              </li>
+              <li>
+                <Link href="/incidents" className="transition hover:text-white">Incident review</Link>
               </li>
               <li>
                 <Link href="/doctrine" className="transition hover:text-white">ROE and doctrine</Link>
@@ -199,7 +205,7 @@ export default async function CommandPage() {
               </p>
             </div>
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              Auth, mission mutation, intel linkage, closeout, reopen, and doctrine are now online. Next useful slice is participant readiness and deeper mission-package control, not more scaffolding theater.
+              QRF dispatch, CSAR intake, incident review, and the public ops pages are now online alongside mission control. The shape is here; now the job is hardening and refinement.
             </p>
           </article>
 

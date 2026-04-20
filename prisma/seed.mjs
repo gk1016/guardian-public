@@ -430,6 +430,8 @@ async function main() {
         urgency: "urgent",
         threatSummary: "Possible hostile overwatch in area. Escort required.",
         rescueNotes: "Damaged ship, limited mobility, beacon intermittent.",
+        survivorCondition: "Minor injuries, degraded quantum drive, low fuel.",
+        outcomeSummary: null,
         escortRequired: true,
         medicalRequired: true,
         offeredPayment: 250000,
@@ -448,6 +450,8 @@ async function main() {
         urgency: "urgent",
         threatSummary: "Possible hostile overwatch in area. Escort required.",
         rescueNotes: "Damaged ship, limited mobility, beacon intermittent.",
+        survivorCondition: "Minor injuries, degraded quantum drive, low fuel.",
+        outcomeSummary: null,
         escortRequired: true,
         medicalRequired: true,
         offeredPayment: 250000,
@@ -501,6 +505,144 @@ async function main() {
         data: {
           orgId: org.id,
           ...qrfSeed,
+        },
+      });
+    }
+  }
+
+  const qrfAssets = await prisma.qrfReadiness.findMany({
+    where: { orgId: org.id },
+  });
+
+  const saberQrf = qrfAssets.find((entry) => entry.callsign === "SABER 1");
+  const vikingQrf = qrfAssets.find((entry) => entry.callsign === "VIKING 2");
+  const guardMission = missions.find((mission) => mission.callsign === "GUARD 21");
+  const reaperMission = missions.find((mission) => mission.callsign === "REAPER 11");
+  const orbiterRescue = await prisma.rescueRequest.findFirst({
+    where: {
+      orgId: org.id,
+      survivorHandle: "ORBITER-4",
+    },
+  });
+
+  if (vikingQrf && orbiterRescue) {
+    const existingDispatch = await prisma.qrfDispatch.findFirst({
+      where: {
+        qrfId: vikingQrf.id,
+        rescueId: orbiterRescue.id,
+      },
+    });
+
+    const dispatchData = {
+      orgId: org.id,
+      missionId: guardMission?.id ?? null,
+      dispatchedById: reaper.id,
+      status: "en_route",
+      notes: "Medical bird launched with escort screen pending final handoff.",
+      arrivedAt: null,
+      rtbAt: null,
+    };
+
+    if (existingDispatch) {
+      await prisma.qrfDispatch.update({
+        where: { id: existingDispatch.id },
+        data: dispatchData,
+      });
+    } else {
+      await prisma.qrfDispatch.create({
+        data: {
+          qrfId: vikingQrf.id,
+          rescueId: orbiterRescue.id,
+          ...dispatchData,
+        },
+      });
+    }
+  }
+
+  if (saberQrf && reaperMission) {
+    const existingDispatch = await prisma.qrfDispatch.findFirst({
+      where: {
+        qrfId: saberQrf.id,
+        missionId: reaperMission.id,
+      },
+    });
+
+    if (!existingDispatch) {
+      await prisma.qrfDispatch.create({
+        data: {
+          orgId: org.id,
+          qrfId: saberQrf.id,
+          missionId: reaperMission.id,
+          dispatchedById: reaper.id,
+          status: "tasked",
+          notes: "Escort element standing by to cover convoy departure window.",
+        },
+      });
+    }
+  }
+
+  const incidentSeeds = [
+    {
+      title: "False distress beacon used to pull responders off route",
+      category: "rescue-trap",
+      severity: 4,
+      status: "open",
+      summary:
+        "Responder package observed a likely bait beacon positioned to drag solo pilots into a prepared kill box near Wolf Point.",
+      lessonsLearned:
+        "Do not commit solo rescue traffic into an unvetted beacon. Pair intake review with the live threat board before launch.",
+      actionItems:
+        "Keep escort mandatory on high-risk Daymar pickups and cross-check distress traffic against recent hostile sightings.",
+      publicSummary:
+        "Guardian identified a probable bait beacon pattern near Wolf Point and adjusted escort posture before committing rescue traffic.",
+      reporterId: viking.id,
+      reviewerId: reaper.id,
+      missionId: guardMission?.id ?? null,
+      rescueId: orbiterRescue?.id ?? null,
+      closedAt: null,
+    },
+    {
+      title: "Convoy intercept geometry forced escort split",
+      category: "contact",
+      severity: 3,
+      status: "closed",
+      summary:
+        "Escort package had to split high and low cover to keep the convoy intact after hostile contacts bracketed the lane.",
+      lessonsLearned:
+        "Reserve element positioning mattered more than outright speed. The convoy survived because one section stayed disciplined instead of chasing.",
+      actionItems:
+        "Seed reserve escort slots by default on medical-lift profiles and tighten merge comm brevity.",
+      publicSummary:
+        "Guardian reviewed a convoy escort engagement and tightened reserve-element doctrine after the package held formation under pressure.",
+      reporterId: reaper.id,
+      reviewerId: reaper.id,
+      missionId: reaperMission?.id ?? null,
+      rescueId: null,
+      closedAt: new Date(),
+    },
+  ];
+
+  for (const incidentSeed of incidentSeeds) {
+    const existingIncident = await prisma.incident.findFirst({
+      where: {
+        orgId: org.id,
+        title: incidentSeed.title,
+      },
+    });
+
+    if (existingIncident) {
+      await prisma.incident.update({
+        where: { id: existingIncident.id },
+        data: {
+          ...incidentSeed,
+          orgId: org.id,
+        },
+      });
+    } else {
+      await prisma.incident.create({
+        data: {
+          orgId: org.id,
+          ...incidentSeed,
         },
       });
     }
