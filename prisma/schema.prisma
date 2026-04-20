@@ -61,6 +61,7 @@ model Mission {
   missionType     String
   status          String               @default("planning")
   priority        String               @default("routine")
+  revisionNumber  Int                  @default(1)
   areaOfOperation String?
   missionBrief    String?
   closeoutSummary String?

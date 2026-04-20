@@ -7,6 +7,7 @@ type MissionWithParticipants = {
   missionType: string;
   status: string;
   priority: string;
+  revisionNumber: number;
   areaOfOperation: string | null;
   missionBrief: string | null;
   closeoutSummary: string | null;
@@ -94,6 +95,7 @@ export type OverviewPayload = {
     missionType: string;
     status: string;
     priority: string;
+    revisionNumber: number;
     areaOfOperation: string | null;
     participantCount: number;
   }[];
@@ -141,6 +143,7 @@ type MissionDetailPayload = {
     missionType: string;
     status: string;
     priority: string;
+    revisionNumber: number;
     areaOfOperation: string | null;
     missionBrief: string | null;
     closeoutSummary: string | null;
@@ -267,6 +270,7 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
         missionType: mission.missionType,
         status: mission.status,
         priority: mission.priority,
+        revisionNumber: mission.revisionNumber,
         areaOfOperation: mission.areaOfOperation,
         participantCount: mission.participants.length,
       })),
@@ -320,6 +324,7 @@ export async function getMissionPageData(userId: string): Promise<
     missionType: string;
     status: string;
     priority: string;
+    revisionNumber: number;
     areaOfOperation: string | null;
     missionBrief: string | null;
     participantCount: number;
@@ -347,6 +352,7 @@ export async function getMissionPageData(userId: string): Promise<
         missionType: mission.missionType,
         status: mission.status,
         priority: mission.priority,
+        revisionNumber: mission.revisionNumber,
         areaOfOperation: mission.areaOfOperation,
         missionBrief: mission.missionBrief,
         participantCount: mission.participants.length,
@@ -455,6 +461,7 @@ export async function getMissionDetailPageData(
         missionType: mission.missionType,
         status: mission.status,
         priority: mission.priority,
+        revisionNumber: mission.revisionNumber,
         areaOfOperation: mission.areaOfOperation,
         missionBrief: mission.missionBrief,
         closeoutSummary: mission.closeoutSummary,

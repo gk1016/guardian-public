@@ -9,7 +9,7 @@ const missionUpdateSchema = z.object({
   callsign: z.string().trim().min(2).max(24),
   title: z.string().trim().min(4).max(120),
   missionType: z.string().trim().min(3).max(40),
-  status: z.enum(["planning", "ready", "active", "complete", "aborted"]),
+  status: z.enum(["planning", "ready", "active"]),
   priority: z.enum(["routine", "priority", "critical"]),
   areaOfOperation: z.string().trim().max(80).optional(),
   missionBrief: z.string().trim().max(2000).optional(),
@@ -68,12 +68,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       priority: payload.data.priority,
       areaOfOperation: payload.data.areaOfOperation || null,
       missionBrief: payload.data.missionBrief || null,
-      completedAt:
-        payload.data.status === "complete"
-          ? new Date()
-          : existingMission.status === "complete"
-            ? null
-            : undefined,
+      completedAt: ["complete", "aborted"].includes(existingMission.status) ? null : undefined,
     },
     select: {
       id: true,

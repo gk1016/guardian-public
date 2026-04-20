@@ -8,8 +8,6 @@ const statusOptions = [
   { value: "planning", label: "Planning" },
   { value: "ready", label: "Ready" },
   { value: "active", label: "Active" },
-  { value: "complete", label: "Complete" },
-  { value: "aborted", label: "Aborted" },
 ] as const;
 
 const priorityOptions = [

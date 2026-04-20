@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Radar, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Radar, RotateCcw, Shield, Users } from "lucide-react";
 import { MissionCloseoutForm } from "@/components/mission-closeout-form";
 import { MissionEditForm } from "@/components/mission-edit-form";
 import { MissionIntelLinkForm } from "@/components/mission-intel-link-form";
 import { MissionLogForm } from "@/components/mission-log-form";
+import { MissionReopenForm } from "@/components/mission-reopen-form";
 import { OpsShell } from "@/components/ops-shell";
 import { ParticipantAssignForm } from "@/components/participant-assign-form";
 import { LinkedIntelManager } from "@/components/linked-intel-manager";
@@ -25,6 +26,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
   const { missionId } = await params;
   const data = await getMissionDetailPageData(session.userId, missionId);
   const canManageMission = canManageMissions(session.role);
+  const isClosedMission = data.mission?.status === "complete" || data.mission?.status === "aborted";
 
   if (!data.mission) {
     return (
@@ -103,8 +105,11 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Lead</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Revision / Lead</p>
                 <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
+                  Rev {mission.revisionNumber}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
                   {mission.leadDisplay}
                 </p>
               </div>
@@ -300,31 +305,48 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
         <div className="space-y-6">
           {canManageMission ? (
             <>
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <Crosshair size={18} className="text-amber-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Update Mission
+              {!isClosedMission ? (
+                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                  <div className="flex items-center gap-3">
+                    <Crosshair size={18} className="text-amber-300" />
+                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                      Update Mission
+                    </p>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    This is the smallest useful command path: update the sortie without leaving the board loop.
                   </p>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  This is the smallest useful command path: update the sortie without leaving the board loop.
-                </p>
-                <div className="mt-6">
-                  <MissionEditForm
-                    missionId={mission.id}
-                    initialMission={{
-                      callsign: mission.callsign,
-                      title: mission.title,
-                      missionType: mission.missionType,
-                      status: mission.status,
-                      priority: mission.priority,
-                      areaOfOperation: mission.areaOfOperation,
-                      missionBrief: mission.missionBrief,
-                    }}
-                  />
-                </div>
-              </section>
+                  <div className="mt-6">
+                    <MissionEditForm
+                      missionId={mission.id}
+                      initialMission={{
+                        callsign: mission.callsign,
+                        title: mission.title,
+                        missionType: mission.missionType,
+                        status: mission.status,
+                        priority: mission.priority,
+                        areaOfOperation: mission.areaOfOperation,
+                        missionBrief: mission.missionBrief,
+                      }}
+                    />
+                  </div>
+                </section>
+              ) : (
+                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                  <div className="flex items-center gap-3">
+                    <RotateCcw size={18} className="text-cyan-300" />
+                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                      Reopen Mission
+                    </p>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    Closed sorties now reopen through a dedicated revision path so command intent and prior closeout stay auditable.
+                  </p>
+                  <div className="mt-6">
+                    <MissionReopenForm missionId={mission.id} />
+                  </div>
+                </section>
+              )}
 
               <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
                 <div className="flex items-center gap-3">
@@ -374,31 +396,33 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <FileCheck2 size={18} className="text-emerald-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Close Mission
+              {!isClosedMission ? (
+                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                  <div className="flex items-center gap-3">
+                    <FileCheck2 size={18} className="text-emerald-300" />
+                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                      Close Mission
+                    </p>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    File the final disposition and package the after-action notes directly onto the sortie.
                   </p>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  File the final disposition and package the after-action notes directly onto the sortie.
-                </p>
-                <div className="mt-6">
-                  <MissionCloseoutForm
-                    missionId={mission.id}
-                    initialFinalStatus={mission.status === "aborted" ? "aborted" : "complete"}
-                    initialCloseoutSummary={
-                      mission.closeoutSummary ??
-                      "Package completed assigned objectives, recovered aircraft, and cleared the lane."
-                    }
-                    initialAarSummary={
-                      mission.aarSummary ??
-                      "Threat picture stabilized after first merge. Escort geometry held, comms discipline remained solid, and civilian traffic cleared without additional loss."
-                    }
-                  />
-                </div>
-              </section>
+                  <div className="mt-6">
+                    <MissionCloseoutForm
+                      missionId={mission.id}
+                      initialFinalStatus={mission.status === "aborted" ? "aborted" : "complete"}
+                      initialCloseoutSummary={
+                        mission.closeoutSummary ??
+                        "Package completed assigned objectives, recovered aircraft, and cleared the lane."
+                      }
+                      initialAarSummary={
+                        mission.aarSummary ??
+                        "Threat picture stabilized after first merge. Escort geometry held, comms discipline remained solid, and civilian traffic cleared without additional loss."
+                      }
+                    />
+                  </div>
+                </section>
+              ) : null}
             </>
           ) : (
             <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">

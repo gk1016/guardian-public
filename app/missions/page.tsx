@@ -54,9 +54,14 @@ export default async function MissionsPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
-                    {mission.callsign}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+                      {mission.callsign}
+                    </p>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
+                      Rev {mission.revisionNumber}
+                    </span>
+                  </div>
                   <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
                     {mission.missionType}
                   </p>
