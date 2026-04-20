@@ -1,12 +1,50 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-type MissionWithParticipants = Prisma.MissionGetPayload<{
-  include: { participants: true };
-}>;
-type IntelReportRecord = Prisma.IntelReportGetPayload<Record<string, never>>;
-type RescueRequestRecord = Prisma.RescueRequestGetPayload<Record<string, never>>;
-type QrfReadinessRecord = Prisma.QrfReadinessGetPayload<Record<string, never>>;
+type MissionWithParticipants = {
+  id: string;
+  callsign: string;
+  title: string;
+  missionType: string;
+  status: string;
+  priority: string;
+  areaOfOperation: string | null;
+  missionBrief: string | null;
+  participants: unknown[];
+};
+
+type IntelReportRecord = {
+  id: string;
+  title: string;
+  description: string | null;
+  severity: number;
+  reportType: string;
+  locationName: string | null;
+  hostileGroup: string | null;
+  confidence: string;
+  tags: string[];
+};
+
+type RescueRequestRecord = {
+  id: string;
+  survivorHandle: string;
+  locationName: string | null;
+  status: string;
+  urgency: string;
+  threatSummary: string | null;
+  rescueNotes: string | null;
+  escortRequired: boolean;
+  medicalRequired: boolean;
+  offeredPayment: number | null;
+};
+
+type QrfReadinessRecord = {
+  id: string;
+  callsign: string;
+  status: string;
+  platform: string | null;
+  locationName: string | null;
+  availableCrew: number;
+};
 
 export type OverviewPayload = {
   ok: boolean;
