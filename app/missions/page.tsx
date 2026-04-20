@@ -85,7 +85,7 @@ export default async function MissionsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle2 size={16} className="text-emerald-300" />
-                  <span>{mission.participantCount} assigned participants</span>
+                  <span>{mission.packageSummary.readyOrLaunched}/{mission.participantCount} package ready</span>
                 </div>
               </div>
             </Link>

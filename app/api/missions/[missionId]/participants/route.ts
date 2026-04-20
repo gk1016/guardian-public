@@ -74,5 +74,14 @@ export async function POST(request: Request, context: RouteContext) {
     },
   });
 
+  await prisma.missionLog.create({
+    data: {
+      missionId: mission.id,
+      authorId: session.userId,
+      entryType: "package",
+      message: `Participant assigned: ${participant.handle} / ${participant.role} / ${participant.status}.`,
+    },
+  });
+
   return NextResponse.json({ ok: true, participant });
 }

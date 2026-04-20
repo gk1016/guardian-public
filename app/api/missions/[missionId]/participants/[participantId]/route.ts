@@ -7,6 +7,9 @@ import { canManageMissions } from "@/lib/roles";
 
 const participantUpdateSchema = z.object({
   status: z.enum(["assigned", "ready", "launched", "rtb"]),
+  role: z.string().trim().min(2).max(40),
+  platform: z.string().trim().max(60).optional(),
+  notes: z.string().trim().max(500).optional(),
 });
 
 type RouteContext = {
@@ -37,6 +40,11 @@ async function getScopedParticipant(
     select: {
       id: true,
       missionId: true,
+      handle: true,
+      role: true,
+      platform: true,
+      notes: true,
+      status: true,
     },
   });
 
@@ -73,11 +81,26 @@ export async function PATCH(request: Request, context: RouteContext) {
     where: { id: participantId },
     data: {
       status: payload.data.status,
+      role: payload.data.role,
+      platform: payload.data.platform || null,
+      notes: payload.data.notes || null,
     },
     select: {
       id: true,
       handle: true,
+      role: true,
+      platform: true,
+      notes: true,
       status: true,
+    },
+  });
+
+  await prisma.missionLog.create({
+    data: {
+      missionId: participant.missionId,
+      authorId: session.userId,
+      entryType: "package",
+      message: `Participant updated: ${updatedParticipant.handle} / ${updatedParticipant.role} / ${updatedParticipant.status}.`,
     },
   });
 
@@ -107,6 +130,15 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   await prisma.missionParticipant.delete({
     where: { id: participantId },
+  });
+
+  await prisma.missionLog.create({
+    data: {
+      missionId: participant.missionId,
+      authorId: session.userId,
+      entryType: "package",
+      message: `Participant removed: ${participant.handle} / ${participant.role}.`,
+    },
   });
 
   return NextResponse.json({ ok: true, participantId });

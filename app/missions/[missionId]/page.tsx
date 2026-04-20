@@ -115,14 +115,17 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Participants</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Package Readiness</p>
                 <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                  {mission.participants.length.toString().padStart(2, "0")}
+                  {mission.packageSummary.readinessLabel}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                  {mission.packageSummary.readyOrLaunched}/{mission.packageSummary.total} ready or launched
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Type / AO</p>
                 <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
@@ -139,6 +142,15 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                     Closed {mission.completedAtLabel}
                   </p>
                 ) : null}
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Package Counts</p>
+                <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
+                  Assigned {mission.packageSummary.assigned} / Ready {mission.packageSummary.ready}
+                </p>
+                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                  Launched {mission.packageSummary.launched} / RTB {mission.packageSummary.rtb}
+                </p>
               </div>
             </div>
 

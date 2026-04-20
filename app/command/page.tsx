@@ -86,7 +86,7 @@ export default async function CommandPage() {
                   </div>
                   <p className="mt-4 text-sm leading-7 text-slate-300">{mission.title}</p>
                   <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-400">
-                    {mission.participantCount} assigned / AO {mission.areaOfOperation ?? "pending"}
+                    {mission.packageSummary.readyOrLaunched}/{mission.participantCount} ready or launched / AO {mission.areaOfOperation ?? "pending"}
                   </p>
                 </article>
               ))}

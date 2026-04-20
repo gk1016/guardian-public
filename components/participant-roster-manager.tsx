@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, LoaderCircle, Trash2 } from "lucide-react";
+import { AlertTriangle, LoaderCircle, Save, Trash2 } from "lucide-react";
 
 const participantStatusOptions = [
   { value: "assigned", label: "Assigned" },
@@ -32,19 +32,38 @@ export function ParticipantRosterManager({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
-  const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>(
-    Object.fromEntries(participants.map((participant) => [participant.id, participant.status])),
+  const [participantDrafts, setParticipantDrafts] = useState<
+    Record<string, { status: string; role: string; platform: string; notes: string }>
+  >(
+    Object.fromEntries(
+      participants.map((participant) => [
+        participant.id,
+        {
+          status: participant.status,
+          role: participant.role,
+          platform: participant.platform ?? "",
+          notes: participant.notes ?? "",
+        },
+      ]),
+    ),
   );
 
-  function setStatusDraft(participantId: string, status: string) {
-    setStatusDrafts((current) => ({
+  function setParticipantDraft(
+    participantId: string,
+    field: "status" | "role" | "platform" | "notes",
+    value: string,
+  ) {
+    setParticipantDrafts((current) => ({
       ...current,
-      [participantId]: status,
+      [participantId]: {
+        ...current[participantId],
+        [field]: value,
+      },
     }));
   }
 
   function handleStatusSave(participantId: string) {
-    const nextStatus = statusDrafts[participantId];
+    const draft = participantDrafts[participantId];
     setError("");
 
     startTransition(async () => {
@@ -54,7 +73,12 @@ export function ParticipantRosterManager({
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: nextStatus }),
+            body: JSON.stringify({
+              status: draft.status,
+              role: draft.role,
+              platform: draft.platform,
+              notes: draft.notes,
+            }),
           },
         );
 
@@ -108,18 +132,13 @@ export function ParticipantRosterManager({
               <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
                 {participant.handle}
               </p>
-              <p className="mt-1 text-sm uppercase tracking-[0.14em] text-slate-400">
-                {participant.role} / {participant.platform ?? "Platform pending"}
-              </p>
-              <p className="mt-2 text-sm text-slate-300">
-                {participant.notes ?? "No notes logged."}
-              </p>
+              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">Package control row</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <select
-                value={statusDrafts[participant.id] ?? participant.status}
-                onChange={(event) => setStatusDraft(participant.id, event.target.value)}
+                value={participantDrafts[participant.id]?.status ?? participant.status}
+                onChange={(event) => setParticipantDraft(participant.id, "status", event.target.value)}
                 className="rounded-md border border-white/10 bg-slate-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100 outline-none transition focus:border-cyan-300/40"
               >
                 {participantStatusOptions.map((option) => (
@@ -141,7 +160,10 @@ export function ParticipantRosterManager({
                     Saving
                   </span>
                 ) : (
-                  "Save"
+                  <span className="inline-flex items-center gap-2">
+                    <Save size={14} />
+                    Save
+                  </span>
                 )}
               </button>
 
@@ -156,6 +178,36 @@ export function ParticipantRosterManager({
               </button>
             </div>
           </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Role</span>
+              <input
+                value={participantDrafts[participant.id]?.role ?? participant.role}
+                onChange={(event) => setParticipantDraft(participant.id, "role", event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Platform</span>
+              <input
+                value={participantDrafts[participant.id]?.platform ?? (participant.platform ?? "")}
+                onChange={(event) => setParticipantDraft(participant.id, "platform", event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+              />
+            </label>
+          </div>
+
+          <label className="mt-4 block space-y-2">
+            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Notes</span>
+            <textarea
+              value={participantDrafts[participant.id]?.notes ?? (participant.notes ?? "")}
+              onChange={(event) => setParticipantDraft(participant.id, "notes", event.target.value)}
+              rows={3}
+              className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+            />
+          </label>
         </div>
       ))}
 

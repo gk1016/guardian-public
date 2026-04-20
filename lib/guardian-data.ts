@@ -40,6 +40,16 @@ type MissionParticipantRecord = {
   notes: string | null;
 };
 
+type PackageSummary = {
+  total: number;
+  assigned: number;
+  ready: number;
+  launched: number;
+  rtb: number;
+  readyOrLaunched: number;
+  readinessLabel: string;
+};
+
 type MissionLogRecord = {
   id: string;
   entryType: string;
@@ -109,6 +119,7 @@ export type OverviewPayload = {
     revisionNumber: number;
     areaOfOperation: string | null;
     participantCount: number;
+    packageSummary: PackageSummary;
   }[];
   rescues: {
     id: string;
@@ -180,6 +191,7 @@ type MissionDetailPayload = {
     completedAtLabel: string | null;
     leadDisplay: string;
     updatedAtLabel: string;
+    packageSummary: PackageSummary;
     doctrineTemplate: {
       id: string;
       code: string;
@@ -233,6 +245,40 @@ async function getPrimaryOrg() {
   return prisma.organization.findFirst({
     orderBy: { createdAt: "asc" },
   });
+}
+
+function summarizePackageStatus(participants: MissionParticipantRecord[]): PackageSummary {
+  const summary = participants.reduce(
+    (current, participant) => {
+      if (participant.status === "assigned") {
+        current.assigned += 1;
+      } else if (participant.status === "ready") {
+        current.ready += 1;
+      } else if (participant.status === "launched") {
+        current.launched += 1;
+      } else if (participant.status === "rtb") {
+        current.rtb += 1;
+      }
+
+      return current;
+    },
+    {
+      total: participants.length,
+      assigned: 0,
+      ready: 0,
+      launched: 0,
+      rtb: 0,
+    },
+  );
+
+  const readyOrLaunched = summary.ready + summary.launched;
+
+  return {
+    ...summary,
+    readyOrLaunched,
+    readinessLabel:
+      summary.total === 0 ? "unassigned" : readyOrLaunched === summary.total ? "green" : readyOrLaunched > 0 ? "partial" : "cold",
+  };
 }
 
 export async function getOrgForUser(userId: string) {
@@ -318,6 +364,7 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
         revisionNumber: mission.revisionNumber,
         areaOfOperation: mission.areaOfOperation,
         participantCount: mission.participants.length,
+        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
       })),
       rescues: rescues.map((rescue: RescueRequestRecord) => ({
         id: rescue.id,
@@ -373,6 +420,7 @@ export async function getMissionPageData(userId: string): Promise<
     areaOfOperation: string | null;
     missionBrief: string | null;
     participantCount: number;
+    packageSummary: PackageSummary;
   }>
 > {
   try {
@@ -401,6 +449,7 @@ export async function getMissionPageData(userId: string): Promise<
         areaOfOperation: mission.areaOfOperation,
         missionBrief: mission.missionBrief,
         participantCount: mission.participants.length,
+        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
       })),
     };
   } catch (error) {
@@ -552,6 +601,7 @@ export async function getMissionDetailPageData(
           hour: "2-digit",
           minute: "2-digit",
         }),
+        packageSummary: summarizePackageStatus(mission.participants as MissionParticipantRecord[]),
         doctrineTemplate: mission.doctrineTemplate,
         availableDoctrineTemplates,
         linkedIntel: mission.intelLinks.map((link) => ({
