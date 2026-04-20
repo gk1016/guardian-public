@@ -47,7 +47,11 @@ export default async function MissionsPage() {
 
         <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {data.items.map((mission) => (
-            <article key={mission.id} className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+            <Link
+              key={mission.id}
+              href={`/missions/${mission.id}`}
+              className="block rounded-2xl border border-white/10 bg-slate-950/60 p-6 transition hover:border-amber-300/25 hover:bg-slate-950/80"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
@@ -79,7 +83,7 @@ export default async function MissionsPage() {
                   <span>{mission.participantCount} assigned participants</span>
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
 
           {data.items.length === 0 ? (

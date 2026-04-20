@@ -9,7 +9,21 @@ type MissionWithParticipants = {
   priority: string;
   areaOfOperation: string | null;
   missionBrief: string | null;
+  lead?: {
+    handle: string;
+    displayName: string | null;
+  } | null;
+  updatedAt?: Date;
   participants: unknown[];
+};
+
+type MissionParticipantRecord = {
+  id: string;
+  handle: string;
+  role: string;
+  platform: string | null;
+  status: string;
+  notes: string | null;
 };
 
 type IntelReportRecord = {
@@ -94,6 +108,32 @@ type PagePayload<T> = {
   ok: boolean;
   orgName: string;
   items: T[];
+  error?: string;
+};
+
+type MissionDetailPayload = {
+  ok: boolean;
+  orgName: string;
+  mission: {
+    id: string;
+    callsign: string;
+    title: string;
+    missionType: string;
+    status: string;
+    priority: string;
+    areaOfOperation: string | null;
+    missionBrief: string | null;
+    leadDisplay: string;
+    updatedAtLabel: string;
+    participants: {
+      id: string;
+      handle: string;
+      role: string;
+      platform: string | null;
+      status: string;
+      notes: string | null;
+    }[];
+  } | null;
   error?: string;
 };
 
@@ -274,6 +314,82 @@ export async function getMissionPageData(userId: string): Promise<
       orgName: "Guardian",
       items: [],
       error: error instanceof Error ? error.message : "Failed to load missions.",
+    };
+  }
+}
+
+export async function getMissionDetailPageData(
+  userId: string,
+  missionId: string,
+): Promise<MissionDetailPayload> {
+  try {
+    const org = await getOrgForUser(userId);
+    if (!org) {
+      return { ok: true, orgName: "Guardian", mission: null };
+    }
+
+    const mission = await prisma.mission.findFirst({
+      where: {
+        id: missionId,
+        orgId: org.id,
+      },
+      include: {
+        lead: {
+          select: {
+            handle: true,
+            displayName: true,
+          },
+        },
+        participants: {
+          orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+        },
+      },
+    });
+
+    if (!mission) {
+      return {
+        ok: false,
+        orgName: org.name,
+        mission: null,
+        error: "Mission not found.",
+      };
+    }
+
+    return {
+      ok: true,
+      orgName: org.name,
+      mission: {
+        id: mission.id,
+        callsign: mission.callsign,
+        title: mission.title,
+        missionType: mission.missionType,
+        status: mission.status,
+        priority: mission.priority,
+        areaOfOperation: mission.areaOfOperation,
+        missionBrief: mission.missionBrief,
+        leadDisplay: mission.lead?.displayName || mission.lead?.handle || "Unassigned",
+        updatedAtLabel: mission.updatedAt.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        participants: mission.participants.map((participant: MissionParticipantRecord) => ({
+          id: participant.id,
+          handle: participant.handle,
+          role: participant.role,
+          platform: participant.platform,
+          status: participant.status,
+          notes: participant.notes,
+        })),
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      orgName: "Guardian",
+      mission: null,
+      error: error instanceof Error ? error.message : "Failed to load mission detail.",
     };
   }
 }
