@@ -1,0 +1,33 @@
+services:
+  guardian:
+    build: .
+    container_name: guardian
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3400:3000"
+    env_file:
+      - .env
+    depends_on:
+      guardian-postgres:
+        condition: service_healthy
+
+  guardian-postgres:
+    image: postgres:16-alpine
+    container_name: guardian-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-guardian}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guardian_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-guardian}
+    ports:
+      - "127.0.0.1:5441:5432"
+    volumes:
+      - guardian-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-guardian}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  guardian-postgres-data:

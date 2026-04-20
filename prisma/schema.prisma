@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  handle       String        @unique
+  displayName  String?
+  role         String        @default("pilot")
+  status       String        @default("pending")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  memberships  OrgMember[]
+  ledMissions  Mission[]     @relation("mission_lead")
+  rescueOwned  RescueRequest[] @relation("rescue_requester")
+  rescueOps    RescueRequest[] @relation("rescue_operator")
+}
+
+model Organization {
+  id          String      @id @default(cuid())
+  name        String
+  tag         String      @unique
+  description String?
+  isPublic    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  members     OrgMember[]
+  missions    Mission[]
+  intel       IntelReport[]
+  rescues     RescueRequest[]
+}
+
+model OrgMember {
+  id         String       @id @default(cuid())
+  userId     String
+  orgId      String
+  rank       String       @default("member")
+  title      String?
+  joinedAt   DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+}
+
+model Mission {
+  id              String               @id @default(cuid())
+  orgId           String
+  callsign        String
+  title           String
+  missionType     String
+  status          String               @default("planning")
+  priority        String               @default("routine")
+  areaOfOperation String?
+  missionBrief    String?
+  mettTc          Json?
+  phases          Json?
+  roeCode         String?
+  leadId          String?
+  startsAt        DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  org             Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  lead            User?                @relation("mission_lead", fields: [leadId], references: [id], onDelete: SetNull)
+  participants    MissionParticipant[]
+
+  @@index([orgId, status])
+  @@index([missionType])
+}
+
+model MissionParticipant {
+  id         String   @id @default(cuid())
+  missionId  String
+  handle     String
+  role       String
+  platform   String?
+  status     String   @default("assigned")
+  notes      String?
+  createdAt  DateTime @default(now())
+  mission    Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId])
+}
+
+model IntelReport {
+  id             String       @id @default(cuid())
+  orgId          String
+  reportType     String       @default("sighting")
+  title          String
+  description    String?
+  severity       Int          @default(3)
+  locationName   String?
+  starSystem     String?
+  hostileGroup   String?
+  confidence     String       @default("medium")
+  isActive       Boolean      @default(true)
+  isVerified     Boolean      @default(false)
+  tags           String[]
+  observedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, isActive])
+  @@index([severity])
+}
+
+model RescueRequest {
+  id                String       @id @default(cuid())
+  orgId             String
+  requesterId       String
+  operatorId        String?
+  survivorHandle    String
+  locationName      String?
+  status            String       @default("open")
+  urgency           String       @default("routine")
+  threatSummary     String?
+  rescueNotes       String?
+  escortRequired    Boolean      @default(false)
+  medicalRequired   Boolean      @default(false)
+  offeredPayment    Int?
+  roeCode           String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  org               Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  requester         User         @relation("rescue_requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  operator          User?        @relation("rescue_operator", fields: [operatorId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status])
+  @@index([urgency])
+}
