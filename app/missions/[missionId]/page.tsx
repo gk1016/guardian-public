@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Shield, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ClipboardList, Crosshair, FileCheck2, NotebookText, Radar, Shield, Users } from "lucide-react";
 import { MissionCloseoutForm } from "@/components/mission-closeout-form";
 import { MissionEditForm } from "@/components/mission-edit-form";
+import { MissionIntelLinkForm } from "@/components/mission-intel-link-form";
 import { MissionLogForm } from "@/components/mission-log-form";
 import { OpsShell } from "@/components/ops-shell";
 import { ParticipantAssignForm } from "@/components/participant-assign-form";
+import { LinkedIntelManager } from "@/components/linked-intel-manager";
 import { ParticipantRosterManager } from "@/components/participant-roster-manager";
 import { requireSession } from "@/lib/auth";
 import { getMissionDetailPageData } from "@/lib/guardian-data";
@@ -172,6 +174,48 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
 
           <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
             <div className="flex items-center gap-3">
+              <Radar size={18} className="text-red-300" />
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Linked Intel
+              </p>
+            </div>
+            <div className="mt-5">
+              {canManageMission ? (
+                <LinkedIntelManager
+                  missionId={mission.id}
+                  intelLinks={mission.linkedIntel}
+                />
+              ) : (
+                <div className="space-y-3">
+                  {mission.linkedIntel.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+                    >
+                      <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+                        {item.title}
+                      </p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+                        {item.reportType.replaceAll("_", " ")} / Severity {item.severity}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-300">
+                        {(item.locationName ?? "Unknown location")} / {item.hostileGroup ?? "Unconfirmed hostile group"}
+                      </p>
+                    </div>
+                  ))}
+
+                  {mission.linkedIntel.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                      No linked intel for this sortie yet.
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+            <div className="flex items-center gap-3">
               <Users size={18} className="text-cyan-300" />
               <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
                 Assigned Package
@@ -278,6 +322,24 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                       areaOfOperation: mission.areaOfOperation,
                       missionBrief: mission.missionBrief,
                     }}
+                  />
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+                <div className="flex items-center gap-3">
+                  <Radar size={18} className="text-red-300" />
+                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                    Link Threat Report
+                  </p>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-300">
+                  Attach existing intel directly to the sortie so the threat picture follows the mission.
+                </p>
+                <div className="mt-6">
+                  <MissionIntelLinkForm
+                    missionId={mission.id}
+                    availableIntel={mission.availableIntel}
                   />
                 </div>
               </section>

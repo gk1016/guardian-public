@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Radar, ShieldAlert } from "lucide-react";
 import { getIntelPageData } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
@@ -64,6 +65,29 @@ export default async function IntelPage() {
                     {tag}
                   </span>
                 ))}
+              </div>
+
+              <div className="mt-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  Linked sorties
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {item.linkedMissions.map((mission) => (
+                    <Link
+                      key={mission.id}
+                      href={`/missions/${mission.id}`}
+                      className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-400/20"
+                    >
+                      {mission.callsign} / {mission.status}
+                    </Link>
+                  ))}
+
+                  {item.linkedMissions.length === 0 ? (
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                      Unlinked
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </article>
           ))}

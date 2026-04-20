@@ -75,6 +75,7 @@ model Mission {
   updatedAt       DateTime             @updatedAt
   org             Organization         @relation(fields: [orgId], references: [id], onDelete: Cascade)
   lead            User?                @relation("mission_lead", fields: [leadId], references: [id], onDelete: SetNull)
+  intelLinks      MissionIntelLink[]
   logs            MissionLog[]
   participants    MissionParticipant[]
 
@@ -94,6 +95,19 @@ model MissionLog {
 
   @@index([missionId, createdAt])
   @@index([entryType])
+}
+
+model MissionIntelLink {
+  id        String      @id @default(cuid())
+  missionId String
+  intelId   String
+  createdAt DateTime    @default(now())
+  mission   Mission     @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  intel     IntelReport @relation(fields: [intelId], references: [id], onDelete: Cascade)
+
+  @@unique([missionId, intelId])
+  @@index([missionId])
+  @@index([intelId])
 }
 
 model MissionParticipant {
@@ -128,6 +142,7 @@ model IntelReport {
   expiresAt      DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  missionLinks   MissionIntelLink[]
   org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId, isActive])

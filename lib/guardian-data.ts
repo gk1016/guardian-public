@@ -49,6 +49,13 @@ type IntelReportRecord = {
   hostileGroup: string | null;
   confidence: string;
   tags: string[];
+  missionLinks?: {
+    mission: {
+      id: string;
+      callsign: string;
+      status: string;
+    };
+  }[];
 };
 
 type RescueRequestRecord = {
@@ -141,6 +148,20 @@ type MissionDetailPayload = {
     completedAtLabel: string | null;
     leadDisplay: string;
     updatedAtLabel: string;
+    linkedIntel: {
+      id: string;
+      intelId: string;
+      title: string;
+      severity: number;
+      reportType: string;
+      locationName: string | null;
+      hostileGroup: string | null;
+    }[];
+    availableIntel: {
+      id: string;
+      title: string;
+      severity: number;
+    }[];
     logs: {
       id: string;
       entryType: string;
@@ -366,6 +387,23 @@ export async function getMissionDetailPageData(
         participants: {
           orderBy: [{ status: "asc" }, { createdAt: "asc" }],
         },
+        intelLinks: {
+          include: {
+            intel: {
+              select: {
+                id: true,
+                title: true,
+                severity: true,
+                reportType: true,
+                locationName: true,
+                hostileGroup: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
         logs: {
           orderBy: [{ createdAt: "desc" }],
           include: {
@@ -388,6 +426,24 @@ export async function getMissionDetailPageData(
         error: "Mission not found.",
       };
     }
+
+    const availableIntel = await prisma.intelReport.findMany({
+      where: {
+        orgId: org.id,
+        isActive: true,
+        missionLinks: {
+          none: {
+            missionId: mission.id,
+          },
+        },
+      },
+      orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        title: true,
+        severity: true,
+      },
+    });
 
     return {
       ok: true,
@@ -418,6 +474,16 @@ export async function getMissionDetailPageData(
           hour: "2-digit",
           minute: "2-digit",
         }),
+        linkedIntel: mission.intelLinks.map((link) => ({
+          id: link.id,
+          intelId: link.intel.id,
+          title: link.intel.title,
+          severity: link.intel.severity,
+          reportType: link.intel.reportType,
+          locationName: link.intel.locationName,
+          hostileGroup: link.intel.hostileGroup,
+        })),
+        availableIntel,
         logs: mission.logs.map((log: MissionLogRecord) => ({
           id: log.id,
           entryType: log.entryType,
@@ -461,6 +527,11 @@ export async function getIntelPageData(userId: string): Promise<
     hostileGroup: string | null;
     confidence: string;
     tags: string[];
+    linkedMissions: {
+      id: string;
+      callsign: string;
+      status: string;
+    }[];
   }>
 > {
   try {
@@ -472,6 +543,22 @@ export async function getIntelPageData(userId: string): Promise<
     const reports = await prisma.intelReport.findMany({
       where: { orgId: org.id },
       orderBy: [{ severity: "desc" }, { createdAt: "desc" }],
+      include: {
+        missionLinks: {
+          include: {
+            mission: {
+              select: {
+                id: true,
+                callsign: true,
+                status: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
     });
 
     return {
@@ -487,6 +574,11 @@ export async function getIntelPageData(userId: string): Promise<
         hostileGroup: report.hostileGroup,
         confidence: report.confidence,
         tags: report.tags,
+        linkedMissions: (report.missionLinks ?? []).map((link) => ({
+          id: link.mission.id,
+          callsign: link.mission.callsign,
+          status: link.mission.status,
+        })),
       })),
     };
   } catch (error) {
