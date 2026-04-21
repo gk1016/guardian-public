@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ScrollText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
@@ -44,6 +45,7 @@ const navSections = [
   {
     title: "Review",
     items: [
+      { href: "/sitrep", label: "SITREP", icon: ScrollText },
       { href: "/incidents", label: "Incidents", icon: AlertTriangle },
       { href: "/notifications", label: "Alerts", icon: Bell },
     ],
@@ -99,227 +101,248 @@ export function Sidebar({
     };
   }, [mobileOpen]);
 
-  // Update tick age display every 5 seconds
   useEffect(() => {
     if (!lastTick) return;
-    setTickAge(formatTickAge(lastTick));
-    const interval = setInterval(() => {
-      setTickAge(formatTickAge(lastTick));
-    }, 5000);
+    function update() {
+      if (lastTick) setTickAge(formatTickAge(lastTick));
+    }
+    update();
+    const interval = setInterval(update, 5000);
     return () => clearInterval(interval);
   }, [lastTick]);
-
-  const isActive = (href: string) => {
-    if (href === "/command") return pathname === "/command";
-    return pathname === href || pathname.startsWith(href + "/");
-  };
 
   const toggleSection = (title: string) => {
     setSectionCollapsed((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
-  const isAdmin = session.role === "admin" || session.role === "commander";
-  const dc = desktopCollapsed;
-
-  const pulseColor =
+  const statusColor =
     connectionState === "connected"
       ? "bg-emerald-400"
       : connectionState === "connecting"
-      ? "bg-amber-400"
-      : "bg-red-400";
-  const pulseTextColor =
-    connectionState === "connected"
-      ? "text-emerald-400"
-      : connectionState === "connecting"
-      ? "text-amber-400"
-      : "text-red-400";
-  const pulseLabel =
+        ? "bg-amber-400"
+        : "bg-red-500";
+  const statusLabel =
     connectionState === "connected"
       ? "LIVE"
       : connectionState === "connecting"
-      ? "SYNC"
-      : "OFFLINE";
+        ? "SYNC"
+        : "OFFLINE";
 
-  return (
+  const navContent = (
     <>
-      {/* Mobile hamburger */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-50 rounded-[var(--radius-md)] border border-white/10 bg-[var(--color-panel)] p-2 text-slate-400 md:hidden"
-        aria-label="Open navigation"
-      >
-        <Menu size={20} />
-      </button>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <nav
-        className={[
-          "fixed left-0 top-0 z-50 flex h-screen flex-col",
-          "border-r border-[var(--color-border)] bg-[var(--color-panel)]",
-          "transition-all duration-200",
-          "w-[var(--sidebar-width)]",
-          dc ? "md:w-14" : "md:w-[var(--sidebar-width)]",
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
-          "md:translate-x-0",
-        ].join(" ")}
-      >
-        {/* Mobile close */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="absolute right-2 top-2 z-10 rounded p-1 text-slate-500 hover:text-white md:hidden"
-        >
-          <X size={18} />
-        </button>
-
-        {/* Header */}
-        <div className={`border-b border-[var(--color-border)] px-4 py-4 ${dc ? "md:px-2 md:py-3" : ""}`}>
-          <Link href="/command" className="block">
-            <span
-              className={`font-[family:var(--font-display)] text-lg uppercase tracking-[0.2em] text-amber-300 ${
-                dc ? "md:text-sm md:tracking-[0.1em] md:text-center md:block" : ""
-              }`}
+      {navSections.map((section) => {
+        const isCollapsed = sectionCollapsed[section.title] ?? false;
+        return (
+          <div key={section.title}>
+            <button
+              onClick={() => toggleSection(section.title)}
+              className="flex w-full items-center justify-between px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 transition hover:text-slate-300"
             >
-              <span className={dc ? "md:hidden" : ""}>Guardian</span>
-              {dc && <span className="hidden md:block">G</span>}
-            </span>
-            <span
-              className={`mt-0.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500 ${
-                dc ? "md:hidden" : ""
-              }`}
-            >
-              {orgName}
-            </span>
-          </Link>
-        </div>
-
-        {/* Nav sections */}
-        <div className="flex-1 overflow-y-auto py-2">
-          {navSections.map((section) => (
-            <div key={section.title} className="mb-1">
-              <button
-                onClick={() => !dc && toggleSection(section.title)}
-                className={`flex w-full items-center px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 hover:text-slate-400 ${
-                  dc ? "md:justify-center md:px-0 md:pointer-events-none" : "justify-between"
-                }`}
-              >
-                <span className={dc ? "md:hidden" : ""}>{section.title}</span>
-                {dc && (
-                  <span className="hidden md:block w-8 border-t border-[var(--color-border)]" />
-                )}
-                <span className={dc ? "md:hidden" : ""}>
-                  {sectionCollapsed[section.title] ? (
-                    <ChevronRight size={12} />
-                  ) : (
-                    <ChevronDown size={12} />
-                  )}
-                </span>
-              </button>
-              {(!sectionCollapsed[section.title] || dc) && (
-                <ul>
-                  {section.items.map((item) => {
-                    if (item.adminOnly && !isAdmin) return null;
+              <span>{section.title}</span>
+              <ChevronDown
+                size={12}
+                className={`transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+              />
+            </button>
+            {!isCollapsed ? (
+              <ul className="space-y-0.5">
+                {section.items
+                  .filter(
+                    (item) =>
+                      !("adminOnly" in item && item.adminOnly) ||
+                      ["commander", "director", "admin"].includes(session.role),
+                  )
+                  .map((item) => {
                     const Icon = item.icon;
-                    const active = isActive(item.href);
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          title={dc ? item.label : undefined}
-                          className={[
-                            "mx-2 flex items-center rounded-[var(--radius-md)] px-3 py-2 text-[13px] font-medium transition-colors",
-                            dc ? "md:justify-center md:mx-1 md:px-0" : "gap-2.5",
-                            active
-                              ? "bg-cyan-500/10 text-cyan-300"
-                              : "text-slate-400 hover:bg-[var(--color-hover)] hover:text-slate-200",
-                          ].join(" ")}
+                          className={`flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition ${
+                            isActive
+                              ? "bg-white/8 font-medium text-white"
+                              : "text-slate-400 hover:bg-white/4 hover:text-white"
+                          }`}
                         >
-                          <Icon size={16} strokeWidth={1.5} />
-                          <span className={dc ? "md:hidden" : ""}>
-                            {item.label}
-                          </span>
+                          <Icon size={15} className={isActive ? "text-amber-300" : ""} />
+                          <span>{item.label}</span>
                         </Link>
                       </li>
                     );
                   })}
-                </ul>
+              </ul>
+            ) : null}
+          </div>
+        );
+      })}
+    </>
+  );
+
+  const engineStatus = (
+    <div className="border-t border-[var(--color-border)] px-3 py-3">
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <div className={`h-2 w-2 rounded-full ${statusColor}`} />
+          {connectionState === "connected" ? (
+            <div className={`absolute inset-0 h-2 w-2 animate-ping rounded-full ${statusColor} opacity-40`} />
+          ) : null}
+        </div>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+          {statusLabel}
+        </span>
+        {tickAge ? (
+          <span className="text-[10px] text-slate-600">{tickAge}</span>
+        ) : null}
+      </div>
+      {opsSummary ? (
+        <p className="mt-1 text-[10px] text-slate-600">
+          {opsSummary.active_missions} msn / {opsSummary.qrf_ready} qrf / {opsSummary.active_intel} intel
+        </p>
+      ) : null}
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed left-3 top-3 z-40 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-panel)] p-2 text-slate-400 md:hidden"
+        aria-label="Open navigation"
+      >
+        <Menu size={18} />
+      </button>
+
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileOpen(false)}
+          />
+          <nav className="relative flex w-64 flex-col bg-[var(--color-surface)] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+              <div>
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
+                  Guardian
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                  {orgName}
+                </p>
+              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="text-slate-400"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto py-2">{navContent}</div>
+            {engineStatus}
+          </nav>
+        </div>
+      ) : null}
+
+      <nav
+        className={`hidden md:flex md:flex-col md:border-r md:border-[var(--color-border)] md:bg-[var(--color-surface)] transition-[width] duration-200 ${
+          desktopCollapsed ? "md:w-14" : "md:w-56"
+        }`}
+      >
+        {!desktopCollapsed ? (
+          <>
+            <div className="border-b border-[var(--color-border)] px-4 py-3">
+              <Link href="/command" className="block">
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
+                  Guardian
+                </p>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                  {orgName}
+                </p>
+              </Link>
+            </div>
+            <div className="flex-1 overflow-y-auto py-2">{navContent}</div>
+            {engineStatus}
+            <div className="border-t border-[var(--color-border)] px-3 py-2">
+              <button
+                onClick={onToggleCollapse}
+                className="flex w-full items-center justify-center rounded-[var(--radius-md)] py-1.5 text-slate-500 transition hover:bg-white/4 hover:text-white"
+                aria-label="Collapse sidebar"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
+            <div className="border-t border-[var(--color-border)] px-3 py-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/8 text-[10px] font-semibold text-amber-300">
+                  {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-medium text-white">{session.handle ?? "Operator"}</p>
+                  <p className="text-[10px] text-slate-500">{session.role}</p>
+                </div>
+              </div>
+              <form action="/api/auth/logout" method="POST" className="mt-2">
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[11px] text-slate-500 transition hover:bg-white/4 hover:text-white"
+                >
+                  <LogOut size={13} />
+                  <span>Sign out</span>
+                </button>
+              </form>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col items-center gap-1 py-3">
+              <Link href="/command" className="block">
+                <p className="font-[family:var(--font-display)] text-sm text-amber-300">G</p>
+              </Link>
+            </div>
+            <div className="flex flex-1 flex-col items-center gap-1 overflow-y-auto py-2">
+              {navSections.flatMap((section) =>
+                section.items
+                  .filter(
+                    (item) =>
+                      !("adminOnly" in item && item.adminOnly) ||
+                      ["commander", "director", "admin"].includes(session.role),
+                  )
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] transition ${
+                          isActive
+                            ? "bg-white/8 text-amber-300"
+                            : "text-slate-500 hover:bg-white/4 hover:text-white"
+                        }`}
+                        title={item.label}
+                      >
+                        <Icon size={16} />
+                      </Link>
+                    );
+                  }),
               )}
             </div>
-          ))}
-        </div>
-
-        {/* Engine status pulse */}
-        <div className={`border-t border-[var(--color-border)] px-4 py-2.5 ${dc ? "md:px-2 md:py-2" : ""}`}>
-          <div className={`flex items-center ${dc ? "md:justify-center" : "gap-2"}`}>
-            <span
-              className={`inline-block h-2 w-2 shrink-0 rounded-full ${pulseColor} ${
-                connectionState !== "disconnected" ? "animate-pulse" : ""
-              }`}
-            />
-            <div className={`flex items-center gap-1.5 ${dc ? "md:hidden" : ""}`}>
-              <span className={`text-[10px] font-semibold uppercase tracking-wider ${pulseTextColor}`}>
-                {pulseLabel}
-              </span>
-              {connectionState === "connected" && opsSummary && (
-                <span className="text-[10px] text-slate-600">
-                  {tickAge}
-                </span>
-              )}
+            <div className="flex flex-col items-center gap-2 border-t border-[var(--color-border)] py-3">
+              <div className="relative">
+                <div className={`h-2 w-2 rounded-full ${statusColor}`} />
+                {connectionState === "connected" ? (
+                  <div className={`absolute inset-0 h-2 w-2 animate-ping rounded-full ${statusColor} opacity-40`} />
+                ) : null}
+              </div>
+              <button
+                onClick={onToggleCollapse}
+                className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
+                aria-label="Expand sidebar"
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
-          </div>
-          {connectionState === "connected" && opsSummary && !dc && (
-            <div className={`mt-1.5 flex gap-3 text-[10px] text-slate-500 ${dc ? "md:hidden" : ""}`}>
-              <span>{opsSummary.active_missions} msn</span>
-              <span>{opsSummary.qrf_ready} qrf</span>
-              <span>{opsSummary.active_intel} intel</span>
-            </div>
-          )}
-        </div>
-
-        {/* Desktop collapse toggle */}
-        <button
-          onClick={onToggleCollapse}
-          className="hidden md:flex items-center justify-center border-t border-[var(--color-border)] py-2.5 text-slate-500 hover:text-slate-300 transition-colors"
-          title={dc ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {dc ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-
-        {/* User footer */}
-        <div className={`border-t border-[var(--color-border)] px-4 py-3 ${dc ? "md:px-2" : ""}`}>
-          <div className={`flex items-center ${dc ? "md:justify-center" : "gap-2.5"}`}>
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-hover)] text-[10px] font-bold uppercase text-slate-300">
-              {(session.displayName || session.handle).charAt(0)}
-            </div>
-            <div className={`min-w-0 flex-1 ${dc ? "md:hidden" : ""}`}>
-              <p className="truncate text-xs font-medium text-white">
-                {session.displayName || session.handle}
-              </p>
-              <p className="truncate text-[10px] text-slate-500">
-                {session.role}
-              </p>
-            </div>
-          </div>
-          <form action="/api/auth/logout" method="post" className={`mt-2 ${dc ? "md:mt-1" : ""}`}>
-            <button
-              type="submit"
-              title={dc ? "Sign out" : undefined}
-              className={`flex w-full items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[11px] text-slate-500 transition hover:bg-[var(--color-hover)] hover:text-red-400 ${
-                dc ? "md:justify-center md:px-0" : ""
-              }`}
-            >
-              <LogOut size={13} />
-              <span className={dc ? "md:hidden" : ""}>Sign out</span>
-            </button>
-          </form>
-        </div>
+          </>
+        )}
       </nav>
     </>
   );
