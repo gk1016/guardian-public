@@ -8,7 +8,7 @@
 //!
 //! Chunk size: 64KB (fits comfortably in a WebSocket text frame as hex)
 
-use crate::federation::types::{FileOfferData, FileChunkData, FileAckData, FederationPayload};
+use crate::federation::types::{FileOfferData, FileAckData, FederationPayload};
 use crate::federation::protocol;
 use crate::state::AppState;
 

@@ -9,7 +9,7 @@
 //! No PII or sensitive mission details cross instance boundaries
 //! unless explicitly authorized.
 
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use crate::federation::types::{DataSyncPayload, FederationPayload};
 use crate::federation::protocol;
 use crate::state::AppState;
@@ -20,31 +20,31 @@ pub async fn share_intel(
     pool: &PgPool,
     report_id: &str,
 ) -> anyhow::Result<()> {
-    let report = sqlx::query!(
+    let row = sqlx::query(
         r#"
-        SELECT id, title, report_type, severity, description,
-               star_system, hostile_group
+        SELECT id, title, "reportType", severity, description,
+               "starSystem", "hostileGroup"
         FROM "IntelReport"
         WHERE id = $1
-        "#,
-        report_id
+        "#
     )
+    .bind(report_id)
     .fetch_optional(pool)
     .await?;
 
-    if let Some(r) = report {
+    if let Some(r) = row {
         let msg = protocol::envelope(
             &state.config().instance_id,
             &state.config().instance_name,
             None, // broadcast
             FederationPayload::DataSync(DataSyncPayload::IntelReport {
-                report_id: r.id,
-                title: r.title,
-                report_type: r.report_type,
-                severity: r.severity,
-                description: r.description,
-                star_system: r.star_system,
-                hostile_group: r.hostile_group,
+                report_id: r.get("id"),
+                title: r.get("title"),
+                report_type: r.get("reportType"),
+                severity: r.get("severity"),
+                description: r.get("description"),
+                star_system: r.get("starSystem"),
+                hostile_group: r.get("hostileGroup"),
             }),
         );
 
@@ -61,27 +61,27 @@ pub async fn share_mission_status(
     pool: &PgPool,
     mission_id: &str,
 ) -> anyhow::Result<()> {
-    let mission = sqlx::query!(
+    let row = sqlx::query(
         r#"
-        SELECT id, callsign, status, mission_type
+        SELECT id, callsign, status, "missionType"
         FROM "Mission"
         WHERE id = $1
-        "#,
-        mission_id
+        "#
     )
+    .bind(mission_id)
     .fetch_optional(pool)
     .await?;
 
-    if let Some(m) = mission {
+    if let Some(m) = row {
         let msg = protocol::envelope(
             &state.config().instance_id,
             &state.config().instance_name,
             None,
             FederationPayload::DataSync(DataSyncPayload::MissionStatus {
-                mission_id: m.id,
-                callsign: m.callsign,
-                status: m.status,
-                mission_type: m.mission_type,
+                mission_id: m.get("id"),
+                callsign: m.get("callsign"),
+                status: m.get("status"),
+                mission_type: m.get("missionType"),
             }),
         );
 

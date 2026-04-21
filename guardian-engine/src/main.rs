@@ -5,7 +5,6 @@ mod compute;
 mod federation;
 mod state;
 
-use std::net::SocketAddr;
 use tracing::info;
 
 #[tokio::main]

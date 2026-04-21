@@ -7,7 +7,6 @@
 
 use sqlx::PgPool;
 use tokio::sync::broadcast;
-use serde_json::json;
 
 /// Evaluate computed state and generate alerts.
 pub async fn evaluate(
@@ -23,15 +22,6 @@ pub async fn evaluate(
     // 2. Broadcast to connected WebSocket clients
     let _ = pool;
     let _ = event_tx;
-
-    // let msg = json!({
-    //     "type": "alert",
-    //     "category": "doctrine_violation",
-    //     "severity": "warning",
-    //     "title": "Mission ALPHA-7 missing ROE code",
-    //     "mission_id": "...",
-    // });
-    // let _ = event_tx.send(msg.to_string());
 
     Ok(())
 }

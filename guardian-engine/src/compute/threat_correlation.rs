@@ -33,18 +33,18 @@ pub enum ClusterConfidence {
 /// Run threat correlation across all active intel reports.
 pub async fn correlate(pool: &PgPool) -> anyhow::Result<Vec<ThreatCluster>> {
     // Fetch active intel reports
-    let _reports = sqlx::query!(
+    let _rows = sqlx::query(
         r#"
-        SELECT id, report_type, severity, location_name, star_system,
-               hostile_group, confidence, tags, observed_at, created_at
+        SELECT id, "reportType", severity, "locationName", "starSystem",
+               "hostileGroup", confidence, tags, "observedAt", "createdAt"
         FROM "IntelReport"
-        WHERE is_active = true
-        ORDER BY created_at DESC
+        WHERE "isActive" = true
+        ORDER BY "createdAt" DESC
         LIMIT 500
         "#
     )
     .fetch_all(pool)
-    .await;
+    .await?;
 
     // TODO: Implement correlation logic:
     // 1. Group by hostile_group + star_system

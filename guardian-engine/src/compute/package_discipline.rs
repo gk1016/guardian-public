@@ -32,36 +32,25 @@ pub enum ViolationSeverity {
 /// Check all active missions for doctrine compliance.
 pub async fn check_all(pool: &PgPool) -> anyhow::Result<Vec<ComplianceResult>> {
     // Query active missions with their doctrine templates
-    let missions = sqlx::query_as!(
-        MissionRow,
+    let _rows = sqlx::query(
         r#"
-        SELECT m.id, m.callsign, m.status, m.misson_brief,
-               m.mett_tc, m.phases, m.roe_code,
-               m.doctrine_template_id,
-               dt.code as "doctrine_code?"
+        SELECT m.id, m.callsign, m.status, m."missionBrief",
+               m."mettTc", m.phases, m."roeCode",
+               m."doctrineTemplateId",
+               dt.code as doctrine_code
         FROM "Mission" m
-        LEFT JOIN "DoctrineTemplate" dt ON m.doctrine_template_id = dt.id
+        LEFT JOIN "DoctrineTemplate" dt ON m."doctrineTemplateId" = dt.id
         WHERE m.status IN ('planning', 'active', 'in_progress')
         "#
     )
     .fetch_all(pool)
-    .await;
+    .await?;
 
-    // TODO: For now return empty results - implement validation logic
-    // against each doctrine template's requirements
-    let _ = missions;
+    // TODO: Implement validation logic against each doctrine template's requirements
+    // For each mission row:
+    //   1. Check if METT-TC is populated when doctrine requires it
+    //   2. Verify phases are defined for multi-phase doctrine types
+    //   3. Confirm ROE code is set
+    //   4. Check participant minimums
     Ok(vec![])
-}
-
-#[allow(dead_code)]
-struct MissionRow {
-    id: String,
-    callsign: String,
-    status: String,
-    misson_brief: Option<String>,
-    mett_tc: Option<serde_json::Value>,
-    phases: Option<serde_json::Value>,
-    roe_code: Option<String>,
-    doctrine_template_id: Option<String>,
-    doctrine_code: Option<String>,
 }

@@ -5,7 +5,7 @@ use axum::{
     response::IntoResponse,
 };
 use futures_util::{SinkExt, StreamExt};
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::state::AppState;
 
