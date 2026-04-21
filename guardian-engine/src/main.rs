@@ -23,16 +23,24 @@ async fn main() -> anyhow::Result<()> {
     let cfg = config::Config::from_env()?;
     info!(listen = %cfg.listen_addr, "guardian-engine starting");
 
+    // Initialize federation TLS identity
+    let identity = federation::tls::ensure_identity(&cfg.cert_dir, &cfg.instance_name)?;
+    info!(
+        fingerprint = %identity.fingerprint,
+        cert = %identity.cert_path.display(),
+        "federation TLS identity ready"
+    );
+
     // Connect to PostgreSQL
     let pool = db::connect(&cfg.database_url).await?;
     info!("database connected");
 
     // Build shared app state
-    let app_state = state::AppState::new(pool, cfg.clone());
+    let app_state = state::AppState::new(pool, cfg.clone(), identity.fingerprint.clone());
 
-    // Start federation manager (background task)
-    let fed_handle = federation::manager::start(app_state.clone());
-    info!("federation manager started");
+    // Start federation manager (background task) with TLS
+    let fed_handle = federation::manager::start(app_state.clone(), identity);
+    info!("federation manager started (TLS enabled)");
 
     // Start compute tick loop (30-second interval)
     let compute_state = app_state.clone();

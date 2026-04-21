@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Create data directory for cert storage
+RUN mkdir -p /data/guardian/certs
+
 COPY --from=builder /app/target/release/guardian-engine /usr/local/bin/guardian-engine
 
 EXPOSE 3420 3421

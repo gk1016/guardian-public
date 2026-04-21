@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -20,8 +21,15 @@ pub struct Config {
     /// Comma-separated list of seed peer addresses (host:port)
     pub federation_seeds: Vec<String>,
 
-    /// Shared secret for federation auth (pre-shared key, replaced by mTLS later)
+    /// Shared secret for federation auth (pre-shared key, supplementary to TLS)
     pub federation_psk: Option<String>,
+
+    /// Directory for TLS certificate storage
+    pub cert_dir: PathBuf,
+
+    /// Trusted peer certificate fingerprints (SHA-256 hex).
+    /// If empty, trust-on-first-use mode is used (fingerprints logged).
+    pub federation_trusted_fingerprints: Vec<String>,
 }
 
 impl Config {
@@ -54,6 +62,19 @@ impl Config {
 
         let federation_psk = std::env::var("FEDERATION_PSK").ok();
 
+        let cert_dir = PathBuf::from(
+            std::env::var("GUARDIAN_CERT_DIR")
+                .unwrap_or_else(|_| "/data/guardian/certs".into())
+        );
+
+        let federation_trusted_fingerprints: Vec<String> =
+            std::env::var("FEDERATION_TRUSTED_FINGERPRINTS")
+                .unwrap_or_default()
+                .split(',')
+                .map(|s| s.trim().to_lowercase())
+                .filter(|s| !s.is_empty())
+                .collect();
+
         Ok(Self {
             listen_addr: SocketAddr::from(([0, 0, 0, 0], listen_port)),
             database_url,
@@ -62,6 +83,8 @@ impl Config {
             federation_port,
             federation_seeds,
             federation_psk,
+            cert_dir,
+            federation_trusted_fingerprints,
         })
     }
 }

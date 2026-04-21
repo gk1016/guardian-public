@@ -25,7 +25,10 @@ services:
       FEDERATION_PORT: "3421"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-guardian}:${POSTGRES_PASSWORD:-guardian_dev}@guardian-postgres:5432/${POSTGRES_DB:-guardian}"
       GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"
+      GUARDIAN_CERT_DIR: "/data/guardian/certs"
       RUST_LOG: "guardian_engine=info,tower_http=info"
+    volumes:
+      - guardian-engine-certs:/data/guardian/certs
     depends_on:
       guardian-postgres:
         condition: service_healthy
@@ -62,3 +65,4 @@ services:
 
 volumes:
   guardian-postgres-data:
+  guardian-engine-certs:

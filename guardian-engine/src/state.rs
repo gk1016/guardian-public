@@ -18,10 +18,12 @@ struct Inner {
     pub event_tx: broadcast::Sender<String>,
     /// Broadcast channel for federation events (inter-instance)
     pub federation_tx: broadcast::Sender<FederationEvent>,
+    /// This instance's TLS certificate fingerprint (SHA-256 hex)
+    pub cert_fingerprint: String,
 }
 
 impl AppState {
-    pub fn new(pool: PgPool, config: Config) -> Self {
+    pub fn new(pool: PgPool, config: Config, cert_fingerprint: String) -> Self {
         let (event_tx, _) = broadcast::channel(256);
         let (federation_tx, _) = broadcast::channel(256);
         Self {
@@ -30,6 +32,7 @@ impl AppState {
                 config,
                 event_tx,
                 federation_tx,
+                cert_fingerprint,
             }),
         }
     }
@@ -48,5 +51,9 @@ impl AppState {
 
     pub fn federation_tx(&self) -> &broadcast::Sender<FederationEvent> {
         &self.inner.federation_tx
+    }
+
+    pub fn cert_fingerprint(&self) -> &str {
+        &self.inner.cert_fingerprint
     }
 }

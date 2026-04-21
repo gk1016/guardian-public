@@ -33,6 +33,14 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 futures-util = "0.3"
 
+# TLS / Crypto for federation
+rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
+tokio-rustls = "0.26"
+rcgen = "0.13"
+rustls-pemfile = "2"
+sha2 = "0.10"
+hex = "0.4"
+
 # Config
 dotenvy = "0.15"
 

@@ -8,9 +8,14 @@
 //!
 //! Architecture mirrors ATAK's federated server model:
 //! - Each instance has a unique ID and display name
-//! - Peers connect via WebSocket (upgradeable to mTLS)
+//! - Peers connect via TLS WebSocket with certificate fingerprint pinning
 //! - Messages are typed envelopes with routing metadata
 //! - No central authority — pure mesh topology
+//!
+//! Security:
+//! - Self-signed TLS cert generated on first boot (stored on disk)
+//! - SHA-256 cert fingerprint used for peer identity verification
+//! - Configurable trusted fingerprints or trust-on-first-use mode
 
 pub mod types;
 pub mod protocol;
@@ -19,3 +24,4 @@ pub mod manager;
 pub mod chat;
 pub mod file_transfer;
 pub mod data_sync;
+pub mod tls;

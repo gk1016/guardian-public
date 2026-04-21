@@ -9,6 +9,10 @@ pub struct HealthResponse {
     pub instance_id: String,
     pub instance_name: String,
     pub version: &'static str,
+    /// SHA-256 fingerprint of this instance's federation TLS certificate.
+    /// Used for out-of-band peer verification.
+    pub cert_fingerprint: String,
+    pub federation_port: u16,
 }
 
 async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
@@ -17,6 +21,8 @@ async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
         instance_id: state.config().instance_id.clone(),
         instance_name: state.config().instance_name.clone(),
         version: env!("CARGO_PKG_VERSION"),
+        cert_fingerprint: state.cert_fingerprint().to_string(),
+        federation_port: state.config().federation_port,
     })
 }
 
