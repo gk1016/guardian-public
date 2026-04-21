@@ -20,6 +20,11 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
+    // Install rustls crypto provider (required before any TLS config is built)
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("failed to install rustls CryptoProvider");
+
     let cfg = config::Config::from_env()?;
     info!(listen = %cfg.listen_addr, "guardian-engine starting");
 
