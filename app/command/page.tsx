@@ -8,12 +8,15 @@ import { getCommandOverview } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
 import { LiveCounters } from "@/components/live-counters";
+import { MissionQuickActions } from "@/components/mission-quick-actions";
+import { canManageMissions } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function CommandPage() {
   const session = await requireSession("/command");
   const data = await getCommandOverview(session.userId);
+  const canManageMission = canManageMissions(session.role);
 
   return (
     <OpsShell
@@ -47,29 +50,40 @@ export default async function CommandPage() {
           <div className="mt-4 space-y-3">
             {data.missions.map((mission) => (
               <article key={mission.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">
-                      {mission.callsign}
-                    </p>
-                    <p className="mt-0.5 text-[11px] uppercase tracking-[0.1em] text-slate-500">{mission.missionType}</p>
-                  </div>
-                  <span className="rounded-[var(--radius-sm)] border border-white/8 bg-black/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber-200">
-                    {mission.status}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-400">{mission.title}</p>
-                <p className="mt-2 text-[11px] text-slate-500">
-                  {mission.packageSummary.readyOrLaunched}/{mission.participantCount} ready / AO {mission.areaOfOperation ?? "pending"}
-                </p>
-                {mission.packageDiscipline.warnings.length > 0 ? (
-                  <div className="mt-2 rounded-[var(--radius-sm)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-[11px] text-red-200">
-                    <div className="flex items-center gap-1.5 font-semibold uppercase tracking-[0.1em]">
-                      <AlertTriangle size={12} />
-                      Package alert
+                <Link href={`/missions/${mission.id}`} className="block">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">
+                        {mission.callsign}
+                      </p>
+                      <p className="mt-0.5 text-[11px] uppercase tracking-[0.1em] text-slate-500">{mission.missionType}</p>
                     </div>
-                    <p className="mt-1">{mission.packageDiscipline.warnings[0]}</p>
+                    <span className="rounded-[var(--radius-sm)] border border-white/8 bg-black/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-amber-200">
+                      {mission.status}
+                    </span>
                   </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">{mission.title}</p>
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    {mission.packageSummary.readyOrLaunched}/{mission.participantCount} ready / AO {mission.areaOfOperation ?? "pending"}
+                  </p>
+                  {mission.packageDiscipline.warnings.length > 0 ? (
+                    <div className="mt-2 rounded-[var(--radius-sm)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-[11px] text-red-200">
+                      <div className="flex items-center gap-1.5 font-semibold uppercase tracking-[0.1em]">
+                        <AlertTriangle size={12} />
+                        Package alert
+                      </div>
+                      <p className="mt-1">{mission.packageDiscipline.warnings[0]}</p>
+                    </div>
+                  ) : null}
+                </Link>
+                {canManageMission ? (
+                  <MissionQuickActions
+                    missionId={mission.id}
+                    currentStatus={mission.status}
+                    callsign={mission.callsign}
+                    participantCount={mission.participantCount}
+                    readyCount={mission.packageSummary.readyOrLaunched}
+                  />
                 ) : null}
               </article>
             ))}
