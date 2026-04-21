@@ -26,6 +26,7 @@ model User {
   incidentsReported Incident[] @relation("incident_reporter")
   incidentsReviewed Incident[] @relation("incident_reviewer")
   notificationsCreated Notification[] @relation("notification_creator")
+  manualEntries ManualEntry[] @relation("manual_author")
 }
 
 model Organization {
@@ -46,6 +47,7 @@ model Organization {
   incidents   Incident[]
   notifications Notification[]
   alertRules  AlertRule[]
+  manualEntries ManualEntry[]
 }
 
 model OrgMember {
@@ -320,4 +322,24 @@ model AlertRule {
   org             Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId, isEnabled])
+}
+
+model ManualEntry {
+  id           String       @id @default(cuid())
+  orgId        String
+  authorId     String
+  title        String
+  category     String       @default("general")
+  body         String       @default("")
+  entryType    String       @default("article")
+  fileName     String?
+  fileSize     Int?
+  fileMimeType String?
+  fileData     Bytes?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  author       User         @relation("manual_author", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, category])
 }

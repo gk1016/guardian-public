@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ScrollText,
+  BookOpen,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
@@ -40,6 +41,12 @@ const navSections = [
       { href: "/qrf", label: "QRF", icon: Zap },
       { href: "/rescues", label: "CSAR", icon: LifeBuoy },
       { href: "/doctrine", label: "Doctrine", icon: BookCheck },
+    ],
+  },
+  {
+    title: "Reference",
+    items: [
+      { href: "/manual", label: "Manual", icon: BookOpen },
     ],
   },
   {

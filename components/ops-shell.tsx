@@ -18,7 +18,8 @@ type OpsShellProps = {
     | "/incidents"
     | "/admin"
     | "/notifications"
-    | "/sitrep";
+    | "/sitrep"
+    | "/manual";
   section: string;
   title: string;
   orgName: string;
