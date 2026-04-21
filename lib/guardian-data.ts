@@ -72,6 +72,14 @@ type CrewCandidate = {
   availabilityLabel: "available" | "tasked" | "engaged";
 };
 
+type RosterCrewItem = CrewCandidate & {
+  activityScore: number;
+  activityTier: "active" | "moderate" | "dormant" | "dark";
+  lastActiveLabel: string | null;
+  missionCount: number;
+  logCount: number;
+};
+
 type MissionLogRecord = {
   id: string;
   entryType: string;
@@ -206,7 +214,7 @@ type DoctrinePagePayload = {
 type RosterPagePayload = {
   ok: boolean;
   orgName: string;
-  items: CrewCandidate[];
+  items: RosterCrewItem[];
   error?: string;
 };
 
@@ -289,6 +297,26 @@ async function getPrimaryOrg() {
 
 function normalizeHandle(value: string | null | undefined) {
   return (value ?? "").replaceAll(/\s+/g, "").trim().toUpperCase();
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
+
+function computeActivityTier(score: number): "active" | "moderate" | "dormant" | "dark" {
+  if (score >= 60) return "active";
+  if (score >= 30) return "moderate";
+  if (score >= 10) return "dormant";
+  return "dark";
 }
 
 function buildCrewCandidates(
@@ -1040,6 +1068,7 @@ export async function getRosterPageData(userId: string): Promise<RosterPagePaylo
           title: true,
           user: {
             select: {
+              id: true,
               handle: true,
               displayName: true,
               role: true,
@@ -1093,10 +1122,80 @@ export async function getRosterPageData(userId: string): Promise<RosterPagePaylo
       }),
     ]);
 
+    // Activity scoring: batch queries for last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [participantActivity, logActivity] = await Promise.all([
+      prisma.$queryRaw<{ handle: string; count: number; lastActive: Date }[]>`
+        SELECT mp."handle", COUNT(*)::int as count, MAX(mp."createdAt") as "lastActive"
+        FROM "MissionParticipant" mp
+        JOIN "Mission" m ON mp."missionId" = m."id"
+        WHERE m."orgId" = ${org.id}
+        AND mp."createdAt" >= ${thirtyDaysAgo}
+        GROUP BY mp."handle"
+      `,
+      prisma.$queryRaw<{ authorId: string; count: number; lastActive: Date }[]>`
+        SELECT ml."authorId", COUNT(*)::int as count, MAX(ml."createdAt") as "lastActive"
+        FROM "MissionLog" ml
+        JOIN "Mission" m ON ml."missionId" = m."id"
+        WHERE m."orgId" = ${org.id}
+        AND ml."authorId" IS NOT NULL
+        AND ml."createdAt" >= ${thirtyDaysAgo}
+        GROUP BY ml."authorId"
+      `,
+    ]);
+
+    const participantMap = new Map(
+      participantActivity.map((p) => [normalizeHandle(p.handle), p])
+    );
+    const logMap = new Map(
+      logActivity.map((l) => [l.authorId, l])
+    );
+
+    // Build userId lookup from members
+    const userIdByHandle = new Map(
+      members.map((m) => [normalizeHandle(m.user.handle), m.user.id])
+    );
+
+    const candidates = buildCrewCandidates(members, qrfEntries, activeMissionAssignments, "");
+
+    const enrichedItems: RosterCrewItem[] = candidates.map((crew) => {
+      const nh = normalizeHandle(crew.handle);
+      const pActivity = participantMap.get(nh);
+      const uid = userIdByHandle.get(nh);
+      const lActivity = uid ? logMap.get(uid) : undefined;
+
+      const missionCount = pActivity?.count ?? 0;
+      const logCount = lActivity?.count ?? 0;
+      const hasCommitments = crew.commitments.length > 0;
+      const hasQrf = crew.qrfStatus !== null;
+
+      // Weighted score: missions 40%, logs 30%, active commitments 20%, QRF 10%
+      const participationScore = Math.min(missionCount / 3, 1) * 40;
+      const logScore = Math.min(logCount / 10, 1) * 30;
+      const commitmentScore = hasCommitments ? 20 : 0;
+      const qrfScore = hasQrf ? 10 : 0;
+      const activityScore = Math.round(participationScore + logScore + commitmentScore + qrfScore);
+
+      // Most recent activity across participation and log authorship
+      const dates = [pActivity?.lastActive, lActivity?.lastActive].filter(Boolean) as Date[];
+      const lastActive = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+
+      return {
+        ...crew,
+        activityScore,
+        activityTier: computeActivityTier(activityScore),
+        lastActiveLabel: lastActive ? formatRelativeTime(lastActive) : null,
+        missionCount,
+        logCount,
+      };
+    });
+
     return {
       ok: true,
       orgName: org.name,
-      items: buildCrewCandidates(members, qrfEntries, activeMissionAssignments, ""),
+      items: enrichedItems,
     };
   } catch (error) {
     return {

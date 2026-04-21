@@ -61,6 +61,13 @@ pub async fn tick(pool: &sqlx::PgPool, event_tx: &tokio::sync::broadcast::Sender
                 "active_intel": summary.active_intel,
                 "threat_clusters": summary.threat_clusters,
                 "compliance_violations": summary.compliance_violations,
+                "readiness_score": summary.readiness_score,
+                "readiness": {
+                    "qrf_posture": summary.readiness.qrf_posture,
+                    "package_discipline": summary.readiness.package_discipline,
+                    "rescue_response": summary.readiness.rescue_response,
+                    "threat_awareness": summary.readiness.threat_awareness,
+                },
                 "timestamp": summary.timestamp,
             });
             let _ = event_tx.send(event.to_string());
