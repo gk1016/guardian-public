@@ -22,7 +22,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
 
   return (
     <header
-      className={`flex items-center justify-between border-b pb-4 ${
+      className={`relative flex items-center justify-between border-b pb-4 ${
         isLanding ? "border-white/8" : "border-white/10 pb-6"
       }`}
     >
