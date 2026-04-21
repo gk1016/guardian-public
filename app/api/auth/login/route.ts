@@ -42,6 +42,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Look up org membership for the session
+    const membership = await prisma.orgMember.findFirst({
+      where: { userId: user.id },
+      include: { org: { select: { id: true, tag: true } } },
+      orderBy: { joinedAt: "asc" },
+    });
+
     const token = await createSessionToken({
       userId: user.id,
       email: user.email,
@@ -49,6 +56,8 @@ export async function POST(request: Request) {
       role: user.role,
       displayName: user.displayName ?? undefined,
       status: user.status,
+      orgId: membership?.org.id,
+      orgTag: membership?.org.tag,
     });
 
     const response = NextResponse.json({

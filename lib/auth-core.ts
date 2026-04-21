@@ -10,6 +10,8 @@ type GuardianSessionPayload = JWTPayload & {
   role: string;
   displayName?: string;
   status: string;
+  orgId?: string;
+  orgTag?: string;
 };
 
 export type GuardianSession = {
@@ -19,6 +21,8 @@ export type GuardianSession = {
   role: string;
   displayName?: string;
   status: string;
+  orgId?: string;
+  orgTag?: string;
 };
 
 function getSessionSecret() {
@@ -34,6 +38,8 @@ export async function createSessionToken(session: GuardianSession) {
     role: session.role,
     displayName: session.displayName,
     status: session.status,
+    orgId: session.orgId,
+    orgTag: session.orgTag,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(session.userId)
@@ -60,6 +66,8 @@ export async function verifySessionToken(token: string) {
       role: payload.role,
       displayName: payload.displayName,
       status: payload.status,
+      orgId: payload.orgId,
+      orgTag: payload.orgTag,
     } satisfies GuardianSession;
   } catch {
     return null;
