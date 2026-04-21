@@ -48,6 +48,7 @@ export const config = {
     "/incidents/:path*",
     "/admin/:path*",
     "/notifications/:path*",
+    "/sitrep/:path*",
     "/aar/:path*",
     "/ops/:path*",
     // Protected API routes (exclude auth + health)
