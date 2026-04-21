@@ -18,145 +18,84 @@ export default async function RescuesPage() {
       currentPath="/rescues"
       section="Rescue"
       title="CSAR Workflow"
-      description="Rescue intake, assignment, status transitions, and dispatched assets now live as an actual workflow."
       orgName={data.orgName}
       session={session}
     >
       {data.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {data.error}
-        </div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
       {canManage ? (
-        <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-          <div className="flex items-center gap-3">
-            <LifeBuoy size={18} className="text-emerald-300" />
-            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-              Open Rescue Intake
-            </p>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <div className="flex items-center gap-2">
+            <LifeBuoy size={16} className="text-emerald-300" />
+            <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Open Rescue Intake</p>
           </div>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            Intake captures the survivor, threat, condition, and escort requirement before dispatch happens.
-          </p>
-          <div className="mt-6">
-            <RescueCreateForm />
-          </div>
+          <div className="mt-4"><RescueCreateForm /></div>
         </section>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((item) => (
-          <article id={item.id} key={item.id} className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-start justify-between gap-4">
+          <article id={item.id} key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
-                  {item.survivorHandle}
-                </p>
-                <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
-                  {item.locationName ?? "Location pending"} / Requester {item.requesterDisplay}
-                </p>
+                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.survivorHandle}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{item.locationName ?? "Location pending"} / {item.requesterDisplay}</p>
               </div>
               <div className="text-right">
-                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                  {item.status}
-                </span>
-                <p className="mt-2 text-xs uppercase tracking-[0.18em] text-amber-200">{item.urgency}</p>
+                <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{item.status}</span>
+                <p className="mt-1 text-[10px] uppercase text-amber-200">{item.urgency}</p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Threat</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {item.threatSummary ?? "Threat summary pending."}
-                </p>
+            <div className="mt-4 grid gap-3">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Threat</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.threatSummary ?? "Pending."}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Condition</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {item.survivorCondition ?? "Condition not yet logged."}
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Condition</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.survivorCondition ?? "Not logged."}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Operator / Outcome</p>
-                <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white">
-                  {item.operatorDisplay}
-                </p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {item.outcomeSummary ?? "Outcome not yet filed."}
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Operator / Outcome</p>
+                <p className="mt-1.5 text-xs font-medium uppercase tracking-[0.08em] text-white">{item.operatorDisplay}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-400">{item.outcomeSummary ?? "Not filed."}</p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3 text-sm text-slate-300">
-              <div className="flex items-center gap-3">
-                <ShieldAlert size={16} className="text-red-300" />
-                <span>
-                  {item.medicalRequired ? "Medical support required" : "Medical support not required"} /{" "}
-                  {item.escortRequired ? "Escort required" : "Escort discretionary"}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <HeartPulse size={16} className="text-emerald-300" />
-                <span>
-                  Offered payment: {item.offeredPayment ? `${item.offeredPayment.toLocaleString()} aUEC` : "none logged"}
-                </span>
-              </div>
+            <div className="mt-3 grid gap-1.5 text-[11px] text-slate-400">
+              <div className="flex items-center gap-2"><ShieldAlert size={13} className="text-red-300" />{item.medicalRequired ? "Medical required" : "No medical"} / {item.escortRequired ? "Escort required" : "Escort discretionary"}</div>
+              <div className="flex items-center gap-2"><HeartPulse size={13} className="text-emerald-300" />Payment: {item.offeredPayment ? `${item.offeredPayment.toLocaleString()} aUEC` : "none"}</div>
             </div>
 
-            <section className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dispatched assets</p>
-              <div className="mt-4 space-y-3">
-                {item.dispatches.map((dispatch) => (
-                  <div key={dispatch.id} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
-                        {dispatch.qrfCallsign}
-                      </p>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-200">
-                        {dispatch.status}
-                      </span>
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatched assets</p>
+              <div className="mt-2 space-y-2">
+                {item.dispatches.map((d) => (
+                  <div key={d.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium uppercase text-white">{d.qrfCallsign}</p>
+                      <span className="text-[10px] uppercase text-slate-500">{d.status}</span>
                     </div>
-                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                      {dispatch.platform ?? "Platform pending"} / Tasked {dispatch.dispatchedAtLabel}
-                    </p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">
-                      {dispatch.notes ?? "No dispatch notes logged."}
-                    </p>
+                    <p className="mt-1 text-[10px] text-slate-500">{d.platform ?? "Platform pending"} / Tasked {d.dispatchedAtLabel}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-400">{d.notes ?? "No notes."}</p>
                   </div>
                 ))}
-                {item.dispatches.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                    No dispatched assets linked yet.
-                  </div>
-                ) : null}
+                {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No assets dispatched.</p> : null}
               </div>
-            </section>
+            </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Rescue notes</p>
-              <p className="mt-3 text-sm leading-7 text-slate-300">
-                {item.rescueNotes ?? "No rescue notes logged."}
-              </p>
+            <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+              <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Notes</p>
+              <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.rescueNotes ?? "None."}</p>
             </div>
 
             {canManage ? (
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Update rescue</p>
-                <div className="mt-4">
-                  <RescueUpdateForm
-                    rescueId={item.id}
-                    operatorOptions={data.operatorOptions}
-                    initialRescue={{
-                      status: item.status,
-                      operatorId: item.operatorId,
-                      survivorCondition: item.survivorCondition,
-                      rescueNotes: item.rescueNotes,
-                      outcomeSummary: item.outcomeSummary,
-                    }}
-                  />
-                </div>
+              <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Update rescue</p>
+                <div className="mt-3"><RescueUpdateForm rescueId={item.id} operatorOptions={data.operatorOptions} initialRescue={{ status: item.status, operatorId: item.operatorId, survivorCondition: item.survivorCondition, rescueNotes: item.rescueNotes, outcomeSummary: item.outcomeSummary }} /></div>
               </div>
             ) : null}
           </article>

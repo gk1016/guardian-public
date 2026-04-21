@@ -1,4 +1,4 @@
-import { BookCheck, Lock, Shield } from "lucide-react";
+import { BookCheck, Lock } from "lucide-react";
 import { DoctrineCreateForm } from "@/components/doctrine-create-form";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
@@ -17,103 +17,59 @@ export default async function DoctrinePage() {
       currentPath="/doctrine"
       section="Doctrine"
       title="ROE and Doctrine"
-      description="Mission doctrine now lives as a first-class org asset instead of getting buried in brief text."
       orgName={data.orgName}
       session={session}
     >
       {data.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {data.error}
-        </div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
+      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="flex flex-col gap-4">
           {data.items.map((item) => (
-            <article key={item.id} className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+            <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                    {item.title}
-                  </p>
-                  <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
-                    {item.code} / {item.category}
-                  </p>
+                  <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{item.title}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{item.code} / {item.category}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {item.isDefault ? (
-                    <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-100">
-                      Default
-                    </span>
-                  ) : null}
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                    {item.missionCount} linked missions
-                  </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.isDefault ? <span className="rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-2 py-0.5 text-[10px] uppercase text-emerald-200">Default</span> : null}
+                  <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{item.missionCount} linked</span>
                 </div>
               </div>
-
-              <p className="mt-5 text-sm leading-7 text-slate-300">{item.summary}</p>
-
-              <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Execution Checklist</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">{item.body}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-400">{item.summary}</p>
+              <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Execution Checklist</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">{item.body}</p>
               </div>
-
-              <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-5 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-amber-100">Escalation Guidance</p>
-                <p className="mt-3 text-sm leading-7 text-amber-50">
-                  {item.escalation ?? "No escalation guidance attached."}
-                </p>
+              <div className="mt-3 rounded-[var(--radius-md)] border border-amber-400/20 bg-amber-400/8 px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-amber-200">Escalation</p>
+                <p className="mt-2 text-sm leading-6 text-amber-100/80">{item.escalation ?? "No escalation guidance."}</p>
               </div>
             </article>
           ))}
-
-          {data.items.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
-              No doctrine templates loaded yet.
-            </div>
-          ) : null}
+          {data.items.length === 0 ? <p className="text-sm text-slate-500">No doctrine templates loaded.</p> : null}
         </div>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           {canManageDoctrine ? (
-            <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-              <div className="flex items-center gap-3">
-                <BookCheck size={18} className="text-amber-300" />
-                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                  Create Doctrine
-                </p>
+            <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+              <div className="flex items-center gap-2">
+                <BookCheck size={16} className="text-amber-300" />
+                <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Create Doctrine</p>
               </div>
-              <p className="mt-3 text-sm leading-7 text-slate-300">
-                Build reusable briefing doctrine once, then attach it directly to sorties as ROE and execution guidance.
-              </p>
-              <div className="mt-6">
-                <DoctrineCreateForm />
-              </div>
+              <div className="mt-4"><DoctrineCreateForm /></div>
             </section>
           ) : (
-            <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
-              <div className="flex items-center gap-3">
-                <Lock size={18} />
-                <p className="font-semibold uppercase tracking-[0.18em]">Read-only doctrine access</p>
+            <section className="rounded-[var(--radius-lg)] border border-amber-400/20 bg-amber-400/8 p-5 text-amber-100">
+              <div className="flex items-center gap-2">
+                <Lock size={16} />
+                <p className="text-xs font-medium uppercase tracking-[0.1em]">Read-only access</p>
               </div>
-              <p className="mt-4 text-sm leading-7 text-amber-50">
-                Your current role is <span className="font-semibold uppercase">{session.role}</span>. You can read doctrine, but creating or attaching ROE packages remains restricted to command authority.
-              </p>
+              <p className="mt-2 text-sm leading-6 text-amber-200/70">Your role ({session.role}) can read doctrine but not create or attach.</p>
             </section>
           )}
-
-          <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <Shield size={18} className="text-cyan-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Why This Matters
-              </p>
-            </div>
-            <p className="mt-4 text-sm leading-7 text-slate-300">
-              Mission briefs change every sortie. Doctrine should not. This keeps escalation rules, engagement posture, and execution checklists attached to the mission record instead of rotting in chat history.
-            </p>
-          </section>
         </div>
       </section>
     </OpsShell>

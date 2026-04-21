@@ -21,133 +21,76 @@ export default async function QrfPage() {
       currentPath="/qrf"
       section="QRF"
       title="QRF Dispatch"
-      description="Readiness posture, dispatch tasking, and return-to-base tracking now live in one board."
       orgName={data.orgName}
       session={session}
     >
       {data.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {data.error}
-        </div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
       {canManage ? (
-        <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-          <div className="flex items-center gap-3">
-            <Rocket size={18} className="text-cyan-300" />
-            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-              Add QRF Asset
-            </p>
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <div className="flex items-center gap-2">
+            <Rocket size={16} className="text-cyan-300" />
+            <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Add QRF Asset</p>
           </div>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            This creates a real readiness entry that can be tasked against sorties or rescue calls.
-          </p>
-          <div className="mt-6">
-            <QrfCreateForm />
-          </div>
+          <div className="mt-4"><QrfCreateForm /></div>
         </section>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((item) => (
-          <article key={item.id} className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+          <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-white">
-                  {item.callsign}
-                </p>
-                <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
-                  {item.platform ?? "Platform pending"} / {item.locationName ?? "Location pending"}
-                </p>
+                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.callsign}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{item.platform ?? "Platform pending"} / {item.locationName ?? "Location pending"}</p>
               </div>
-              <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                {item.status}
-              </span>
+              <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-cyan-200">{item.status}</span>
             </div>
-
-            <p className="mt-4 text-sm leading-7 text-slate-300">
-              Crew {item.availableCrew} / {item.notes ?? "No readiness notes logged."}
-            </p>
+            <p className="mt-3 text-sm leading-6 text-slate-400">Crew {item.availableCrew} / {item.notes ?? "No readiness notes."}</p>
 
             {canManage ? (
-              <div className="mt-6 grid gap-6">
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Update posture</p>
-                  <div className="mt-4">
-                    <QrfStatusForm
-                      qrfId={item.id}
-                      initialAsset={{
-                        status: item.status,
-                        platform: item.platform,
-                        locationName: item.locationName,
-                        availableCrew: item.availableCrew,
-                        notes: item.notes,
-                      }}
-                    />
-                  </div>
-                </section>
-
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dispatch asset</p>
-                  <div className="mt-4">
-                    <QrfDispatchForm
-                      qrfId={item.id}
-                      missionOptions={data.missionOptions}
-                      rescueOptions={data.rescueOptions}
-                    />
-                  </div>
-                </section>
+              <div className="mt-4 grid gap-4">
+                <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Update posture</p>
+                  <div className="mt-3"><QrfStatusForm qrfId={item.id} initialAsset={{ status: item.status, platform: item.platform, locationName: item.locationName, availableCrew: item.availableCrew, notes: item.notes }} /></div>
+                </div>
+                <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatch asset</p>
+                  <div className="mt-3"><QrfDispatchForm qrfId={item.id} missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} /></div>
+                </div>
               </div>
             ) : null}
 
-            <section className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center gap-3">
-                <ShieldAlert size={16} className="text-amber-300" />
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dispatch history</p>
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={13} className="text-amber-300" />
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatch history</p>
               </div>
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-2">
                 {item.dispatches.map((dispatch) => (
-                  <div key={dispatch.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div key={dispatch.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       {dispatch.targetHref ? (
-                        <Link href={dispatch.targetHref} className="text-sm font-semibold uppercase tracking-[0.16em] text-white transition hover:text-cyan-100">
-                          {dispatch.targetLabel}
-                        </Link>
+                        <Link href={dispatch.targetHref} className="text-xs font-medium uppercase tracking-[0.1em] text-white hover:text-cyan-200">{dispatch.targetLabel}</Link>
                       ) : (
-                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
-                          {dispatch.targetLabel}
-                        </p>
+                        <p className="text-xs font-medium uppercase tracking-[0.1em] text-white">{dispatch.targetLabel}</p>
                       )}
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-200">
-                        {dispatch.status}
-                      </span>
+                      <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase text-slate-400">{dispatch.status}</span>
                     </div>
-                    <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-1 text-[10px] text-slate-500">
                       Tasked {dispatch.dispatchedAtLabel}
                       {dispatch.arrivedAtLabel ? ` / Arrived ${dispatch.arrivedAtLabel}` : ""}
                       {dispatch.rtbAtLabel ? ` / RTB ${dispatch.rtbAtLabel}` : ""}
                     </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">
-                      {dispatch.notes ?? "No dispatch notes logged."}
-                    </p>
-                    {canManage ? (
-                      <div className="mt-4">
-                        <QrfDispatchStatusForm
-                          dispatchId={dispatch.id}
-                          initialStatus={dispatch.status}
-                        />
-                      </div>
-                    ) : null}
+                    <p className="mt-1.5 text-sm leading-6 text-slate-400">{dispatch.notes ?? "No dispatch notes."}</p>
+                    {canManage ? <div className="mt-2"><QrfDispatchStatusForm dispatchId={dispatch.id} initialStatus={dispatch.status} /></div> : null}
                   </div>
                 ))}
-
-                {item.dispatches.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                    No dispatches logged for this asset yet.
-                  </div>
-                ) : null}
+                {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No dispatches logged.</p> : null}
               </div>
-            </section>
+            </div>
           </article>
         ))}
       </section>

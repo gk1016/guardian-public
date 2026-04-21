@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, Clock3, Crosshair, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Crosshair, ShieldAlert } from "lucide-react";
 import { getMissionPageData } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
@@ -8,9 +8,9 @@ import { canManageMissions } from "@/lib/roles";
 export const dynamic = "force-dynamic";
 
 const statusTone = {
-  planning: "text-slate-300 border-slate-500/20 bg-slate-500/10",
-  ready: "text-amber-200 border-amber-400/20 bg-amber-400/10",
-  active: "text-emerald-200 border-emerald-400/20 bg-emerald-400/10",
+  planning: "text-slate-300 border-slate-500/20 bg-slate-500/8",
+  ready: "text-amber-200 border-amber-400/20 bg-amber-400/8",
+  active: "text-emerald-200 border-emerald-400/20 bg-emerald-400/8",
 };
 
 export default async function MissionsPage() {
@@ -23,110 +23,77 @@ export default async function MissionsPage() {
       currentPath="/missions"
       section="Missions"
       title="Mission Board"
-      description="Mission views are now authenticated and scoped through the active operator session."
       orgName={data.orgName}
       session={session}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        <span>Mission board is live. Commander-gated mission creation is now online.</span>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5 text-sm text-slate-400">
+        <span>{data.items.length} missions loaded</span>
         {canCreateMission ? (
           <Link
             href="/missions/new"
-            className="rounded-md border border-amber-300/30 bg-amber-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-amber-200"
+            className="rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-amber-200"
           >
             Create mission
           </Link>
         ) : null}
       </div>
 
-        {data.error ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-            {data.error}
-          </div>
-        ) : null}
+      {data.error ? (
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
+      ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          {data.items.map((mission) => (
-            <Link
-              key={mission.id}
-              href={`/missions/${mission.id}`}
-              className="block rounded-2xl border border-white/10 bg-slate-950/60 p-6 transition hover:border-amber-300/25 hover:bg-slate-950/80"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
-                      {mission.callsign}
-                    </p>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-300">
-                      Rev {mission.revisionNumber}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
-                    {mission.missionType}
-                  </p>
+      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        {data.items.map((mission) => (
+          <Link
+            key={mission.id}
+            href={`/missions/${mission.id}`}
+            className="block rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5 transition hover:border-amber-300/20 hover:bg-[var(--color-panel-strong)]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{mission.callsign}</p>
+                  <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-slate-400">Rev {mission.revisionNumber}</span>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] ${statusTone[mission.status as keyof typeof statusTone] ?? statusTone.planning}`}>
-                  {mission.status}
-                </span>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{mission.missionType}</p>
               </div>
-
-              <h2 className="mt-5 text-xl font-semibold text-white">{mission.title}</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-300">{mission.missionBrief ?? "Mission brief pending."}</p>
-
-              <div className="mt-6 grid gap-3 text-sm text-slate-300">
-                <div className="flex items-center gap-3">
-                  <ShieldAlert size={16} className="text-amber-300" />
-                  <span className="uppercase tracking-[0.16em]">{mission.priority}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Crosshair size={16} className="text-cyan-300" />
-                  <span>{mission.areaOfOperation ?? "AO pending"}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-emerald-300" />
-                  <span>{mission.packageSummary.readyOrLaunched}/{mission.participantCount} package ready</span>
-                </div>
-              </div>
-
-              {mission.packageDiscipline.warnings.length > 0 ? (
-                <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-200">
-                    Package alert / {mission.packageDiscipline.coverageLabel}
-                  </p>
-                  <p className="mt-2 leading-7">{mission.packageDiscipline.warnings[0]}</p>
-                </div>
-              ) : (
-                <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-4 text-sm text-emerald-100">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
-                    Package structured
-                  </p>
-                  <p className="mt-2 leading-7">
-                    Required package roles are currently covered for this mission profile.
-                  </p>
-                </div>
-              )}
-            </Link>
-          ))}
-
-          {data.items.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
-              No missions are loaded yet.
+              <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${statusTone[mission.status as keyof typeof statusTone] ?? statusTone.planning}`}>{mission.status}</span>
             </div>
-          ) : null}
-        </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm leading-7 text-slate-300">
-          <div className="flex items-center gap-3">
-            <Clock3 size={16} className="text-cyan-300" />
-            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-              Next slice
-            </p>
-          </div>
-          <p className="mt-4">
-            Mission creation, detail views, closeout, reopen, participant assignment, intel linkage, doctrine attachment, and template-aware sortie seeding are live. Next up is deeper package control, not more placeholder pages.
-          </p>
-        </section>
+            <h2 className="mt-3 text-sm font-medium text-white">{mission.title}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">{mission.missionBrief ?? "Mission brief pending."}</p>
+
+            <div className="mt-4 grid gap-2 text-[11px] text-slate-400">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={13} className="text-amber-300" />
+                <span className="uppercase tracking-[0.1em]">{mission.priority}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Crosshair size={13} className="text-cyan-300" />
+                <span>{mission.areaOfOperation ?? "AO pending"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={13} className="text-emerald-300" />
+                <span>{mission.packageSummary.readyOrLaunched}/{mission.participantCount} package ready</span>
+              </div>
+            </div>
+
+            {mission.packageDiscipline.warnings.length > 0 ? (
+              <div className="mt-3 rounded-[var(--radius-sm)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-[11px] text-red-200">
+                <span className="font-semibold uppercase tracking-[0.1em]">Package alert</span> / {mission.packageDiscipline.warnings[0]}
+              </div>
+            ) : (
+              <div className="mt-3 rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-3 py-2 text-[11px] text-emerald-200">
+                Package structured
+              </div>
+            )}
+          </Link>
+        ))}
+
+        {data.items.length === 0 ? (
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3 text-sm text-slate-400">No missions loaded yet.</div>
+        ) : null}
+      </section>
     </OpsShell>
   );
 }

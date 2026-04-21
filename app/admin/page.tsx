@@ -14,16 +14,9 @@ export default async function AdminPage() {
 
   if (!canManage) {
     return (
-      <OpsShell
-        currentPath="/admin"
-        section="Admin"
-        title="Administration Restricted"
-        description="Role and access management is reserved for command authority."
-        orgName="Guardian"
-        session={session}
-      >
-        <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-8 text-amber-50">
-          Your current role is `{session.role}`. That is enough to operate, not enough to manage org access.
+      <OpsShell currentPath="/admin" section="Admin" title="Restricted" orgName="Guardian" session={session}>
+        <section className="rounded-[var(--radius-lg)] border border-amber-400/20 bg-amber-400/8 p-5 text-sm text-amber-200">
+          Your role ({session.role}) does not have admin access.
         </section>
       </OpsShell>
     );
@@ -32,89 +25,46 @@ export default async function AdminPage() {
   const data = await getAdminPageData(session.userId);
 
   return (
-    <OpsShell
-      currentPath="/admin"
-      section="Admin"
-      title="Org Administration"
-      description="User access, role control, member status, and credential resets now live inside the protected shell."
-      orgName={data.orgName}
-      session={session}
-    >
+    <OpsShell currentPath="/admin" section="Admin" title="Org Administration" orgName={data.orgName} session={session}>
       {data.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {data.error}
-        </div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
-      <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-        <div className="flex items-center gap-3">
-          <UserCog size={18} className="text-amber-300" />
-          <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-            Create Member
-          </p>
+      <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+        <div className="flex items-center gap-2">
+          <UserCog size={16} className="text-amber-300" />
+          <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Create Member</p>
         </div>
-        <p className="mt-3 text-sm leading-7 text-slate-300">
-          This creates the user, sets the initial password, and attaches them to the current organization in one move.
-        </p>
-        <div className="mt-6">
-          <AdminUserCreateForm />
-        </div>
+        <div className="mt-4"><AdminUserCreateForm /></div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((member) => (
-          <article key={member.membershipId} className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+          <article key={member.membershipId} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-white">
-                  {member.displayName ?? member.handle}
-                </p>
-                <p className="mt-2 text-sm uppercase tracking-[0.18em] text-slate-400">
-                  {member.handle} / {member.email}
-                </p>
+                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{member.displayName ?? member.handle}</p>
+                <p className="mt-1 text-[11px] text-slate-500">{member.handle} / {member.email}</p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                  {member.role}
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-200">
-                  {member.status}
-                </span>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{member.role}</span>
+                <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase text-slate-400">{member.status}</span>
               </div>
             </div>
-
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Rank / Title</p>
-                <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white">
-                  {member.rank} / {member.title ?? "No title"}
-                </p>
+            <div className="mt-3 grid gap-2 text-[11px] md:grid-cols-2">
+              <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
+                <span className="text-slate-500">Rank/Title:</span> <span className="text-white">{member.rank} / {member.title ?? "None"}</span>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Joined</p>
-                <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white">
-                  {member.joinedAtLabel}
-                </p>
+              <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
+                <span className="text-slate-500">Joined:</span> <span className="text-white">{member.joinedAtLabel}</span>
               </div>
             </div>
-
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center gap-3">
-                <Shield size={16} className="text-cyan-300" />
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Access control</p>
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+              <div className="flex items-center gap-2">
+                <Shield size={13} className="text-cyan-300" />
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Access control</p>
               </div>
-              <div className="mt-4">
-                <AdminMemberUpdateForm
-                  userId={member.userId}
-                  initialMember={{
-                    displayName: member.displayName,
-                    role: member.role,
-                    status: member.status,
-                    rank: member.rank,
-                    title: member.title,
-                  }}
-                />
-              </div>
+              <div className="mt-3"><AdminMemberUpdateForm userId={member.userId} initialMember={{ displayName: member.displayName, role: member.role, status: member.status, rank: member.rank, title: member.title }} /></div>
             </div>
           </article>
         ))}

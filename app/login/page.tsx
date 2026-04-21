@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Shield, User, KeyRound, AlertTriangle } from "lucide-react";
+import { KeyRound, User, AlertTriangle } from "lucide-react";
 
 function LoginScreen() {
   const router = useRouter();
@@ -18,126 +18,65 @@ function LoginScreen() {
     event.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const payload = await response.json();
-      if (!response.ok) {
-        setError(payload.error || "Failed to sign in.");
-        return;
-      }
-
+      if (!response.ok) { setError(payload.error || "Sign in failed."); return; }
       router.push(nextPath);
       router.refresh();
-    } catch {
-      setError("Failed to sign in.");
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError("Sign in failed."); } finally { setLoading(false); }
   }
 
   return (
-    <main className="min-h-screen bg-[var(--color-bg)] px-6 py-10 text-[var(--color-text)] lg:px-10">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-        <section className="rounded-3xl border border-white/10 bg-slate-950/55 p-8 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-          <div className="inline-flex items-center gap-3 rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-2 text-xs uppercase tracking-[0.22em] text-amber-200">
-            <Shield size={14} />
-            Authenticated Operations Access
-          </div>
-          <h1 className="mt-6 font-[family:var(--font-display)] text-5xl uppercase tracking-[0.14em] text-white">
-            Sign in to Guardian
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-            Ops pages are now protected. This login is intentionally boring: credentials, signed cookie,
-            middleware gate, and no cloud auth dependency.
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-6 text-[var(--color-text)]">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 text-center">
+          <span className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.2em] text-amber-300">Guardian</span>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-slate-500">Sign in to operations</p>
+        </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Demo Account</p>
-              <p className="mt-3 text-white">`reaper11@guardian.local`</p>
-              <p className="mt-2 text-sm text-slate-300">Role: commander</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Demo Password</p>
-              <p className="mt-3 text-white">`GuardianDemo!2026`</p>
-              <p className="mt-2 text-sm text-slate-300">Seeded through Prisma for bootstrap access.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-8">
-          <form className="space-y-5" onSubmit={onSubmit}>
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-6">
+          <form className="space-y-4" onSubmit={onSubmit}>
             <div>
-              <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-slate-400">
-                Email
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
-                <User size={18} className="text-slate-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full bg-transparent text-white outline-none placeholder:text-slate-500"
-                  placeholder="pilot@guardian.local"
-                />
+              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500">Email</label>
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5">
+                <User size={15} className="text-slate-600" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="pilot@guardian.local" />
               </div>
             </div>
-
             <div>
-              <label className="mb-2 block text-xs uppercase tracking-[0.18em] text-slate-400">
-                Password
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3">
-                <KeyRound size={18} className="text-slate-500" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="w-full bg-transparent text-white outline-none placeholder:text-slate-500"
-                  placeholder="Password"
-                />
+              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500">Password</label>
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5">
+                <KeyRound size={15} className="text-slate-600" />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Password" />
               </div>
             </div>
-
             {error ? (
-              <div className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                <AlertTriangle size={16} />
-                <span>{error}</span>
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-200">
+                <AlertTriangle size={14} />{error}
               </div>
             ) : null}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl border border-amber-300/35 bg-amber-300 px-5 py-3 font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading ? "Signing In..." : "Enter Command Deck"}
+            <button type="submit" disabled={loading} className="w-full rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-amber-200 disabled:opacity-60">
+              {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
+          <p className="mt-4 text-center text-[11px] text-slate-500">
+            Demo: reaper11@guardian.local / GuardianDemo!2026
+          </p>
+        </div>
 
-          <div className="mt-6 text-sm text-slate-400">
-            Public site remains available at{" "}
-            <Link href="/" className="text-white transition hover:text-amber-200">
-              /
-            </Link>
-            .
-          </div>
-        </section>
+        <p className="mt-4 text-center text-[11px] text-slate-600">
+          <Link href="/" className="transition hover:text-white">Back to public site</Link>
+        </p>
       </div>
     </main>
   );
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={null}>
-      <LoginScreen />
-    </Suspense>
-  );
+  return <Suspense fallback={null}><LoginScreen /></Suspense>;
 }
