@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Rocket, ShieldAlert } from "lucide-react";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { QrfCreateForm } from "@/components/qrf-create-form";
 import { QrfDispatchForm } from "@/components/qrf-dispatch-form";
 import { QrfDispatchStatusForm } from "@/components/qrf-dispatch-status-form";
@@ -29,18 +30,14 @@ export default async function QrfPage() {
       ) : null}
 
       {canManage ? (
-        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
-          <div className="flex items-center gap-2">
-            <Rocket size={16} className="text-cyan-300" />
-            <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Add QRF Asset</p>
-          </div>
-          <div className="mt-4"><QrfCreateForm /></div>
-        </section>
+        <CollapsiblePanel label="Add QRF Asset" icon={<Rocket size={16} className="text-cyan-300" />}>
+          <QrfCreateForm />
+        </CollapsiblePanel>
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((item) => (
-          <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.callsign}</p>
@@ -51,45 +48,41 @@ export default async function QrfPage() {
             <p className="mt-3 text-sm leading-6 text-slate-400">Crew {item.availableCrew} / {item.notes ?? "No readiness notes."}</p>
 
             {canManage ? (
-              <div className="mt-4 grid gap-4">
-                <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 p-4">
-                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Update posture</p>
-                  <div className="mt-3"><QrfStatusForm qrfId={item.id} initialAsset={{ status: item.status, platform: item.platform, locationName: item.locationName, availableCrew: item.availableCrew, notes: item.notes }} /></div>
-                </div>
-                <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 p-4">
-                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatch asset</p>
-                  <div className="mt-3"><QrfDispatchForm qrfId={item.id} missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} /></div>
-                </div>
+              <div className="mt-4 grid gap-3">
+                <CollapsiblePanel label="Update posture" variant="inline">
+                  <QrfStatusForm qrfId={item.id} initialAsset={{ status: item.status, platform: item.platform, locationName: item.locationName, availableCrew: item.availableCrew, notes: item.notes }} />
+                </CollapsiblePanel>
+                <CollapsiblePanel label="Dispatch asset" variant="inline">
+                  <QrfDispatchForm qrfId={item.id} missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} />
+                </CollapsiblePanel>
               </div>
             ) : null}
 
-            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
-              <div className="flex items-center gap-2">
-                <ShieldAlert size={13} className="text-amber-300" />
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatch history</p>
-              </div>
-              <div className="mt-3 space-y-2">
-                {item.dispatches.map((dispatch) => (
-                  <div key={dispatch.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      {dispatch.targetHref ? (
-                        <Link href={dispatch.targetHref} className="text-xs font-medium uppercase tracking-[0.1em] text-white hover:text-cyan-200">{dispatch.targetLabel}</Link>
-                      ) : (
-                        <p className="text-xs font-medium uppercase tracking-[0.1em] text-white">{dispatch.targetLabel}</p>
-                      )}
-                      <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase text-slate-400">{dispatch.status}</span>
+            <div className="mt-4">
+              <CollapsiblePanel label="Dispatch history" variant="inline" icon={<ShieldAlert size={13} className="text-amber-300" />}>
+                <div className="space-y-2">
+                  {item.dispatches.map((dispatch) => (
+                    <div key={dispatch.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        {dispatch.targetHref ? (
+                          <Link href={dispatch.targetHref} className="text-xs font-medium uppercase tracking-[0.1em] text-white hover:text-cyan-200">{dispatch.targetLabel}</Link>
+                        ) : (
+                          <p className="text-xs font-medium uppercase tracking-[0.1em] text-white">{dispatch.targetLabel}</p>
+                        )}
+                        <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase text-slate-400">{dispatch.status}</span>
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-500">
+                        Tasked {dispatch.dispatchedAtLabel}
+                        {dispatch.arrivedAtLabel ? ` / Arrived ${dispatch.arrivedAtLabel}` : ""}
+                        {dispatch.rtbAtLabel ? ` / RTB ${dispatch.rtbAtLabel}` : ""}
+                      </p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-400">{dispatch.notes ?? "No dispatch notes."}</p>
+                      {canManage ? <div className="mt-2"><QrfDispatchStatusForm dispatchId={dispatch.id} initialStatus={dispatch.status} /></div> : null}
                     </div>
-                    <p className="mt-1 text-[10px] text-slate-500">
-                      Tasked {dispatch.dispatchedAtLabel}
-                      {dispatch.arrivedAtLabel ? ` / Arrived ${dispatch.arrivedAtLabel}` : ""}
-                      {dispatch.rtbAtLabel ? ` / RTB ${dispatch.rtbAtLabel}` : ""}
-                    </p>
-                    <p className="mt-1.5 text-sm leading-6 text-slate-400">{dispatch.notes ?? "No dispatch notes."}</p>
-                    {canManage ? <div className="mt-2"><QrfDispatchStatusForm dispatchId={dispatch.id} initialStatus={dispatch.status} /></div> : null}
-                  </div>
-                ))}
-                {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No dispatches logged.</p> : null}
-              </div>
+                  ))}
+                  {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No dispatches logged.</p> : null}
+                </div>
+              </CollapsiblePanel>
             </div>
           </article>
         ))}

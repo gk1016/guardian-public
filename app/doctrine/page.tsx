@@ -1,4 +1,5 @@
 import { BookCheck, Lock } from "lucide-react";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { DoctrineCreateForm } from "@/components/doctrine-create-form";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
@@ -27,7 +28,7 @@ export default async function DoctrinePage() {
       <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col gap-4">
           {data.items.map((item) => (
-            <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{item.title}</p>
@@ -54,13 +55,9 @@ export default async function DoctrinePage() {
 
         <div className="flex flex-col gap-4">
           {canManageDoctrine ? (
-            <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
-              <div className="flex items-center gap-2">
-                <BookCheck size={16} className="text-amber-300" />
-                <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Create Doctrine</p>
-              </div>
-              <div className="mt-4"><DoctrineCreateForm /></div>
-            </section>
+            <CollapsiblePanel label="Create Doctrine" icon={<BookCheck size={16} className="text-amber-300" />}>
+              <DoctrineCreateForm />
+            </CollapsiblePanel>
           ) : (
             <section className="rounded-[var(--radius-lg)] border border-amber-400/20 bg-amber-400/8 p-5 text-amber-100">
               <div className="flex items-center gap-2">

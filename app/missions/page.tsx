@@ -47,7 +47,7 @@ export default async function MissionsPage() {
           <Link
             key={mission.id}
             href={`/missions/${mission.id}`}
-            className="block rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5 transition hover:border-amber-300/20 hover:bg-[var(--color-panel-strong)]"
+            className="block rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated transition hover:border-amber-300/20 hover:bg-[var(--color-panel-strong)]"
           >
             <div className="flex items-start justify-between gap-3">
               <div>

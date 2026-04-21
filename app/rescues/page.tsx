@@ -1,4 +1,5 @@
 import { HeartPulse, LifeBuoy, ShieldAlert } from "lucide-react";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { RescueCreateForm } from "@/components/rescue-create-form";
 import { RescueUpdateForm } from "@/components/rescue-update-form";
 import { requireSession } from "@/lib/auth";
@@ -26,18 +27,14 @@ export default async function RescuesPage() {
       ) : null}
 
       {canManage ? (
-        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
-          <div className="flex items-center gap-2">
-            <LifeBuoy size={16} className="text-emerald-300" />
-            <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Open Rescue Intake</p>
-          </div>
-          <div className="mt-4"><RescueCreateForm /></div>
-        </section>
+        <CollapsiblePanel label="Open Rescue Intake" icon={<LifeBuoy size={16} className="text-emerald-300" />}>
+          <RescueCreateForm />
+        </CollapsiblePanel>
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((item) => (
-          <article id={item.id} key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <article id={item.id} key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.survivorHandle}</p>
@@ -70,21 +67,22 @@ export default async function RescuesPage() {
               <div className="flex items-center gap-2"><HeartPulse size={13} className="text-emerald-300" />Payment: {item.offeredPayment ? `${item.offeredPayment.toLocaleString()} aUEC` : "none"}</div>
             </div>
 
-            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
-              <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Dispatched assets</p>
-              <div className="mt-2 space-y-2">
-                {item.dispatches.map((d) => (
-                  <div key={d.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium uppercase text-white">{d.qrfCallsign}</p>
-                      <span className="text-[10px] uppercase text-slate-500">{d.status}</span>
+            <div className="mt-4">
+              <CollapsiblePanel label="Dispatched assets" variant="inline">
+                <div className="space-y-2">
+                  {item.dispatches.map((d) => (
+                    <div key={d.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium uppercase text-white">{d.qrfCallsign}</p>
+                        <span className="text-[10px] uppercase text-slate-500">{d.status}</span>
+                      </div>
+                      <p className="mt-1 text-[10px] text-slate-500">{d.platform ?? "Platform pending"} / Tasked {d.dispatchedAtLabel}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-400">{d.notes ?? "No notes."}</p>
                     </div>
-                    <p className="mt-1 text-[10px] text-slate-500">{d.platform ?? "Platform pending"} / Tasked {d.dispatchedAtLabel}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-400">{d.notes ?? "No notes."}</p>
-                  </div>
-                ))}
-                {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No assets dispatched.</p> : null}
-              </div>
+                  ))}
+                  {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No assets dispatched.</p> : null}
+                </div>
+              </CollapsiblePanel>
             </div>
 
             <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
@@ -93,9 +91,10 @@ export default async function RescuesPage() {
             </div>
 
             {canManage ? (
-              <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Update rescue</p>
-                <div className="mt-3"><RescueUpdateForm rescueId={item.id} operatorOptions={data.operatorOptions} initialRescue={{ status: item.status, operatorId: item.operatorId, survivorCondition: item.survivorCondition, rescueNotes: item.rescueNotes, outcomeSummary: item.outcomeSummary }} /></div>
+              <div className="mt-4">
+                <CollapsiblePanel label="Update rescue" variant="inline">
+                  <RescueUpdateForm rescueId={item.id} operatorOptions={data.operatorOptions} initialRescue={{ status: item.status, operatorId: item.operatorId, survivorCondition: item.survivorCondition, rescueNotes: item.rescueNotes, outcomeSummary: item.outcomeSummary }} />
+                </CollapsiblePanel>
               </div>
             ) : null}
           </article>

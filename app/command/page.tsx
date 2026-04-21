@@ -1,9 +1,6 @@
 import Link from "next/link";
 import {
-  Activity,
   AlertTriangle,
-  Bell,
-  BookCheck,
   Crosshair,
   Siren,
 } from "lucide-react";
@@ -59,7 +56,7 @@ export default async function CommandPage() {
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-3">
             <div>
               <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.1em] text-white">Mission Board</p>
@@ -99,7 +96,7 @@ export default async function CommandPage() {
         </div>
 
         <div className="flex flex-col gap-5">
-          <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <section className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex items-center gap-2.5 border-b border-[var(--color-border)] pb-3">
               <Siren className="text-cyan-300" size={16} />
               <div>
@@ -120,7 +117,7 @@ export default async function CommandPage() {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <section className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex items-center gap-2.5 border-b border-[var(--color-border)] pb-3">
               <Crosshair className="text-red-300" size={16} />
               <div>
@@ -142,49 +139,7 @@ export default async function CommandPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-4">
-          <div className="flex items-center gap-2">
-            <Activity size={15} className="text-amber-300" />
-            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Live Modules</p>
-          </div>
-          <ul className="mt-3 space-y-1.5 text-sm text-slate-400">
-            <li><Link href="/missions" className="transition hover:text-white">Mission board</Link></li>
-            <li><Link href="/qrf" className="transition hover:text-white">QRF dispatch</Link></li>
-            <li><Link href="/intel" className="transition hover:text-white">Threat picture</Link></li>
-            <li><Link href="/rescues" className="transition hover:text-white">Rescue board</Link></li>
-            <li><Link href="/incidents" className="transition hover:text-white">Incident review</Link></li>
-            <li><Link href="/doctrine" className="transition hover:text-white">ROE and doctrine</Link></li>
-          </ul>
-        </article>
-
-        <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-4">
-          <div className="flex items-center gap-2">
-            <BookCheck size={15} className="text-lime-300" />
-            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Doctrine</p>
-          </div>
-          <p className="mt-3 text-sm leading-6 text-slate-400">
-            Reusable ROE and execution guidance attached directly to sorties.
-          </p>
-        </article>
-
-        <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-4">
-          <div className="flex items-center gap-2">
-            <Bell size={15} className="text-red-300" />
-            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Alerts</p>
-          </div>
-          <div className="mt-3 grid gap-2">
-            {data.notifications.slice(0, 3).map((n) => (
-              <div key={n.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
-                <p className="text-xs font-medium text-white">{n.title}</p>
-                <span className="text-[10px] uppercase text-slate-500">{n.severity}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-4">
+      <section className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Siren size={15} className="text-amber-300" />

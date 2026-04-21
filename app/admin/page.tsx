@@ -1,4 +1,5 @@
 import { Shield, UserCog } from "lucide-react";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { AdminMemberUpdateForm } from "@/components/admin-member-update-form";
 import { AdminUserCreateForm } from "@/components/admin-user-create-form";
 import { OpsShell } from "@/components/ops-shell";
@@ -30,17 +31,13 @@ export default async function AdminPage() {
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
-      <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
-        <div className="flex items-center gap-2">
-          <UserCog size={16} className="text-amber-300" />
-          <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">Create Member</p>
-        </div>
-        <div className="mt-4"><AdminUserCreateForm /></div>
-      </section>
+      <CollapsiblePanel label="Create Member" icon={<UserCog size={16} className="text-amber-300" />}>
+        <AdminUserCreateForm />
+      </CollapsiblePanel>
 
       <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((member) => (
-          <article key={member.membershipId} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <article key={member.membershipId} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{member.displayName ?? member.handle}</p>
@@ -59,12 +56,10 @@ export default async function AdminPage() {
                 <span className="text-slate-500">Joined:</span> <span className="text-white">{member.joinedAtLabel}</span>
               </div>
             </div>
-            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
-              <div className="flex items-center gap-2">
-                <Shield size={13} className="text-cyan-300" />
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Access control</p>
-              </div>
-              <div className="mt-3"><AdminMemberUpdateForm userId={member.userId} initialMember={{ displayName: member.displayName, role: member.role, status: member.status, rank: member.rank, title: member.title }} /></div>
+            <div className="mt-4">
+              <CollapsiblePanel label="Access control" variant="inline" icon={<Shield size={13} className="text-cyan-300" />}>
+                <AdminMemberUpdateForm userId={member.userId} initialMember={{ displayName: member.displayName, role: member.role, status: member.status, rank: member.rank, title: member.title }} />
+              </CollapsiblePanel>
             </div>
           </article>
         ))}

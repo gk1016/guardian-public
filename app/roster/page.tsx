@@ -30,7 +30,7 @@ export default async function RosterPage() {
 
       <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {data.items.map((crew) => (
-          <article key={crew.handle} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <article key={crew.handle} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{crew.displayName ?? crew.handle}</p>

@@ -1,4 +1,5 @@
 import { AlertTriangle, FileWarning } from "lucide-react";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { IncidentCreateForm } from "@/components/incident-create-form";
 import { IncidentUpdateForm } from "@/components/incident-update-form";
 import { OpsShell } from "@/components/ops-shell";
@@ -34,18 +35,14 @@ export default async function IncidentsPage() {
       ) : null}
 
       {canManage ? (
-        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
-          <div className="flex items-center gap-2">
-            <FileWarning size={16} className="text-amber-300" />
-            <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.1em] text-white">File Incident</p>
-          </div>
-          <div className="mt-4"><IncidentCreateForm missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} /></div>
-        </section>
+        <CollapsiblePanel label="File Incident" icon={<FileWarning size={16} className="text-amber-300" />}>
+          <IncidentCreateForm missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} />
+        </CollapsiblePanel>
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-2">
         {data.items.map((item) => (
-          <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+          <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.title}</p>
@@ -82,12 +79,10 @@ export default async function IncidentsPage() {
             </p>
 
             {canManage ? (
-              <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle size={13} className="text-cyan-300" />
-                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Review update</p>
-                </div>
-                <div className="mt-3"><IncidentUpdateForm incidentId={item.id} initialIncident={{ status: item.status, lessonsLearned: item.lessonsLearned, actionItems: item.actionItems, publicSummary: item.publicSummary }} /></div>
+              <div className="mt-4">
+                <CollapsiblePanel label="Review update" variant="inline" icon={<AlertTriangle size={13} className="text-cyan-300" />}>
+                  <IncidentUpdateForm incidentId={item.id} initialIncident={{ status: item.status, lessonsLearned: item.lessonsLearned, actionItems: item.actionItems, publicSummary: item.publicSummary }} />
+                </CollapsiblePanel>
               </div>
             ) : null}
           </article>
