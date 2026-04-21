@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
 import { Sidebar } from "@/components/sidebar";
+import { AlertToastContainer } from "@/components/alert-toast";
 
 type OpsShellProps = {
   currentPath:
@@ -75,6 +76,7 @@ export function OpsShell({
           <div className="flex flex-col gap-5">{children}</div>
         </div>
       </main>
+      <AlertToastContainer />
     </div>
   );
 }
