@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Shield, Crosshair, Siren } from "lucide-react";
+import { PublicNav } from "@/components/public-nav";
 
 const capabilities = [
   "Anti-piracy interdiction and escort",
@@ -15,25 +16,8 @@ export default function Home() {
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.15),_transparent_35%),linear-gradient(180deg,_#0a0e14_0%,_#070b12_100%)]" />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col px-6 pb-20 pt-6 lg:px-10">
-        <header className="flex items-center justify-between border-b border-white/8 pb-4">
-          <div>
-            <span className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.24em] text-amber-300">
-              Guardian
-            </span>
-            <p className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-slate-500">
-              Anti-Piracy and Rescue Operations
-            </p>
-          </div>
-          <nav className="hidden gap-5 text-xs uppercase tracking-[0.16em] text-slate-400 md:flex">
-            <Link href="/about" className="transition hover:text-white">About</Link>
-            <Link href="/ops" className="transition hover:text-white">Ops</Link>
-            <Link href="/standards" className="transition hover:text-white">Standards</Link>
-            <Link href="/recruit" className="transition hover:text-white">Recruit</Link>
-            <Link href="/aar" className="transition hover:text-white">AAR</Link>
-            <Link href="/login" className="transition hover:text-white">Sign In</Link>
-          </nav>
-        </header>
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col px-6 pb-20 pt-6 lg:px-10">
+        <PublicNav variant="landing" />
 
         <section className="pt-14">
           <div className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-amber-300/20 bg-amber-300/8 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-amber-200">
