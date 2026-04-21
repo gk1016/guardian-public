@@ -35,24 +35,22 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
         currentPath="/missions"
         section="Missions"
         title="Mission Not Found"
-        description="The requested sortie does not exist in the operator's organization scope."
         orgName={data.orgName}
         session={session}
       >
-        <section className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={18} />
-            <p className="font-semibold uppercase tracking-[0.18em]">Mission record unavailable</p>
+        <section className="rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 p-5 text-red-200">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} />
+            <p className="text-xs font-medium uppercase tracking-[0.1em]">Mission record unavailable</p>
           </div>
-          <p className="mt-4 text-sm leading-7 text-red-50">
+          <p className="mt-2 text-sm leading-6 text-red-300">
             {data.error || "That mission ID is not available in the current org scope."}
           </p>
           <Link
             href="/missions"
-            className="mt-6 inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/15"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/12"
           >
-            <ArrowLeft size={14} />
-            Back to board
+            <ArrowLeft size={13} />Back to board
           </Link>
         </section>
       </OpsShell>
@@ -66,381 +64,231 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
       currentPath="/missions"
       section="Missions"
       title={`${mission.callsign} / ${mission.title}`}
-      description="Mission detail, update path, and participant assignment now live inside the protected ops surface."
       orgName={data.orgName}
       session={session}
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-        <div className="text-sm text-slate-300">
-          Sortie detail page is now the control point for board updates and package assignment.
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
+        <span className="text-sm text-slate-400">Sortie detail and package control</span>
         <Link
           href="/missions"
-          className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/8"
         >
-          <ArrowLeft size={14} />
-          Back to board
+          <ArrowLeft size={13} />Board
         </Link>
       </div>
 
       {data.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {data.error}
-        </div>
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-6">
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Status</p>
-                <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                  {mission.status}
-                </p>
+      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="flex flex-col gap-5">
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Status</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.status}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Priority</p>
-                <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                  {mission.priority}
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Priority</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.priority}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Revision / Lead</p>
-                <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                  Rev {mission.revisionNumber}
-                </p>
-                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                  {mission.leadDisplay}
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Rev / Lead</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">Rev {mission.revisionNumber}</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">{mission.leadDisplay}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Package Readiness</p>
-                <p className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
-                  {mission.packageSummary.readinessLabel}
-                </p>
-                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                  {mission.packageSummary.readyOrLaunched}/{mission.packageSummary.total} ready or launched
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Readiness</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.packageSummary.readinessLabel}</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">{mission.packageSummary.readyOrLaunched}/{mission.packageSummary.total} ready</p>
               </div>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Type / AO</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
-                  {mission.missionType} / {mission.areaOfOperation ?? "AO pending"}
-                </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Type / AO</p>
+                <p className="mt-1 text-xs text-white">{mission.missionType} / {mission.areaOfOperation ?? "Pending"}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Timeline</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
-                  Updated {mission.updatedAtLabel}
-                </p>
-                {mission.completedAtLabel ? (
-                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-emerald-200">
-                    Closed {mission.completedAtLabel}
-                  </p>
-                ) : null}
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Timeline</p>
+                <p className="mt-1 text-xs text-white">Updated {mission.updatedAtLabel}</p>
+                {mission.completedAtLabel ? <p className="mt-0.5 text-[10px] text-emerald-300">Closed {mission.completedAtLabel}</p> : null}
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Package Counts</p>
-                <p className="mt-2 text-sm uppercase tracking-[0.16em] text-white">
-                  Assigned {mission.packageSummary.assigned} / Ready {mission.packageSummary.ready}
-                </p>
-                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                  Launched {mission.packageSummary.launched} / RTB {mission.packageSummary.rtb} / Open {mission.packageSummary.open}
-                </p>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Package</p>
+                <p className="mt-1 text-xs text-white">A{mission.packageSummary.assigned} / R{mission.packageSummary.ready} / L{mission.packageSummary.launched} / RTB{mission.packageSummary.rtb}</p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center gap-3">
-                <ClipboardList size={18} className="text-amber-300" />
-                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                  Mission Brief
-                </p>
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+              <div className="flex items-center gap-2">
+                <ClipboardList size={15} className="text-amber-300" />
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Mission Brief</p>
               </div>
-              <p className="mt-4 text-sm leading-8 text-slate-300">
-                {mission.missionBrief ?? "Mission brief not yet recorded."}
-              </p>
+              <p className="mt-2 text-sm leading-7 text-slate-400">{mission.missionBrief ?? "Not yet recorded."}</p>
             </div>
           </article>
 
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <AlertTriangle size={18} className="text-amber-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Package Discipline
-              </p>
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={15} className="text-amber-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Package Discipline</p>
             </div>
-            <div className="mt-5 grid gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Profile</p>
-                <p className="mt-3 font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
-                  {mission.packageDiscipline.profileLabel}
-                </p>
-                <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                  Coverage {mission.packageDiscipline.coverageLabel}
-                </p>
+            <div className="mt-3 grid gap-3">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Profile</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-white">{mission.packageDiscipline.profileLabel}</p>
+                <p className="mt-0.5 text-[10px] text-slate-500">Coverage {mission.packageDiscipline.coverageLabel}</p>
               </div>
-
-              <div className="grid gap-4 xl:grid-cols-2">
-                {mission.packageDiscipline.roleChecks.map((roleCheck) => (
-                  <div key={roleCheck.key} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
-                        {roleCheck.label}
-                      </p>
-                      <span className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] ${
-                        roleCheck.shortfall === 0
-                          ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-                          : "border-red-500/20 bg-red-500/10 text-red-100"
-                      }`}>
-                        {roleCheck.matchedCount}/{roleCheck.requiredCount}
-                      </span>
+              <div className="grid gap-3 xl:grid-cols-2">
+                {mission.packageDiscipline.roleChecks.map((rc) => (
+                  <div key={rc.key} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-medium text-white">{rc.label}</p>
+                      <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase ${rc.shortfall === 0 ? "border-emerald-400/20 bg-emerald-400/8 text-emerald-200" : "border-red-500/20 bg-red-500/8 text-red-200"}`}>{rc.matchedCount}/{rc.requiredCount}</span>
                     </div>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">
-                      {roleCheck.matchedHandles.length > 0 || roleCheck.openHandles.length > 0
-                        ? [...roleCheck.matchedHandles, ...roleCheck.openHandles].join(", ")
-                        : "No assigned element currently matches this role."}
-                    </p>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-400">{[...rc.matchedHandles, ...rc.openHandles].join(", ") || "No match."}</p>
                   </div>
                 ))}
               </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Warnings</p>
-                <div className="mt-3 space-y-3">
-                  {mission.packageDiscipline.warnings.length > 0 ? (
-                    mission.packageDiscipline.warnings.map((warning) => (
-                      <div key={warning} className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                        {warning}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-                      Required package roles are covered and the current sortie profile is structurally sound.
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <FileCheck2 size={18} className="text-emerald-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Closeout Package
-              </p>
-            </div>
-            <div className="mt-5 grid gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Closeout Summary</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {mission.closeoutSummary ?? "Mission closeout not yet filed."}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">AAR Package</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  {mission.aarSummary ?? "AAR package not yet filed."}
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <BookCheck size={18} className="text-lime-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Doctrine Package
-              </p>
-            </div>
-            <div className="mt-5 grid gap-4">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">ROE Code</p>
-                <p className="mt-3 text-sm uppercase tracking-[0.16em] text-white">
-                  {mission.roeCode ?? "No ROE attached"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Attached Doctrine</p>
-                {mission.doctrineTemplate ? (
-                  <>
-                    <p className="mt-3 font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
-                      {mission.doctrineTemplate.title}
-                    </p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                      {mission.doctrineTemplate.code} / {mission.doctrineTemplate.category}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">
-                      {mission.doctrineTemplate.summary}
-                    </p>
-                    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Execution Checklist</p>
-                      <p className="mt-3 text-sm leading-7 text-slate-300">
-                        {mission.doctrineTemplate.body}
-                      </p>
-                    </div>
-                    <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-4">
-                      <p className="text-xs uppercase tracking-[0.18em] text-amber-100">Escalation Guidance</p>
-                      <p className="mt-3 text-sm leading-7 text-amber-50">
-                        {mission.doctrineTemplate.escalation ?? "No escalation guidance attached."}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <p className="mt-3 text-sm leading-7 text-slate-300">
-                    No doctrine package attached to this sortie yet.
-                  </p>
+              <div className="space-y-2">
+                {mission.packageDiscipline.warnings.length > 0 ? mission.packageDiscipline.warnings.map((w) => (
+                  <div key={w} className="rounded-[var(--radius-sm)] border border-red-500/20 bg-red-500/8 px-3 py-2 text-sm text-red-200">{w}</div>
+                )) : (
+                  <div className="rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-3 py-2 text-sm text-emerald-200">Package roles covered.</div>
                 )}
               </div>
             </div>
           </article>
 
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <Radar size={18} className="text-red-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Linked Intel
-              </p>
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <FileCheck2 size={15} className="text-emerald-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Closeout</p>
             </div>
-            <div className="mt-5">
+            <div className="mt-3 grid gap-3">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Summary</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-400">{mission.closeoutSummary ?? "Not filed."}</p>
+              </div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">AAR</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-400">{mission.aarSummary ?? "Not filed."}</p>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <BookCheck size={15} className="text-lime-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Doctrine</p>
+            </div>
+            <div className="mt-3 grid gap-3">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">ROE Code</p>
+                <p className="mt-1 text-xs uppercase text-white">{mission.roeCode ?? "No ROE attached"}</p>
+              </div>
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Attached Doctrine</p>
+                {mission.doctrineTemplate ? (
+                  <>
+                    <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-white">{mission.doctrineTemplate.title}</p>
+                    <p className="mt-0.5 text-[10px] text-slate-500">{mission.doctrineTemplate.code} / {mission.doctrineTemplate.category}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{mission.doctrineTemplate.summary}</p>
+                    <div className="mt-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/15 px-3 py-2">
+                      <p className="text-[10px] uppercase text-slate-500">Execution</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-300">{mission.doctrineTemplate.body}</p>
+                    </div>
+                    <div className="mt-2 rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-3 py-2">
+                      <p className="text-[10px] uppercase text-amber-200">Escalation</p>
+                      <p className="mt-1 text-sm leading-6 text-amber-100/80">{mission.doctrineTemplate.escalation ?? "None."}</p>
+                    </div>
+                  </>
+                ) : <p className="mt-1 text-sm text-slate-500">No doctrine attached.</p>}
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <Radar size={15} className="text-red-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Linked Intel</p>
+            </div>
+            <div className="mt-3">
               {canManageMission ? (
-                <LinkedIntelManager
-                  missionId={mission.id}
-                  intelLinks={mission.linkedIntel}
-                />
+                <LinkedIntelManager missionId={mission.id} intelLinks={mission.linkedIntel} />
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {mission.linkedIntel.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
-                    >
-                      <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
-                        {item.title}
-                      </p>
-                      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
-                        {item.reportType.replaceAll("_", " ")} / Severity {item.severity}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-300">
-                        {(item.locationName ?? "Unknown location")} / {item.hostileGroup ?? "Unconfirmed hostile group"}
-                      </p>
+                    <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                      <p className="text-xs font-medium text-white">{item.title}</p>
+                      <p className="mt-0.5 text-[10px] text-slate-500">{item.reportType.replaceAll("_", " ")} / Sev {item.severity}</p>
+                      <p className="mt-1 text-sm text-slate-400">{item.locationName ?? "Unknown"} / {item.hostileGroup ?? "Unconfirmed"}</p>
                     </div>
                   ))}
-
-                  {mission.linkedIntel.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                      No linked intel for this sortie yet.
-                    </div>
-                  ) : null}
+                  {mission.linkedIntel.length === 0 ? <p className="text-[11px] text-slate-500">No linked intel.</p> : null}
                 </div>
               )}
             </div>
           </article>
 
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <Users size={18} className="text-cyan-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Assigned Package
-              </p>
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <Users size={15} className="text-cyan-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Assigned Package</p>
             </div>
-            <div className="mt-5">
+            <div className="mt-3">
               {canManageMission ? (
-                <ParticipantRosterManager
-                  missionId={mission.id}
-                  participants={mission.participants}
-                  availableCrew={mission.availableCrew}
-                />
+                <ParticipantRosterManager missionId={mission.id} participants={mission.participants} availableCrew={mission.availableCrew} />
               ) : (
-                <div className="space-y-3">
-                  {mission.participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
-                    >
+                <div className="space-y-2">
+                  {mission.participants.map((p) => (
+                    <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
                       <div>
-                        <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
-                          {participant.handle}
-                        </p>
-                        <p className="mt-1 text-sm uppercase tracking-[0.14em] text-slate-400">
-                          {participant.role} / {participant.platform ?? "Platform pending"}
-                        </p>
-                        <p className="mt-2 text-sm text-slate-300">
-                          {participant.notes ?? "No notes logged."}
-                        </p>
+                        <p className="text-xs font-medium text-white">{p.handle}</p>
+                        <p className="mt-0.5 text-[10px] text-slate-500">{p.role} / {p.platform ?? "Platform pending"}</p>
+                        {p.notes ? <p className="mt-1 text-sm text-slate-400">{p.notes}</p> : null}
                       </div>
-                      <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
-                        {participant.status}
-                      </span>
+                      <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{p.status}</span>
                     </div>
                   ))}
-
-                  {mission.participants.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                      No package assigned yet.
-                    </div>
-                  ) : null}
+                  {mission.participants.length === 0 ? <p className="text-[11px] text-slate-500">No package assigned.</p> : null}
                 </div>
               )}
             </div>
           </article>
 
-          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-            <div className="flex items-center gap-3">
-              <NotebookText size={18} className="text-amber-300" />
-              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                Mission Timeline
-              </p>
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <div className="flex items-center gap-2">
+              <NotebookText size={15} className="text-amber-300" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Timeline</p>
             </div>
-            <div className="mt-5 space-y-3">
+            <div className="mt-3 space-y-2">
               {mission.logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
-                      {log.entryType}
-                    </p>
-                    <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                      {log.authorDisplay} / {log.createdAtLabel}
-                    </p>
+                <div key={log.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-200">{log.entryType}</p>
+                    <p className="text-[10px] text-slate-500">{log.authorDisplay} / {log.createdAtLabel}</p>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">
-                    {log.message}
-                  </p>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-400">{log.message}</p>
                 </div>
               ))}
-
-              {mission.logs.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
-                  No mission timeline entries logged yet.
-                </div>
-              ) : null}
+              {mission.logs.length === 0 ? <p className="text-[11px] text-slate-500">No timeline entries.</p> : null}
             </div>
           </article>
         </div>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-5">
           {canManageMission ? (
             <>
               {!isClosedMission ? (
-                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                  <div className="flex items-center gap-3">
-                    <Crosshair size={18} className="text-amber-300" />
-                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                      Update Mission
-                    </p>
+                <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                  <div className="flex items-center gap-2">
+                    <Crosshair size={15} className="text-amber-300" />
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Update Mission</p>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">
-                    This is the smallest useful command path: update the sortie without leaving the board loop.
-                  </p>
-                  <div className="mt-6">
+                  <div className="mt-4">
                     <MissionEditForm
                       missionId={mission.id}
                       initialMission={{
@@ -456,33 +304,21 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                   </div>
                 </section>
               ) : (
-                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                  <div className="flex items-center gap-3">
-                    <RotateCcw size={18} className="text-cyan-300" />
-                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                      Reopen Mission
-                    </p>
+                <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={15} className="text-cyan-300" />
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Reopen Mission</p>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">
-                    Closed sorties now reopen through a dedicated revision path so command intent and prior closeout stay auditable.
-                  </p>
-                  <div className="mt-6">
-                    <MissionReopenForm missionId={mission.id} />
-                  </div>
+                  <div className="mt-4"><MissionReopenForm missionId={mission.id} /></div>
                 </section>
               )}
 
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <BookCheck size={18} className="text-lime-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Attach Doctrine
-                  </p>
+              <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                <div className="flex items-center gap-2">
+                  <BookCheck size={15} className="text-lime-300" />
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Attach Doctrine</p>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Attach a reusable ROE and execution package so this sortie carries more than free-text intent.
-                </p>
-                <div className="mt-6">
+                <div className="mt-4">
                   <MissionDoctrineForm
                     missionId={mission.id}
                     selectedDoctrineTemplateId={mission.doctrineTemplate?.id ?? null}
@@ -491,92 +327,56 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <Radar size={18} className="text-red-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Link Threat Report
-                  </p>
+              <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                <div className="flex items-center gap-2">
+                  <Radar size={15} className="text-red-300" />
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Link Threat Report</p>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Attach existing intel directly to the sortie so the threat picture follows the mission.
-                </p>
-                <div className="mt-6">
-                  <MissionIntelLinkForm
-                    missionId={mission.id}
-                    availableIntel={mission.availableIntel}
-                  />
+                <div className="mt-4">
+                  <MissionIntelLinkForm missionId={mission.id} availableIntel={mission.availableIntel} />
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <Users size={18} className="text-cyan-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Assign Package
-                  </p>
+              <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                <div className="flex items-center gap-2">
+                  <Users size={15} className="text-cyan-300" />
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Assign Package</p>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Add pilots and escorts directly into the sortie package.
-                </p>
-                <div className="mt-6">
-                  <ParticipantAssignForm missionId={mission.id} />
-                </div>
+                <div className="mt-4"><ParticipantAssignForm missionId={mission.id} /></div>
               </section>
 
-              <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                <div className="flex items-center gap-3">
-                  <NotebookText size={18} className="text-amber-300" />
-                  <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                    Log Timeline Entry
-                  </p>
+              <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                <div className="flex items-center gap-2">
+                  <NotebookText size={15} className="text-amber-300" />
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Log Entry</p>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Record command updates, contact reports, and post-mission notes directly against the sortie.
-                </p>
-                <div className="mt-6">
-                  <MissionLogForm missionId={mission.id} />
-                </div>
+                <div className="mt-4"><MissionLogForm missionId={mission.id} /></div>
               </section>
 
               {!isClosedMission ? (
-                <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-                  <div className="flex items-center gap-3">
-                    <FileCheck2 size={18} className="text-emerald-300" />
-                    <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-                      Close Mission
-                    </p>
+                <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+                  <div className="flex items-center gap-2">
+                    <FileCheck2 size={15} className="text-emerald-300" />
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Close Mission</p>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">
-                    File the final disposition and package the after-action notes directly onto the sortie.
-                  </p>
-                  <div className="mt-6">
+                  <div className="mt-4">
                     <MissionCloseoutForm
                       missionId={mission.id}
                       initialFinalStatus={mission.status === "aborted" ? "aborted" : "complete"}
-                      initialCloseoutSummary={
-                        mission.closeoutSummary ??
-                        "Package completed assigned objectives, recovered aircraft, and cleared the lane."
-                      }
-                      initialAarSummary={
-                        mission.aarSummary ??
-                        "Threat picture stabilized after first merge. Escort geometry held, comms discipline remained solid, and civilian traffic cleared without additional loss."
-                      }
+                      initialCloseoutSummary={mission.closeoutSummary ?? ""}
+                      initialAarSummary={mission.aarSummary ?? ""}
                     />
                   </div>
                 </section>
               ) : null}
             </>
           ) : (
-            <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-8 text-amber-100">
-              <div className="flex items-center gap-3">
-                <Shield size={18} />
-                <p className="font-semibold uppercase tracking-[0.18em]">Read-only operator view</p>
+            <section className="rounded-[var(--radius-lg)] border border-amber-400/20 bg-amber-400/8 p-5 text-amber-200">
+              <div className="flex items-center gap-2">
+                <Shield size={15} />
+                <p className="text-xs font-medium uppercase tracking-[0.1em]">Read-only view</p>
               </div>
-              <p className="mt-4 text-sm leading-7 text-amber-50">
-                Your current role is <span className="font-semibold uppercase">{session.role}</span>. You can read
-                sortie detail, but update and package assignment remain restricted to command authority.
-              </p>
+              <p className="mt-2 text-sm leading-6 text-amber-200/70">Your role ({session.role}) can view sorties but not modify.</p>
             </section>
           )}
         </div>

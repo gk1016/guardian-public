@@ -19,40 +19,30 @@ export default async function NewMissionPage() {
       currentPath="/missions"
       section="Missions"
       title="Create Mission"
-      description="Commander-only mission launch path with mission-type templates, package expectations, and immediate board population."
       orgName={orgName}
       session={session}
     >
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
-        <div className="text-sm text-slate-300">
-          Mission creation now writes straight to Postgres and seeds a sortie template before command refines tasking.
-        </div>
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
+        <span className="text-sm text-slate-400">New sortie creation</span>
         <Link
           href="/missions"
-          className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/8"
         >
-          <ArrowLeft size={14} />
-          Back to board
+          <ArrowLeft size={13} />Board
         </Link>
       </div>
 
       {canCreateMission ? (
-        <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
           <MissionCreateForm />
         </section>
       ) : (
-        <section className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
-          <div className="flex items-center gap-3">
-            <Lock size={18} />
-            <p className="font-semibold uppercase tracking-[0.18em]">
-              Mission creation requires command authority
-            </p>
+        <section className="rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 p-5 text-red-200">
+          <div className="flex items-center gap-2">
+            <Lock size={15} />
+            <p className="text-xs font-medium uppercase tracking-[0.1em]">Command authority required</p>
           </div>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-red-50">
-            Your current role is <span className="font-semibold uppercase">{session.role}</span>. Pilot-grade
-            access can read mission boards, but mission launch authority is restricted to commander,
-            director, or admin roles.
-          </p>
+          <p className="mt-2 text-sm leading-6 text-red-300">Your role ({session.role}) cannot create missions.</p>
         </section>
       )}
     </OpsShell>
