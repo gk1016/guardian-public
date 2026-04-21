@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Target,
   Shield,
-  Siren,
   Zap,
   BookCheck,
   LifeBuoy,
@@ -18,6 +17,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -59,12 +59,19 @@ const navSections = [
 type SidebarProps = {
   session: GuardianSession;
   orgName: string;
+  desktopCollapsed: boolean;
+  onToggleCollapse: () => void;
 };
 
-export function Sidebar({ session, orgName }: SidebarProps) {
+export function Sidebar({
+  session,
+  orgName,
+  desktopCollapsed,
+  onToggleCollapse,
+}: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [sectionCollapsed, setSectionCollapsed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setMobileOpen(false);
@@ -76,7 +83,9 @@ export function Sidebar({ session, orgName }: SidebarProps) {
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   const isActive = (href: string) => {
@@ -85,23 +94,24 @@ export function Sidebar({ session, orgName }: SidebarProps) {
   };
 
   const toggleSection = (title: string) => {
-    setCollapsed((prev) => ({ ...prev, [title]: !prev[title] }));
+    setSectionCollapsed((prev) => ({ ...prev, [title]: !prev[title] }));
   };
 
   const isAdmin = session.role === "admin" || session.role === "commander";
+  const dc = desktopCollapsed;
 
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-50 rounded-md border border-white/10 bg-[var(--color-panel)] p-2 text-slate-400 md:hidden"
+        className="fixed left-3 top-3 z-50 rounded-[var(--radius-md)] border border-white/10 bg-[var(--color-panel)] p-2 text-slate-400 md:hidden"
         aria-label="Open navigation"
       >
         <Menu size={20} />
       </button>
 
-      {/* Overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 md:hidden"
@@ -111,25 +121,40 @@ export function Sidebar({ session, orgName }: SidebarProps) {
 
       {/* Sidebar */}
       <nav
-        className={`fixed left-0 top-0 z-50 flex h-screen w-[var(--sidebar-width)] flex-col border-r border-[var(--color-border)] bg-[var(--color-panel)] transition-transform duration-200 md:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={[
+          "fixed left-0 top-0 z-50 flex h-screen flex-col",
+          "border-r border-[var(--color-border)] bg-[var(--color-panel)]",
+          "transition-all duration-200",
+          "w-[var(--sidebar-width)]",
+          dc ? "md:w-14" : "md:w-[var(--sidebar-width)]",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          "md:translate-x-0",
+        ].join(" ")}
       >
         {/* Mobile close */}
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute right-2 top-2 rounded p-1 text-slate-500 hover:text-white md:hidden"
+          className="absolute right-2 top-2 z-10 rounded p-1 text-slate-500 hover:text-white md:hidden"
         >
           <X size={18} />
         </button>
 
         {/* Header */}
-        <div className="border-b border-[var(--color-border)] px-4 py-4">
+        <div className={`border-b border-[var(--color-border)] px-4 py-4 ${dc ? "md:px-2 md:py-3" : ""}`}>
           <Link href="/command" className="block">
-            <span className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.2em] text-amber-300">
-              Guardian
+            <span
+              className={`font-[family:var(--font-display)] text-lg uppercase tracking-[0.2em] text-amber-300 ${
+                dc ? "md:text-sm md:tracking-[0.1em] md:text-center md:block" : ""
+              }`}
+            >
+              <span className={dc ? "md:hidden" : ""}>Guardian</span>
+              {dc && <span className="hidden md:block">G</span>}
             </span>
-            <span className="mt-0.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500">
+            <span
+              className={`mt-0.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500 ${
+                dc ? "md:hidden" : ""
+              }`}
+            >
               {orgName}
             </span>
           </Link>
@@ -140,17 +165,24 @@ export function Sidebar({ session, orgName }: SidebarProps) {
           {navSections.map((section) => (
             <div key={section.title} className="mb-1">
               <button
-                onClick={() => toggleSection(section.title)}
-                className="flex w-full items-center justify-between px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 hover:text-slate-400"
+                onClick={() => !dc && toggleSection(section.title)}
+                className={`flex w-full items-center px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500 hover:text-slate-400 ${
+                  dc ? "md:justify-center md:px-0 md:pointer-events-none" : "justify-between"
+                }`}
               >
-                {section.title}
-                {collapsed[section.title] ? (
-                  <ChevronRight size={12} />
-                ) : (
-                  <ChevronDown size={12} />
+                <span className={dc ? "md:hidden" : ""}>{section.title}</span>
+                {dc && (
+                  <span className="hidden md:block w-8 border-t border-[var(--color-border)]" />
                 )}
+                <span className={dc ? "md:hidden" : ""}>
+                  {sectionCollapsed[section.title] ? (
+                    <ChevronRight size={12} />
+                  ) : (
+                    <ChevronDown size={12} />
+                  )}
+                </span>
               </button>
-              {!collapsed[section.title] && (
+              {(!sectionCollapsed[section.title] || dc) && (
                 <ul>
                   {section.items.map((item) => {
                     if (item.adminOnly && !isAdmin) return null;
@@ -160,14 +192,19 @@ export function Sidebar({ session, orgName }: SidebarProps) {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className={`mx-2 flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-[13px] font-medium transition-colors ${
+                          title={dc ? item.label : undefined}
+                          className={[
+                            "mx-2 flex items-center rounded-[var(--radius-md)] px-3 py-2 text-[13px] font-medium transition-colors",
+                            dc ? "md:justify-center md:mx-1 md:px-0" : "gap-2.5",
                             active
                               ? "bg-cyan-500/10 text-cyan-300"
-                              : "text-slate-400 hover:bg-[var(--color-hover)] hover:text-slate-200"
-                          }`}
+                              : "text-slate-400 hover:bg-[var(--color-hover)] hover:text-slate-200",
+                          ].join(" ")}
                         >
                           <Icon size={16} strokeWidth={1.5} />
-                          {item.label}
+                          <span className={dc ? "md:hidden" : ""}>
+                            {item.label}
+                          </span>
                         </Link>
                       </li>
                     );
@@ -178,13 +215,22 @@ export function Sidebar({ session, orgName }: SidebarProps) {
           ))}
         </div>
 
-        {/* User */}
-        <div className="border-t border-[var(--color-border)] px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-hover)] text-[10px] font-bold uppercase text-slate-300">
+        {/* Desktop collapse toggle */}
+        <button
+          onClick={onToggleCollapse}
+          className="hidden md:flex items-center justify-center border-t border-[var(--color-border)] py-2.5 text-slate-500 hover:text-slate-300 transition-colors"
+          title={dc ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {dc ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
+
+        {/* User footer */}
+        <div className={`border-t border-[var(--color-border)] px-4 py-3 ${dc ? "md:px-2" : ""}`}>
+          <div className={`flex items-center ${dc ? "md:justify-center" : "gap-2.5"}`}>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-hover)] text-[10px] font-bold uppercase text-slate-300">
               {(session.displayName || session.handle).charAt(0)}
             </div>
-            <div className="min-w-0 flex-1">
+            <div className={`min-w-0 flex-1 ${dc ? "md:hidden" : ""}`}>
               <p className="truncate text-xs font-medium text-white">
                 {session.displayName || session.handle}
               </p>
@@ -193,13 +239,16 @@ export function Sidebar({ session, orgName }: SidebarProps) {
               </p>
             </div>
           </div>
-          <form action="/api/auth/logout" method="post" className="mt-2">
+          <form action="/api/auth/logout" method="post" className={`mt-2 ${dc ? "md:mt-1" : ""}`}>
             <button
               type="submit"
-              className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[11px] text-slate-500 transition hover:bg-[var(--color-hover)] hover:text-red-400"
+              title={dc ? "Sign out" : undefined}
+              className={`flex w-full items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[11px] text-slate-500 transition hover:bg-[var(--color-hover)] hover:text-red-400 ${
+                dc ? "md:justify-center md:px-0" : ""
+              }`}
             >
               <LogOut size={13} />
-              Sign out
+              <span className={dc ? "md:hidden" : ""}>Sign out</span>
             </button>
           </form>
         </div>
