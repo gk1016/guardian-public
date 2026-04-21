@@ -159,7 +159,7 @@ export function Sidebar({
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className={`flex items-center gap-2 rounded-[var(--radius-md)] px-2.5 py-1.5 text-[13px] transition ${
+                          className={`flex items-center gap-2 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm transition ${
                             isActive
                               ? "bg-white/8 font-medium text-white"
                               : "text-slate-400 hover:bg-white/4 hover:text-white"
@@ -179,8 +179,10 @@ export function Sidebar({
     </>
   );
 
-  const engineStatus = (
-    <div className="border-t border-[var(--color-border)] px-2.5 py-2.5">
+  /* Consolidated bottom block: engine status + user + sign out + collapse */
+  const bottomBlock = (
+    <div className="border-t border-[var(--color-border)] px-2.5 py-2">
+      {/* Engine status row */}
       <div className="flex items-center gap-2">
         <div className="relative">
           <div className={`h-2 w-2 rounded-full ${statusColor}`} />
@@ -196,10 +198,37 @@ export function Sidebar({
         ) : null}
       </div>
       {opsSummary ? (
-        <p className="mt-1 text-[10px] text-slate-600">
+        <p className="mt-0.5 text-[10px] text-slate-600">
           {opsSummary.active_missions} msn / {opsSummary.qrf_ready} qrf / {opsSummary.active_intel} intel
         </p>
       ) : null}
+
+      {/* User row + collapse */}
+      <div className="mt-2 flex items-center gap-2">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/8 text-[9px] font-semibold text-amber-300">
+          {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-white">{session.handle ?? "Operator"}</p>
+          <p className="text-[10px] text-slate-500">{session.role}</p>
+        </div>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-6 w-6 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
+          aria-label="Collapse sidebar"
+        >
+          <ChevronLeft size={13} />
+        </button>
+      </div>
+      <form action="/api/auth/logout" method="POST" className="mt-1">
+        <button
+          type="submit"
+          className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-slate-500 transition hover:bg-white/4 hover:text-white"
+        >
+          <LogOut size={11} />
+          <span>Sign out</span>
+        </button>
+      </form>
     </div>
   );
 
@@ -237,7 +266,7 @@ export function Sidebar({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto py-1.5">{navContent}</div>
-            {engineStatus}
+            {bottomBlock}
           </nav>
         </div>
       ) : null}
@@ -260,36 +289,7 @@ export function Sidebar({
               </Link>
             </div>
             <div className="flex-1 overflow-y-auto py-1.5">{navContent}</div>
-            {engineStatus}
-            <div className="border-t border-[var(--color-border)] px-2 py-1.5">
-              <button
-                onClick={onToggleCollapse}
-                className="flex w-full items-center justify-center rounded-[var(--radius-md)] py-1 text-slate-500 transition hover:bg-white/4 hover:text-white"
-                aria-label="Collapse sidebar"
-              >
-                <ChevronLeft size={14} />
-              </button>
-            </div>
-            <div className="border-t border-[var(--color-border)] px-2.5 py-2.5">
-              <div className="flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/8 text-[9px] font-semibold text-amber-300">
-                  {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-medium text-white">{session.handle ?? "Operator"}</p>
-                  <p className="text-[10px] text-slate-500">{session.role}</p>
-                </div>
-              </div>
-              <form action="/api/auth/logout" method="POST" className="mt-1.5">
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-slate-500 transition hover:bg-white/4 hover:text-white"
-                >
-                  <LogOut size={12} />
-                  <span>Sign out</span>
-                </button>
-              </form>
-            </div>
+            {bottomBlock}
           </>
         ) : (
           <>
