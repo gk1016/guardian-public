@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 use sqlx::{PgPool, Row};
-use chrono::{DateTime, Utc};
+use chrono::NaiveDateTime;
 
 /// A correlated threat cluster - multiple intel reports that together
 /// indicate a coherent threat.
@@ -23,8 +23,8 @@ pub struct ThreatCluster {
     pub max_severity: i32,
     pub avg_severity: f64,
     pub confidence: ClusterConfidence,
-    pub first_seen: DateTime<Utc>,
-    pub last_seen: DateTime<Utc>,
+    pub first_seen: NaiveDateTime,
+    pub last_seen: NaiveDateTime,
     /// Active mission callsigns operating in the same area
     pub overlapping_missions: Vec<String>,
 }
@@ -52,7 +52,7 @@ struct IntelRow {
     severity: i32,
     star_system: Option<String>,
     hostile_group: Option<String>,
-    created_at: DateTime<Utc>,
+    created_at: NaiveDateTime,
 }
 
 /// Run threat correlation across all active intel reports.

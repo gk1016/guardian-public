@@ -143,8 +143,9 @@ pub async fn evaluate(
 }
 
 /// Check if a notification with the same title exists in the same org within the last 24 hours.
+/// Uses NaiveDateTime since Prisma stores DateTime as TIMESTAMP (no tz).
 async fn is_duplicate(pool: &PgPool, org_id: &str, title: &str) -> anyhow::Result<bool> {
-    let cutoff = Utc::now() - chrono::Duration::hours(24);
+    let cutoff = (Utc::now() - chrono::Duration::hours(24)).naive_utc();
     let row = sqlx::query(
         r#"
         SELECT COUNT(*) as cnt
@@ -163,6 +164,7 @@ async fn is_duplicate(pool: &PgPool, org_id: &str, title: &str) -> anyhow::Resul
 }
 
 /// Insert a new Notification row. Uses UUID for id since Prisma's cuid() is client-side.
+/// All timestamps are NaiveDateTime to match Prisma's TIMESTAMP columns.
 async fn insert_notification(
     pool: &PgPool,
     org_id: &str,
@@ -173,7 +175,7 @@ async fn insert_notification(
     href: Option<&str>,
 ) -> anyhow::Result<()> {
     let id = uuid::Uuid::new_v4().to_string();
-    let now = Utc::now();
+    let now = Utc::now().naive_utc();
 
     let result = sqlx::query(
         r#"
