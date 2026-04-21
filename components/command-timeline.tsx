@@ -31,6 +31,18 @@ const severityText: Record<string, string> = {
   critical: "text-red-400",
 };
 
+const categoryAbbrev: Record<string, string> = {
+  ops: "OPS",
+  intel: "INTEL",
+  mission: "MSN",
+  rescue: "CSAR",
+  qrf: "QRF",
+  admin: "ADMIN",
+  rule: "RULE",
+  incident: "INC",
+  maintenance: "MAINT",
+};
+
 function formatCompactTime(iso: string): string {
   const d = new Date(iso);
   const now = Date.now();
@@ -110,7 +122,7 @@ export function CommandTimeline({ initialEvents }: CommandTimelineProps) {
               {timeLabels[event.id] ?? formatCompactTime(event.createdAt)}
             </span>
             <span className={`w-14 flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] ${severityText[event.severity] ?? "text-slate-400"}`}>
-              {event.category.length > 6 ? event.category.slice(0, 6) : event.category}
+              {categoryAbbrev[event.category] ?? event.category.toUpperCase().slice(0, 5)}
             </span>
             <span className="min-w-0 flex-1 truncate text-[12px] text-slate-300">
               {event.title}
