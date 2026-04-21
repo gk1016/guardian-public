@@ -179,10 +179,8 @@ export function Sidebar({
     </>
   );
 
-  /* Consolidated bottom block: engine status + user + sign out + collapse */
   const bottomBlock = (
     <div className="border-t border-[var(--color-border)] px-2.5 py-2">
-      {/* Engine status row */}
       <div className="flex items-center gap-2">
         <div className="relative">
           <div className={`h-2 w-2 rounded-full ${statusColor}`} />
@@ -202,8 +200,6 @@ export function Sidebar({
           {opsSummary.active_missions} msn / {opsSummary.qrf_ready} qrf / {opsSummary.active_intel} intel
         </p>
       ) : null}
-
-      {/* User row + collapse */}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/8 text-[9px] font-semibold text-amber-300">
           {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
@@ -248,7 +244,7 @@ export function Sidebar({
             className="absolute inset-0 bg-black/60"
             onClick={() => setMobileOpen(false)}
           />
-          <nav className="relative flex w-56 flex-col bg-[var(--color-surface)] shadow-xl">
+          <nav className="relative flex h-full w-56 flex-col bg-[var(--color-surface)] shadow-xl">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2.5">
               <div>
                 <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
@@ -272,13 +268,13 @@ export function Sidebar({
       ) : null}
 
       <nav
-        className={`hidden md:flex md:flex-col md:flex-shrink-0 md:border-r md:border-[var(--color-border)] md:bg-[var(--color-surface)] transition-[width] duration-200 ${
+        className={`hidden md:sticky md:top-0 md:flex md:h-screen md:flex-col md:flex-shrink-0 md:border-r md:border-[var(--color-border)] md:bg-[var(--color-surface)] transition-[width] duration-200 ${
           desktopCollapsed ? "md:w-12" : "md:w-48"
         }`}
       >
         {!desktopCollapsed ? (
           <>
-            <div className="border-b border-[var(--color-border)] px-3 py-2.5">
+            <div className="flex-shrink-0 border-b border-[var(--color-border)] px-3 py-2.5">
               <Link href="/command" className="block">
                 <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
                   Guardian
@@ -289,11 +285,11 @@ export function Sidebar({
               </Link>
             </div>
             <div className="flex-1 overflow-y-auto py-1.5">{navContent}</div>
-            {bottomBlock}
+            <div className="flex-shrink-0">{bottomBlock}</div>
           </>
         ) : (
           <>
-            <div className="flex flex-col items-center gap-1 py-2.5">
+            <div className="flex flex-shrink-0 flex-col items-center gap-1 py-2.5">
               <Link href="/command" className="block">
                 <p className="font-[family:var(--font-display)] text-sm text-amber-300">G</p>
               </Link>
@@ -326,7 +322,7 @@ export function Sidebar({
                   }),
               )}
             </div>
-            <div className="flex flex-col items-center gap-2 border-t border-[var(--color-border)] py-2.5">
+            <div className="flex flex-shrink-0 flex-col items-center gap-2 border-t border-[var(--color-border)] py-2.5">
               <div className="relative">
                 <div className={`h-2 w-2 rounded-full ${statusColor}`} />
                 {connectionState === "connected" ? (
