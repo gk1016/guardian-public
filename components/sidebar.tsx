@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
+import { useEngine } from "@/lib/engine-context";
 
 const navSections = [
   {
@@ -56,6 +57,14 @@ const navSections = [
   },
 ];
 
+function formatTickAge(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m ago`;
+}
+
 type SidebarProps = {
   session: GuardianSession;
   orgName: string;
@@ -72,6 +81,8 @@ export function Sidebar({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sectionCollapsed, setSectionCollapsed] = useState<Record<string, boolean>>({});
+  const { connectionState, lastTick, opsSummary } = useEngine();
+  const [tickAge, setTickAge] = useState<string>("");
 
   useEffect(() => {
     setMobileOpen(false);
@@ -88,6 +99,16 @@ export function Sidebar({
     };
   }, [mobileOpen]);
 
+  // Update tick age display every 5 seconds
+  useEffect(() => {
+    if (!lastTick) return;
+    setTickAge(formatTickAge(lastTick));
+    const interval = setInterval(() => {
+      setTickAge(formatTickAge(lastTick));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [lastTick]);
+
   const isActive = (href: string) => {
     if (href === "/command") return pathname === "/command";
     return pathname === href || pathname.startsWith(href + "/");
@@ -99,6 +120,25 @@ export function Sidebar({
 
   const isAdmin = session.role === "admin" || session.role === "commander";
   const dc = desktopCollapsed;
+
+  const pulseColor =
+    connectionState === "connected"
+      ? "bg-emerald-400"
+      : connectionState === "connecting"
+      ? "bg-amber-400"
+      : "bg-red-400";
+  const pulseTextColor =
+    connectionState === "connected"
+      ? "text-emerald-400"
+      : connectionState === "connecting"
+      ? "text-amber-400"
+      : "text-red-400";
+  const pulseLabel =
+    connectionState === "connected"
+      ? "LIVE"
+      : connectionState === "connecting"
+      ? "SYNC"
+      : "OFFLINE";
 
   return (
     <>
@@ -213,6 +253,34 @@ export function Sidebar({
               )}
             </div>
           ))}
+        </div>
+
+        {/* Engine status pulse */}
+        <div className={`border-t border-[var(--color-border)] px-4 py-2.5 ${dc ? "md:px-2 md:py-2" : ""}`}>
+          <div className={`flex items-center ${dc ? "md:justify-center" : "gap-2"}`}>
+            <span
+              className={`inline-block h-2 w-2 shrink-0 rounded-full ${pulseColor} ${
+                connectionState !== "disconnected" ? "animate-pulse" : ""
+              }`}
+            />
+            <div className={`flex items-center gap-1.5 ${dc ? "md:hidden" : ""}`}>
+              <span className={`text-[10px] font-semibold uppercase tracking-wider ${pulseTextColor}`}>
+                {pulseLabel}
+              </span>
+              {connectionState === "connected" && opsSummary && (
+                <span className="text-[10px] text-slate-600">
+                  {tickAge}
+                </span>
+              )}
+            </div>
+          </div>
+          {connectionState === "connected" && opsSummary && !dc && (
+            <div className={`mt-1.5 flex gap-3 text-[10px] text-slate-500 ${dc ? "md:hidden" : ""}`}>
+              <span>{opsSummary.active_missions} msn</span>
+              <span>{opsSummary.qrf_ready} qrf</span>
+              <span>{opsSummary.active_intel} intel</span>
+            </div>
+          )}
         </div>
 
         {/* Desktop collapse toggle */}

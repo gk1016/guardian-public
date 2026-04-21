@@ -1,6 +1,7 @@
 pub mod package_discipline;
 pub mod threat_correlation;
 pub mod alert_engine;
+pub mod ops_summary;
 
 use tracing::{info, error};
 
@@ -43,5 +44,29 @@ pub async fn tick(pool: &sqlx::PgPool, event_tx: &tokio::sync::broadcast::Sender
     // Phase 3: Generate alerts from computed results
     if let Err(e) = alert_engine::evaluate(pool, event_tx, &compliance_results, &threat_clusters).await {
         error!(error = %e, "alert evaluation failed");
+    }
+
+    // Phase 4: Broadcast live ops summary to all connected clients
+    let violation_count: usize = compliance_results.iter().map(|r| r.violations.len()).sum();
+    match ops_summary::query(pool, threat_clusters.len(), violation_count).await {
+        Ok(summary) => {
+            let event = serde_json::json!({
+                "type": "ops_summary",
+                "active_missions": summary.active_missions,
+                "planning_missions": summary.planning_missions,
+                "qrf_ready": summary.qrf_ready,
+                "qrf_total": summary.qrf_total,
+                "open_rescues": summary.open_rescues,
+                "unread_alerts": summary.unread_alerts,
+                "active_intel": summary.active_intel,
+                "threat_clusters": summary.threat_clusters,
+                "compliance_violations": summary.compliance_violations,
+                "timestamp": summary.timestamp,
+            });
+            let _ = event_tx.send(event.to_string());
+        }
+        Err(e) => {
+            error!(error = %e, "ops summary query failed");
+        }
     }
 }

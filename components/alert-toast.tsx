@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { EngineEvent } from "@/lib/use-engine-ws";
-import { useEngineWS } from "@/lib/use-engine-ws";
+import { useEngine } from "@/lib/engine-context";
 
 type Toast = {
   id: string;
@@ -53,10 +53,11 @@ function getHref(event: EngineEvent): string | null {
 }
 
 /**
- * Real-time alert toast container. Connects to guardian-engine via WSS
- * and renders incoming alerts as dismissible toasts.
+ * Real-time alert toast container. Consumes alert events from EngineProvider
+ * context and renders them as dismissible toasts.
  */
 export function AlertToastContainer() {
+  const { connectionState, subscribeAlerts } = useEngine();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const counterRef = useRef(0);
 
@@ -64,8 +65,8 @@ export function AlertToastContainer() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const onEvent = useCallback(
-    (event: EngineEvent) => {
+  useEffect(() => {
+    return subscribeAlerts((event: EngineEvent) => {
       if (event.type !== "alert") return;
 
       const id = `toast-${++counterRef.current}`;
@@ -76,20 +77,15 @@ export function AlertToastContainer() {
         return next.slice(0, MAX_TOASTS);
       });
 
-      // Auto-dismiss
       const delay =
         event.severity === "critical" ? DISMISS_CRITICAL : DISMISS_DEFAULT;
       setTimeout(() => dismiss(id), delay);
-    },
-    [dismiss]
-  );
-
-  const { state } = useEngineWS(onEvent);
+    });
+  }, [subscribeAlerts, dismiss]);
 
   return (
     <div className="fixed right-4 top-4 z-[9999] flex w-[380px] max-w-[calc(100vw-2rem)] flex-col gap-2">
-      {/* Connection indicator - only show when disconnected */}
-      {state === "disconnected" && (
+      {connectionState === "disconnected" && (
         <div className="rounded-[var(--radius-sm)] bg-[var(--color-panel)] px-3 py-1.5 text-[10px] uppercase tracking-wider text-[var(--color-text-dim)] border border-[var(--color-border)]">
           Engine disconnected - reconnecting...
         </div>

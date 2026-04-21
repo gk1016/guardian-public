@@ -7,6 +7,7 @@ import {
 import { getCommandOverview } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
+import { LiveCounters } from "@/components/live-counters";
 
 export const dynamic = "force-dynamic";
 
@@ -22,32 +23,12 @@ export default async function CommandPage() {
       orgName={data.orgName}
       session={session}
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-[var(--radius-lg)] border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-emerald-200">Active Missions</p>
-          <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white">
-            {data.activeMissionCount.toString().padStart(2, "0")}
-          </p>
-        </div>
-        <div className="rounded-[var(--radius-lg)] border border-cyan-500/20 bg-cyan-500/8 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-cyan-200">QRF Ready</p>
-          <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white">
-            {data.qrfReadyCount.toString().padStart(2, "0")}
-          </p>
-        </div>
-        <div className="rounded-[var(--radius-lg)] border border-amber-500/20 bg-amber-500/8 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-amber-200">Open Rescue</p>
-          <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white">
-            {data.openRescueCount.toString().padStart(2, "0")}
-          </p>
-        </div>
-        <div className="rounded-[var(--radius-lg)] border border-red-500/20 bg-red-500/8 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-red-200">Unread Alerts</p>
-          <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white">
-            {data.unreadNotificationCount.toString().padStart(2, "0")}
-          </p>
-        </div>
-      </div>
+      <LiveCounters
+        initialActiveMissions={data.activeMissionCount}
+        initialQrfReady={data.qrfReadyCount}
+        initialOpenRescues={data.openRescueCount}
+        initialUnreadAlerts={data.unreadNotificationCount}
+      />
 
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">
