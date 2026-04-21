@@ -2,6 +2,7 @@ pub mod package_discipline;
 pub mod threat_correlation;
 pub mod alert_engine;
 pub mod ops_summary;
+pub mod rule_evaluator;
 
 use tracing::{info, error};
 
@@ -46,7 +47,7 @@ pub async fn tick(pool: &sqlx::PgPool, event_tx: &tokio::sync::broadcast::Sender
         error!(error = %e, "alert evaluation failed");
     }
 
-    // Phase 4: Broadcast live ops summary to all connected clients
+    // Phase 4: Broadcast live ops summary + Phase 5: Evaluate alert rules
     let violation_count: usize = compliance_results.iter().map(|r| r.violations.len()).sum();
     match ops_summary::query(pool, threat_clusters.len(), violation_count).await {
         Ok(summary) => {
@@ -71,6 +72,11 @@ pub async fn tick(pool: &sqlx::PgPool, event_tx: &tokio::sync::broadcast::Sender
                 "timestamp": summary.timestamp,
             });
             let _ = event_tx.send(event.to_string());
+
+            // Phase 5: Evaluate user-defined alert rules against computed metrics
+            if let Err(e) = rule_evaluator::evaluate(pool, &summary, event_tx).await {
+                error!(error = %e, "alert rule evaluation failed");
+            }
         }
         Err(e) => {
             error!(error = %e, "ops summary query failed");

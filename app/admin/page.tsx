@@ -1,7 +1,8 @@
-import { Shield, UserCog } from "lucide-react";
+import { Shield, UserCog, Bell } from "lucide-react";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { AdminMemberUpdateForm } from "@/components/admin-member-update-form";
 import { AdminUserCreateForm } from "@/components/admin-user-create-form";
+import { AlertRuleManager } from "@/components/alert-rule-manager";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
 import { getAdminPageData } from "@/lib/ops-data";
@@ -30,6 +31,10 @@ export default async function AdminPage() {
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
+
+      <CollapsiblePanel label="Alert Rules" icon={<Bell size={16} className="text-amber-300" />} defaultOpen>
+        <AlertRuleManager />
+      </CollapsiblePanel>
 
       <CollapsiblePanel label="Create Member" icon={<UserCog size={16} className="text-amber-300" />}>
         <AdminUserCreateForm />

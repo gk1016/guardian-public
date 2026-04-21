@@ -45,6 +45,7 @@ model Organization {
   qrfDispatches QrfDispatch[]
   incidents   Incident[]
   notifications Notification[]
+  alertRules  AlertRule[]
 }
 
 model OrgMember {
@@ -301,4 +302,22 @@ model Notification {
 
   @@index([orgId, status, createdAt])
   @@index([severity])
+}
+
+model AlertRule {
+  id              String       @id @default(cuid())
+  orgId           String
+  name            String
+  metric          String
+  operator        String
+  threshold       Float
+  severity        String       @default("warning")
+  isEnabled       Boolean      @default(true)
+  cooldownMinutes Int          @default(60)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  org             Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, isEnabled])
 }
