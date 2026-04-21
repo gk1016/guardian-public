@@ -11,6 +11,25 @@ services:
       guardian-postgres:
         condition: service_healthy
 
+  guardian-engine:
+    build:
+      context: ./guardian-engine
+      dockerfile: Dockerfile
+    container_name: guardian-engine
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:3420:3420"
+      - "0.0.0.0:3421:3421"
+    environment:
+      ENGINE_PORT: "3420"
+      FEDERATION_PORT: "3421"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-guardian}:${POSTGRES_PASSWORD:-guardian_dev}@guardian-postgres:5432/${POSTGRES_DB:-guardian}"
+      GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"
+      RUST_LOG: "guardian_engine=info,tower_http=info"
+    depends_on:
+      guardian-postgres:
+        condition: service_healthy
+
   guardian-tools:
     build:
       context: .

@@ -2,3 +2,4 @@
 .next
 node_modules
 npm-debug.log
+guardian-engine/target
