@@ -136,16 +136,16 @@ export function Sidebar({
           <div key={section.title}>
             <button
               onClick={() => toggleSection(section.title)}
-              className="flex w-full items-center justify-between px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 transition hover:text-slate-300"
+              className="flex w-full items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 transition hover:text-slate-300"
             >
               <span>{section.title}</span>
               <ChevronDown
-                size={12}
+                size={11}
                 className={`transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
               />
             </button>
             {!isCollapsed ? (
-              <ul className="space-y-0.5">
+              <ul className="space-y-px">
                 {section.items
                   .filter(
                     (item) =>
@@ -159,13 +159,13 @@ export function Sidebar({
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className={`flex items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 text-sm transition ${
+                          className={`flex items-center gap-2 rounded-[var(--radius-md)] px-2.5 py-1.5 text-[13px] transition ${
                             isActive
                               ? "bg-white/8 font-medium text-white"
                               : "text-slate-400 hover:bg-white/4 hover:text-white"
                           }`}
                         >
-                          <Icon size={15} className={isActive ? "text-amber-300" : ""} />
+                          <Icon size={14} className={isActive ? "text-amber-300" : ""} />
                           <span>{item.label}</span>
                         </Link>
                       </li>
@@ -180,7 +180,7 @@ export function Sidebar({
   );
 
   const engineStatus = (
-    <div className="border-t border-[var(--color-border)] px-3 py-3">
+    <div className="border-t border-[var(--color-border)] px-2.5 py-2.5">
       <div className="flex items-center gap-2">
         <div className="relative">
           <div className={`h-2 w-2 rounded-full ${statusColor}`} />
@@ -219,8 +219,8 @@ export function Sidebar({
             className="absolute inset-0 bg-black/60"
             onClick={() => setMobileOpen(false)}
           />
-          <nav className="relative flex w-64 flex-col bg-[var(--color-surface)] shadow-xl">
-            <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+          <nav className="relative flex w-56 flex-col bg-[var(--color-surface)] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2.5">
               <div>
                 <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
                   Guardian
@@ -236,20 +236,20 @@ export function Sidebar({
                 <X size={18} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto py-2">{navContent}</div>
+            <div className="flex-1 overflow-y-auto py-1.5">{navContent}</div>
             {engineStatus}
           </nav>
         </div>
       ) : null}
 
       <nav
-        className={`hidden md:flex md:flex-col md:border-r md:border-[var(--color-border)] md:bg-[var(--color-surface)] transition-[width] duration-200 ${
-          desktopCollapsed ? "md:w-14" : "md:w-56"
+        className={`hidden md:flex md:flex-col md:flex-shrink-0 md:border-r md:border-[var(--color-border)] md:bg-[var(--color-surface)] transition-[width] duration-200 ${
+          desktopCollapsed ? "md:w-12" : "md:w-48"
         }`}
       >
         {!desktopCollapsed ? (
           <>
-            <div className="border-b border-[var(--color-border)] px-4 py-3">
+            <div className="border-b border-[var(--color-border)] px-3 py-2.5">
               <Link href="/command" className="block">
                 <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
                   Guardian
@@ -259,33 +259,33 @@ export function Sidebar({
                 </p>
               </Link>
             </div>
-            <div className="flex-1 overflow-y-auto py-2">{navContent}</div>
+            <div className="flex-1 overflow-y-auto py-1.5">{navContent}</div>
             {engineStatus}
-            <div className="border-t border-[var(--color-border)] px-3 py-2">
+            <div className="border-t border-[var(--color-border)] px-2 py-1.5">
               <button
                 onClick={onToggleCollapse}
-                className="flex w-full items-center justify-center rounded-[var(--radius-md)] py-1.5 text-slate-500 transition hover:bg-white/4 hover:text-white"
+                className="flex w-full items-center justify-center rounded-[var(--radius-md)] py-1 text-slate-500 transition hover:bg-white/4 hover:text-white"
                 aria-label="Collapse sidebar"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
               </button>
             </div>
-            <div className="border-t border-[var(--color-border)] px-3 py-3">
+            <div className="border-t border-[var(--color-border)] px-2.5 py-2.5">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/8 text-[10px] font-semibold text-amber-300">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/8 text-[9px] font-semibold text-amber-300">
                   {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium text-white">{session.handle ?? "Operator"}</p>
+                  <p className="truncate text-[11px] font-medium text-white">{session.handle ?? "Operator"}</p>
                   <p className="text-[10px] text-slate-500">{session.role}</p>
                 </div>
               </div>
-              <form action="/api/auth/logout" method="POST" className="mt-2">
+              <form action="/api/auth/logout" method="POST" className="mt-1.5">
                 <button
                   type="submit"
-                  className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[11px] text-slate-500 transition hover:bg-white/4 hover:text-white"
+                  className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-slate-500 transition hover:bg-white/4 hover:text-white"
                 >
-                  <LogOut size={13} />
+                  <LogOut size={12} />
                   <span>Sign out</span>
                 </button>
               </form>
@@ -293,12 +293,12 @@ export function Sidebar({
           </>
         ) : (
           <>
-            <div className="flex flex-col items-center gap-1 py-3">
+            <div className="flex flex-col items-center gap-1 py-2.5">
               <Link href="/command" className="block">
                 <p className="font-[family:var(--font-display)] text-sm text-amber-300">G</p>
               </Link>
             </div>
-            <div className="flex flex-1 flex-col items-center gap-1 overflow-y-auto py-2">
+            <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto py-1.5">
               {navSections.flatMap((section) =>
                 section.items
                   .filter(
@@ -313,20 +313,20 @@ export function Sidebar({
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] transition ${
+                        className={`flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] transition ${
                           isActive
                             ? "bg-white/8 text-amber-300"
                             : "text-slate-500 hover:bg-white/4 hover:text-white"
                         }`}
                         title={item.label}
                       >
-                        <Icon size={16} />
+                        <Icon size={15} />
                       </Link>
                     );
                   }),
               )}
             </div>
-            <div className="flex flex-col items-center gap-2 border-t border-[var(--color-border)] py-3">
+            <div className="flex flex-col items-center gap-2 border-t border-[var(--color-border)] py-2.5">
               <div className="relative">
                 <div className={`h-2 w-2 rounded-full ${statusColor}`} />
                 {connectionState === "connected" ? (
@@ -335,10 +335,10 @@ export function Sidebar({
               </div>
               <button
                 onClick={onToggleCollapse}
-                className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
                 aria-label="Expand sidebar"
               >
-                <ChevronRight size={14} />
+                <ChevronRight size={13} />
               </button>
             </div>
           </>

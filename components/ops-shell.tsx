@@ -62,13 +62,9 @@ export function OpsShell({
           desktopCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
         />
-        <main
-          className={`ml-0 min-h-screen flex-1 bg-[var(--color-bg)] transition-[margin] duration-200 ${
-            sidebarCollapsed ? "md:ml-14" : "md:ml-[var(--sidebar-width)]"
-          }`}
-        >
-          <div className="mx-auto max-w-[1400px] px-5 py-5">
-            <header className="mb-5 border-b border-[var(--color-border)] pb-4 pl-10 md:pl-0">
+        <main className="min-h-screen flex-1 bg-[var(--color-bg)]">
+          <div className="mx-auto max-w-[1400px] px-4 py-4">
+            <header className="mb-4 border-b border-[var(--color-border)] pb-3 pl-10 md:pl-0">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
                 {orgName} / {section}
               </p>
@@ -76,7 +72,7 @@ export function OpsShell({
                 {title}
               </h1>
             </header>
-            <div className="flex flex-col gap-5">{children}</div>
+            <div className="flex flex-col gap-4">{children}</div>
           </div>
         </main>
         <AlertToastContainer />
