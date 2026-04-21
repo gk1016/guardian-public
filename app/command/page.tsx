@@ -10,7 +10,10 @@ import { OpsShell } from "@/components/ops-shell";
 import { LiveCounters } from "@/components/live-counters";
 import { ReadinessGauge } from "@/components/readiness-gauge";
 import { MissionQuickActions } from "@/components/mission-quick-actions";
+import { CommandTimeline } from "@/components/command-timeline";
 import { canManageMissions } from "@/lib/roles";
+import { prisma } from "@/lib/prisma";
+import { getOrgForUser } from "@/lib/guardian-data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +21,35 @@ export default async function CommandPage() {
   const session = await requireSession("/command");
   const data = await getCommandOverview(session.userId);
   const canManageMission = canManageMissions(session.role);
+
+  // Load recent notifications for command timeline
+  const org = await getOrgForUser(session.userId);
+  let timelineEvents: {
+    id: string;
+    category: string;
+    severity: string;
+    title: string;
+    body: string;
+    href: string | null;
+    createdAt: string;
+  }[] = [];
+
+  if (org) {
+    const recentNotifications = await prisma.notification.findMany({
+      where: { orgId: org.id },
+      orderBy: { createdAt: "desc" },
+      take: 15,
+    });
+    timelineEvents = recentNotifications.map((n) => ({
+      id: n.id,
+      category: n.category,
+      severity: n.severity,
+      title: n.title,
+      body: n.body,
+      href: n.href,
+      createdAt: n.createdAt.toISOString(),
+    }));
+  }
 
   return (
     <OpsShell
@@ -36,6 +68,8 @@ export default async function CommandPage() {
           initialUnreadAlerts={data.unreadNotificationCount}
         />
       </div>
+
+      <CommandTimeline initialEvents={timelineEvents} />
 
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">
