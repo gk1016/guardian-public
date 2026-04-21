@@ -34,6 +34,21 @@ async fn main() -> anyhow::Result<()> {
     let fed_handle = federation::manager::start(app_state.clone());
     info!("federation manager started");
 
+    // Start compute tick loop (30-second interval)
+    let compute_state = app_state.clone();
+    let compute_handle = tokio::spawn(async move {
+        // Wait 5 seconds on startup before first tick (let things settle)
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+        loop {
+            interval.tick().await;
+            info!("compute tick starting");
+            compute::tick(compute_state.pool(), compute_state.event_tx()).await;
+            info!("compute tick complete");
+        }
+    });
+    info!("compute tick loop started (30s interval)");
+
     // Build router
     let app = routes::router(app_state);
 
@@ -45,6 +60,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Cleanup
+    compute_handle.abort();
     fed_handle.abort();
     info!("guardian-engine stopped");
     Ok(())
