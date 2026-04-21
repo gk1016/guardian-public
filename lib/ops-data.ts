@@ -91,6 +91,24 @@ export type IncidentPagePayload = PagePayload<{
   updatedAtLabel: string;
 }>;
 
+export type AdminPagePayload = {
+  ok: boolean;
+  orgName: string;
+  items: {
+    membershipId: string;
+    userId: string;
+    email: string;
+    handle: string;
+    displayName: string | null;
+    role: string;
+    status: string;
+    rank: string;
+    title: string | null;
+    joinedAtLabel: string;
+  }[];
+  error?: string;
+};
+
 export async function getQrfPageData(
   userId: string,
 ): Promise<QrfPagePayload & { missionOptions: SelectOption[]; rescueOptions: SelectOption[] }> {
@@ -507,4 +525,58 @@ export async function getPublicAarData() {
       updatedAtLabel: formatDateTime(mission.updatedAt),
     })),
   };
+}
+
+export async function getAdminPageData(userId: string): Promise<AdminPagePayload> {
+  try {
+    const org = await getOrgForUser(userId);
+    if (!org) {
+      return {
+        ok: true,
+        orgName: "Guardian",
+        items: [],
+      };
+    }
+
+    const members = await prisma.orgMember.findMany({
+      where: { orgId: org.id },
+      orderBy: [{ rank: "asc" }, { joinedAt: "asc" }],
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            handle: true,
+            displayName: true,
+            role: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    return {
+      ok: true,
+      orgName: org.name,
+      items: members.map((member) => ({
+        membershipId: member.id,
+        userId: member.user.id,
+        email: member.user.email,
+        handle: member.user.handle,
+        displayName: member.user.displayName,
+        role: member.user.role,
+        status: member.user.status,
+        rank: member.rank,
+        title: member.title,
+        joinedAtLabel: formatDateTime(member.joinedAt),
+      })),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      orgName: "Guardian",
+      items: [],
+      error: error instanceof Error ? error.message : "Failed to load admin board.",
+    };
+  }
 }
