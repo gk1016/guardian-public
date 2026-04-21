@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { NotificationAckForm } from "@/components/notification-ack-form";
+import { NotificationCreateForm } from "@/components/notification-create-form";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
 import { getNotificationPageData } from "@/lib/ops-data";
+import { canManageOperations } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +19,7 @@ const severityTone = {
 export default async function NotificationsPage() {
   const session = await requireSession("/notifications");
   const data = await getNotificationPageData(session.userId);
+  const canCreateAlert = canManageOperations(session.role);
 
   return (
     <OpsShell
@@ -27,6 +31,12 @@ export default async function NotificationsPage() {
     >
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
+      ) : null}
+
+      {canCreateAlert ? (
+        <CollapsiblePanel label="Send Alert" icon={<Bell size={14} className="text-amber-300" />}>
+          <NotificationCreateForm />
+        </CollapsiblePanel>
       ) : null}
 
       <section className="flex flex-col gap-4">

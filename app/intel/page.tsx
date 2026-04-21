@@ -3,12 +3,17 @@ import { Radar, ShieldAlert } from "lucide-react";
 import { getIntelPageData } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
+import { CollapsiblePanel } from "@/components/collapsible-panel";
+import { IntelCreateForm } from "@/components/intel-create-form";
+import { IntelUpdateForm } from "@/components/intel-update-form";
+import { canManageOperations } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 export default async function IntelPage() {
   const session = await requireSession("/intel");
   const data = await getIntelPageData(session.userId);
+  const canFileIntel = canManageOperations(session.role);
 
   return (
     <OpsShell
@@ -20,6 +25,12 @@ export default async function IntelPage() {
     >
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
+      ) : null}
+
+      {canFileIntel ? (
+        <CollapsiblePanel label="File Intel Report" icon={<Radar size={14} className="text-red-300" />}>
+          <IntelCreateForm />
+        </CollapsiblePanel>
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -52,6 +63,18 @@ export default async function IntelPage() {
                 {item.linkedMissions.length === 0 ? <span className="text-[10px] text-slate-600">Unlinked</span> : null}
               </div>
             </div>
+            {canFileIntel ? (
+              <div className="mt-3">
+                <CollapsiblePanel label="Update Report" variant="inline">
+                  <IntelUpdateForm
+                    intelId={item.id}
+                    initialSeverity={item.severity}
+                    initialConfidence={item.confidence}
+                    isActive={true}
+                  />
+                </CollapsiblePanel>
+              </div>
+            ) : null}
           </article>
         ))}
       </section>
