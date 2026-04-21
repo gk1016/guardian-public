@@ -32,10 +32,10 @@ export default function Home() {
             Planning, rescue, dispatch, readiness, and threat tracking in one system.
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-7">
             <Link
               href="/login"
-              className="inline-flex items-center rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-950 transition hover:bg-amber-200"
+              className="inline-flex items-center rounded-[var(--radius-md)] border border-amber-300/25 bg-amber-300/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/15 hover:text-amber-100"
             >
               Sign In
             </Link>
