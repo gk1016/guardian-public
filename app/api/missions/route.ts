@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { getMissionTemplate } from "@/lib/mission-templates";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
 
@@ -102,6 +103,16 @@ export async function POST(request: Request) {
     }
 
     return createdMission;
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "mission",
+    severity: payload.data.priority === "critical" ? "critical" : "info",
+    title: `Mission created / ${mission.callsign}`,
+    body: `${mission.title} opened with status ${mission.status}.`,
+    href: `/missions/${mission.id}`,
   });
 
   return NextResponse.json({ ok: true, mission });

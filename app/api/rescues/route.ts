@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
 
@@ -57,6 +58,16 @@ export async function POST(request: Request) {
       survivorHandle: true,
       status: true,
     },
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "rescue",
+    severity: payload.data.urgency === "flash" ? "critical" : "warning",
+    title: `New rescue intake / ${rescue.survivorHandle}`,
+    body: `Rescue request opened with status ${rescue.status}. Escort requirement and survivor condition need review.`,
+    href: "/rescues",
   });
 
   return NextResponse.json({ ok: true, rescue });

@@ -25,6 +25,7 @@ model User {
   qrfDispatches QrfDispatch[] @relation("qrf_dispatch_author")
   incidentsReported Incident[] @relation("incident_reporter")
   incidentsReviewed Incident[] @relation("incident_reviewer")
+  notificationsCreated Notification[] @relation("notification_creator")
 }
 
 model Organization {
@@ -43,6 +44,7 @@ model Organization {
   qrfReadiness QrfReadiness[]
   qrfDispatches QrfDispatch[]
   incidents   Incident[]
+  notifications Notification[]
 }
 
 model OrgMember {
@@ -278,5 +280,25 @@ model Incident {
   @@index([orgId, status])
   @@index([missionId])
   @@index([rescueId])
+  @@index([severity])
+}
+
+model Notification {
+  id             String       @id @default(cuid())
+  orgId          String
+  createdById    String?
+  category       String       @default("ops")
+  severity       String       @default("info")
+  title          String
+  body           String
+  href           String?
+  status         String       @default("unread")
+  acknowledgedAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  createdBy      User?        @relation("notification_creator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([orgId, status, createdAt])
   @@index([severity])
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
+  Bell,
   BookCheck,
   Clock3,
   Crosshair,
@@ -43,6 +44,12 @@ export default async function CommandPage() {
               <p className="text-xs uppercase tracking-[0.18em] text-amber-100">Open Rescue</p>
               <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
                 {data.openRescueCount.toString().padStart(2, "0")}
+              </p>
+            </div>
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-red-100">Unread Alerts</p>
+              <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+                {data.unreadNotificationCount.toString().padStart(2, "0")}
               </p>
             </div>
       </div>
@@ -220,6 +227,45 @@ export default async function CommandPage() {
               Doctrine templates now exist as reusable org assets. ROE and execution guidance can be attached directly to sorties instead of dying in mission briefs or chat fragments.
             </p>
           </article>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Bell size={18} className="text-red-300" />
+              <div>
+                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                  Ops Alerts
+                </p>
+                <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Persisted notification feed</p>
+              </div>
+            </div>
+            <Link
+              href="/notifications"
+              className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
+            >
+              Open alerts
+            </Link>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            {data.notifications.map((notification) => (
+              <article key={notification.id} className="rounded-xl border border-white/10 bg-slate-950/60 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+                    {notification.title}
+                  </p>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-300">
+                    {notification.severity}
+                  </span>
+                </div>
+                {notification.href ? (
+                  <Link href={notification.href} className="mt-3 inline-flex text-xs uppercase tracking-[0.16em] text-cyan-100 transition hover:text-white">
+                    Open source
+                  </Link>
+                ) : null}
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-white/5 p-6">

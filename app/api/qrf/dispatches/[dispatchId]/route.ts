@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
 
@@ -114,6 +115,21 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         },
       });
     }
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "qrf",
+    severity:
+      dispatchStatus === "aborted"
+        ? "critical"
+        : dispatchStatus === "complete" || dispatchStatus === "rtb"
+          ? "info"
+          : "warning",
+    title: `${dispatch.qrf.callsign} / ${dispatchStatus}`,
+    body: `${dispatch.qrf.callsign} dispatch state changed to ${dispatchStatus}.`,
+    href: "/qrf",
   });
 
   return NextResponse.json({ ok: true });

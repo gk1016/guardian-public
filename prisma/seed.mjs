@@ -648,6 +648,54 @@ async function main() {
     }
   }
 
+  const notificationSeeds = [
+    {
+      category: "qrf",
+      severity: "warning",
+      title: "VIKING 2 remains committed to active CSAR tasking",
+      body: "Medical package is already moving toward ORBITER-4. Do not count that asset as free for unrelated dispatch.",
+      href: "/qrf",
+    },
+    {
+      category: "incident",
+      severity: "critical",
+      title: "False distress beacon pattern remains unresolved",
+      body: "Rescue trap incident is still open. Escort remains mandatory on Daymar pickups until that contact pattern is burned down.",
+      href: "/incidents",
+    },
+    {
+      category: "rescue",
+      severity: "info",
+      title: "ORBITER-4 rescue remains in progress",
+      body: "Survivor beacon is still active and the rescue package has not yet filed final outcome.",
+      href: "/rescues",
+    },
+  ];
+
+  for (const notificationSeed of notificationSeeds) {
+    const existingNotification = await prisma.notification.findFirst({
+      where: {
+        orgId: org.id,
+        title: notificationSeed.title,
+      },
+    });
+
+    if (existingNotification) {
+      await prisma.notification.update({
+        where: { id: existingNotification.id },
+        data: notificationSeed,
+      });
+    } else {
+      await prisma.notification.create({
+        data: {
+          orgId: org.id,
+          createdById: reaper.id,
+          ...notificationSeed,
+        },
+      });
+    }
+  }
+
   console.log("Guardian seed complete.");
 }
 

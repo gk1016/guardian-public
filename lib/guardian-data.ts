@@ -132,6 +132,7 @@ export type OverviewPayload = {
   openRescueCount: number;
   activeIntelCount: number;
   qrfReadyCount: number;
+  unreadNotificationCount: number;
   missions: {
     id: string;
     callsign: string;
@@ -168,6 +169,12 @@ export type OverviewPayload = {
     platform: string | null;
     locationName: string | null;
     availableCrew: number;
+  }[];
+  notifications: {
+    id: string;
+    severity: string;
+    title: string;
+    href: string | null;
   }[];
   error?: string;
 };
@@ -487,14 +494,16 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
         openRescueCount: 0,
         activeIntelCount: 0,
         qrfReadyCount: 0,
+        unreadNotificationCount: 0,
         missions: [],
         rescues: [],
         intel: [],
         qrf: [],
+        notifications: [],
       };
     }
 
-    const [missions, rescues, intel, qrf, activeMissionCount, openRescueCount, activeIntelCount, qrfReadyCount] =
+    const [missions, rescues, intel, qrf, notifications, activeMissionCount, openRescueCount, activeIntelCount, qrfReadyCount, unreadNotificationCount] =
       await Promise.all([
         prisma.mission.findMany({
           where: { orgId: org.id },
@@ -525,6 +534,17 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
           orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
           take: 4,
         }),
+        prisma.notification.findMany({
+          where: { orgId: org.id },
+          orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+          take: 4,
+          select: {
+            id: true,
+            severity: true,
+            title: true,
+            href: true,
+          },
+        }),
         prisma.mission.count({
           where: { orgId: org.id, status: { in: ["planning", "ready", "active"] } },
         }),
@@ -537,6 +557,9 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
         prisma.qrfReadiness.count({
           where: { orgId: org.id, status: { in: ["redcon1", "redcon2"] } },
         }),
+        prisma.notification.count({
+          where: { orgId: org.id, status: "unread" },
+        }),
       ]);
 
     return {
@@ -546,6 +569,7 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
       openRescueCount,
       activeIntelCount,
       qrfReadyCount,
+      unreadNotificationCount,
       missions: missions.map((mission: MissionWithParticipants) => {
         const packageSummary = summarizePackageStatus(mission.participants as MissionParticipantRecord[]);
 
@@ -596,6 +620,7 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
         locationName: entry.locationName,
         availableCrew: entry.availableCrew,
       })),
+      notifications,
     };
   } catch (error) {
     return {
@@ -605,10 +630,12 @@ export async function getCommandOverview(userId: string): Promise<OverviewPayloa
       openRescueCount: 0,
       activeIntelCount: 0,
       qrfReadyCount: 0,
+      unreadNotificationCount: 0,
       missions: [],
       rescues: [],
       intel: [],
       qrf: [],
+      notifications: [],
       error: error instanceof Error ? error.message : "Failed to load overview.",
     };
   }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
 
@@ -86,6 +87,16 @@ export async function POST(request: Request) {
       title: true,
       status: true,
     },
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "incident",
+    severity: payload.data.severity >= 4 ? "critical" : "warning",
+    title: incident.title,
+    body: `Incident opened with status ${incident.status}. Review and lessons-learned capture are required.`,
+    href: "/incidents",
   });
 
   return NextResponse.json({ ok: true, incident });

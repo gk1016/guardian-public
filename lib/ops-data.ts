@@ -91,6 +91,18 @@ export type IncidentPagePayload = PagePayload<{
   updatedAtLabel: string;
 }>;
 
+export type NotificationPagePayload = PagePayload<{
+  id: string;
+  category: string;
+  severity: string;
+  title: string;
+  body: string;
+  href: string | null;
+  status: string;
+  createdAtLabel: string;
+  acknowledgedAtLabel: string | null;
+}>;
+
 export type AdminPagePayload = {
   ok: boolean;
   orgName: string;
@@ -577,6 +589,52 @@ export async function getAdminPageData(userId: string): Promise<AdminPagePayload
       orgName: "Guardian",
       items: [],
       error: error instanceof Error ? error.message : "Failed to load admin board.",
+    };
+  }
+}
+
+export async function getNotificationPageData(
+  userId: string,
+): Promise<NotificationPagePayload> {
+  try {
+    const org = await getOrgForUser(userId);
+    if (!org) {
+      return {
+        ok: true,
+        orgName: "Guardian",
+        items: [],
+      };
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where: { orgId: org.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      take: 50,
+    });
+
+    return {
+      ok: true,
+      orgName: org.name,
+      items: notifications.map((notification) => ({
+        id: notification.id,
+        category: notification.category,
+        severity: notification.severity,
+        title: notification.title,
+        body: notification.body,
+        href: notification.href,
+        status: notification.status,
+        createdAtLabel: formatDateTime(notification.createdAt),
+        acknowledgedAtLabel: notification.acknowledgedAt
+          ? formatDateTime(notification.acknowledgedAt)
+          : null,
+      })),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      orgName: "Guardian",
+      items: [],
+      error: error instanceof Error ? error.message : "Failed to load notifications.",
     };
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
 
@@ -127,6 +128,18 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     return createdDispatch;
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "qrf",
+    severity: "warning",
+    title: `${qrf.callsign} dispatched`,
+    body: payload.data.missionId
+      ? `${qrf.callsign} has been tasked to a mission package.`
+      : `${qrf.callsign} has been tasked to a rescue package.`,
+    href: "/qrf",
   });
 
   return NextResponse.json({ ok: true, dispatch });

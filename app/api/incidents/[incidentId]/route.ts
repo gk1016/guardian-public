@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
 
@@ -65,6 +66,19 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       id: true,
       status: true,
     },
+  });
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "incident",
+    severity:
+      payload.data.status === "closed" || payload.data.status === "archived"
+        ? "info"
+        : "warning",
+    title: `Incident ${updated.status}`,
+    body: `Incident ${incidentId} changed to ${updated.status}.`,
+    href: "/incidents",
   });
 
   return NextResponse.json({ ok: true, incident: updated });

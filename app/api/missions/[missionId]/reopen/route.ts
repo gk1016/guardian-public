@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
+import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
 
@@ -95,6 +96,16 @@ export async function POST(request: Request, context: RouteContext) {
       select: { id: true },
     }),
   ]);
+
+  await createNotification({
+    orgId: org.id,
+    createdById: session.userId,
+    category: "mission",
+    severity: "warning",
+    title: `Mission reopened / ${mission.callsign}`,
+    body: `${mission.callsign} moved back to ${payload.data.status} for revision ${updatedMission.revisionNumber}.`,
+    href: `/missions/${mission.id}`,
+  });
 
   return NextResponse.json({ ok: true, mission: updatedMission });
 }

@@ -13,7 +13,8 @@ type OpsShellProps = {
     | "/roster"
     | "/qrf"
     | "/incidents"
-    | "/admin";
+    | "/admin"
+    | "/notifications";
   section: string;
   title: string;
   description: string;
@@ -33,6 +34,7 @@ const navItems: Array<{
   { href: "/doctrine", label: "Doctrine" },
   { href: "/rescues", label: "Rescue" },
   { href: "/incidents", label: "Incidents" },
+  { href: "/notifications", label: "Notifications" },
   { href: "/roster", label: "Roster" },
   { href: "/admin", label: "Admin" },
 ];
