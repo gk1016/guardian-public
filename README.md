@@ -104,4 +104,6 @@ The dev server runs at http://localhost:3000. The Rust engine is not started by 
 
 ## License
 
-All rights reserved.
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+Copyright (C) 2026 Graham Kyle
