@@ -4,7 +4,7 @@ services:
     container_name: guardian
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3410:3000"
+      - "0.0.0.0:3410:3000"
     env_file:
       - .env
     depends_on:
