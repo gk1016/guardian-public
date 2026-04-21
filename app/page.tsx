@@ -39,12 +39,6 @@ export default function Home() {
             >
               Sign In
             </Link>
-            <Link
-              href="/ops"
-              className="inline-flex items-center rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white/10"
-            >
-              View Workflows
-            </Link>
           </div>
         </section>
 
