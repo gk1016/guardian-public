@@ -8,6 +8,7 @@ import { getCommandOverview } from "@/lib/guardian-data";
 import { requireSession } from "@/lib/auth";
 import { OpsShell } from "@/components/ops-shell";
 import { LiveCounters } from "@/components/live-counters";
+import { ReadinessGauge } from "@/components/readiness-gauge";
 import { MissionQuickActions } from "@/components/mission-quick-actions";
 import { canManageMissions } from "@/lib/roles";
 
@@ -26,12 +27,15 @@ export default async function CommandPage() {
       orgName={data.orgName}
       session={session}
     >
-      <LiveCounters
-        initialActiveMissions={data.activeMissionCount}
-        initialQrfReady={data.qrfReadyCount}
-        initialOpenRescues={data.openRescueCount}
-        initialUnreadAlerts={data.unreadNotificationCount}
-      />
+      <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
+        <ReadinessGauge />
+        <LiveCounters
+          initialActiveMissions={data.activeMissionCount}
+          initialQrfReady={data.qrfReadyCount}
+          initialOpenRescues={data.openRescueCount}
+          initialUnreadAlerts={data.unreadNotificationCount}
+        />
+      </div>
 
       {data.error ? (
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">

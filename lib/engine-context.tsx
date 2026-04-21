@@ -11,6 +11,13 @@ import {
 } from "react";
 import { useEngineWS, type EngineEvent } from "@/lib/use-engine-ws";
 
+export type ReadinessBreakdown = {
+  qrf_posture: number;
+  package_discipline: number;
+  rescue_response: number;
+  threat_awareness: number;
+};
+
 export type OpsSummary = {
   active_missions: number;
   planning_missions: number;
@@ -21,6 +28,8 @@ export type OpsSummary = {
   active_intel: number;
   threat_clusters: number;
   compliance_violations: number;
+  readiness_score: number;
+  readiness: ReadinessBreakdown;
   timestamp: string;
 };
 
@@ -70,6 +79,13 @@ export function EngineProvider({ children }: { children: ReactNode }) {
         active_intel: summary.active_intel ?? 0,
         threat_clusters: summary.threat_clusters ?? 0,
         compliance_violations: summary.compliance_violations ?? 0,
+        readiness_score: summary.readiness_score ?? 0,
+        readiness: summary.readiness ?? {
+          qrf_posture: 0,
+          package_discipline: 0,
+          rescue_response: 0,
+          threat_awareness: 0,
+        },
         timestamp: summary.timestamp ?? new Date().toISOString(),
       });
       setLastTick(new Date());
