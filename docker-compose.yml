@@ -3,8 +3,8 @@ services:
     build: .
     container_name: guardian
     restart: unless-stopped
-    ports:
-      - "0.0.0.0:3410:3000"
+    expose:
+      - "3000"
     env_file:
       - .env
     depends_on:
@@ -17,8 +17,9 @@ services:
       dockerfile: Dockerfile
     container_name: guardian-engine
     restart: unless-stopped
+    expose:
+      - "3420"
     ports:
-      - "0.0.0.0:3420:3420"
       - "0.0.0.0:3421:3421"
     environment:
       ENGINE_PORT: "3420"
@@ -53,8 +54,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-guardian}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guardian_dev}
       POSTGRES_DB: ${POSTGRES_DB:-guardian}
-    ports:
-      - "127.0.0.1:5441:5432"
+    expose:
+      - "5432"
     volumes:
       - guardian-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -63,6 +64,22 @@ services:
       timeout: 5s
       retries: 10
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: guardian-caddy
+    restart: unless-stopped
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - guardian
+      - guardian-engine
+
 volumes:
   guardian-postgres-data:
   guardian-engine-certs:
+  caddy_data:

@@ -1,0 +1,10 @@
+{$SITE_ADDRESS:localhost} {
+    tls internal
+
+    handle /engine/* {
+        uri strip_prefix /engine
+        reverse_proxy guardian-engine:3420
+    }
+
+    reverse_proxy guardian:3000
+}
