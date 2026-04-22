@@ -59,7 +59,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const passwordHash =
     payload.data.password && payload.data.password.trim().length > 0
-      ? await bcrypt.hash(payload.data.password, 10)
+      ? await bcrypt.hash(payload.data.password, 12)
       : undefined;
 
   const updated = await prisma.$transaction(async (tx) => {

@@ -32,7 +32,7 @@ services:
     environment:
       ENGINE_PORT: "3420"
       FEDERATION_PORT: "3421"
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-guardian}:${POSTGRES_PASSWORD:-guardian_dev}@guardian-postgres:5432/${POSTGRES_DB:-guardian}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@guardian-postgres:5432/${POSTGRES_DB}"
       GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"
       GUARDIAN_CERT_DIR: "/data/guardian/certs"
       RUST_LOG: "guardian_engine=info,tower_http=info"
@@ -65,15 +65,15 @@ services:
     container_name: guardian-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-guardian}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-guardian_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-guardian}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     expose:
       - "5432"
     volumes:
       - guardian-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-guardian}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 10

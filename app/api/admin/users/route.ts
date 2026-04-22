@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Handle already exists." }, { status: 409 });
   }
 
-  const passwordHash = await bcrypt.hash(payload.data.password, 10);
+  const passwordHash = await bcrypt.hash(payload.data.password, 12);
 
   const created = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({

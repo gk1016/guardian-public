@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   const demoPassword =
     process.env.GUARDIAN_DEMO_PASSWORD || "GuardianDemo!2026";
-  const passwordHash = await bcrypt.hash(demoPassword, 10);
+  const passwordHash = await bcrypt.hash(demoPassword, 12);
 
   const org = await prisma.organization.upsert({
     where: { tag: "GUARD" },
