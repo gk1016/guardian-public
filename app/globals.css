@@ -149,3 +149,18 @@ a {
 .panel-elevated {
   box-shadow: 0 2px 4px var(--color-shadow), 0 8px 20px var(--color-shadow-deep);
 }
+
+/* Fix native <select> dropdown option visibility on dark themes.
+   Browser <option> elements inherit text color but render on a
+   platform-default white background, making white text invisible. */
+select option,
+select optgroup {
+  background-color: #1a1a2e;
+  color: #e6edf3;
+}
+
+[data-theme="daylight"] select option,
+[data-theme="daylight"] select optgroup {
+  background-color: #ffffff;
+  color: #1e293b;
+}

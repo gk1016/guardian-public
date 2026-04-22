@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, DragEvent } from "react";
 import {
   Filter,
   FileText,
@@ -75,6 +75,9 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createMode, setCreateMode] = useState<"article" | "file">("article");
   const [isPending, startTransition] = useTransition();
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create form state
   const [newTitle, setNewTitle] = useState("");
@@ -86,20 +89,73 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
     ? items
     : items.filter((i) => i.category === categoryFilter);
 
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "text/plain",
+    "text/markdown",
+    "image/png",
+    "image/jpeg",
+  ];
+
+  function validateAndSetFile(file: File | null) {
+    setUploadError(null);
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File exceeds 10MB limit.");
+      return;
+    }
+    // Also accept by extension since browser MIME detection can be unreliable
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const allowedExts = ["pdf", "docx", "doc", "txt", "md", "png", "jpg", "jpeg"];
+    if (!allowedMimeTypes.includes(file.type) && (!ext || !allowedExts.includes(ext))) {
+      setUploadError(`File type not allowed: ${file.type || ext}`);
+      return;
+    }
+    setNewFile(file);
+  }
+
+  function handleDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }
+
+  function handleDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0] ?? null;
+    validateAndSetFile(file);
+  }
+
   function handleCreate() {
     if (!newTitle.trim()) return;
+    setUploadError(null);
     startTransition(async () => {
-      if (createMode === "article") {
-        const res = await fetch("/api/manual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: newTitle,
-            category: newCategory,
-            body: newBody,
-          }),
-        });
-        if (res.ok) {
+      try {
+        if (createMode === "article") {
+          const res = await fetch("/api/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: newTitle,
+              category: newCategory,
+              body: newBody,
+            }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            setUploadError(data.error ?? `Server error: ${res.status}`);
+            return;
+          }
           // Refresh list
           const listRes = await fetch("/api/manual");
           const data = await listRes.json();
@@ -107,18 +163,21 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
           setNewTitle("");
           setNewBody("");
           setShowCreateForm(false);
-        }
-      } else {
-        if (!newFile) return;
-        const formData = new FormData();
-        formData.append("title", newTitle);
-        formData.append("category", newCategory);
-        formData.append("file", newFile);
-        const res = await fetch("/api/manual", {
-          method: "POST",
-          body: formData,
-        });
-        if (res.ok) {
+        } else {
+          if (!newFile) return;
+          const formData = new FormData();
+          formData.append("title", newTitle);
+          formData.append("category", newCategory);
+          formData.append("file", newFile);
+          const res = await fetch("/api/manual", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            setUploadError(data.error ?? `Upload failed: ${res.status}`);
+            return;
+          }
           const listRes = await fetch("/api/manual");
           const data = await listRes.json();
           if (data.ok) setItems(data.items);
@@ -126,6 +185,8 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
           setNewFile(null);
           setShowCreateForm(false);
         }
+      } catch (err) {
+        setUploadError(`Network error: ${err instanceof Error ? err.message : "Unknown error"}`);
       }
     });
   }
@@ -234,30 +295,42 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2 font-mono text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
               />
             ) : (
-              <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] bg-white/3 px-4 py-6 text-center">
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`cursor-pointer rounded-[var(--radius-md)] border border-dashed px-4 py-6 text-center transition ${
+                  isDragging
+                    ? "border-amber-400/60 bg-amber-400/8"
+                    : "border-[var(--color-border)] bg-white/3 hover:border-[var(--color-border-bright)] hover:bg-white/5"
+                }`}
+              >
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".pdf,.docx,.doc,.txt,.md,.png,.jpg,.jpeg"
-                  onChange={(e) => setNewFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => validateAndSetFile(e.target.files?.[0] ?? null)}
                   className="hidden"
-                  id="manual-file-input"
                 />
-                <label
-                  htmlFor="manual-file-input"
-                  className="cursor-pointer text-sm text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
-                >
-                  <Upload size={20} className="mx-auto mb-2 text-[var(--color-text-tertiary)]" />
-                  {newFile ? (
-                    <span className="text-amber-200">{newFile.name} ({formatFileSize(newFile.size)})</span>
-                  ) : (
-                    <span>Click to select file (PDF, DOCX, TXT, MD, PNG, JPG - max 10MB)</span>
-                  )}
-                </label>
+                <Upload size={20} className={`mx-auto mb-2 ${isDragging ? "text-amber-400" : "text-[var(--color-text-tertiary)]"}`} />
+                {newFile ? (
+                  <span className="text-sm text-amber-200">{newFile.name} ({formatFileSize(newFile.size)})</span>
+                ) : (
+                  <span className="text-sm text-[var(--color-text-secondary)]">
+                    {isDragging ? "Drop file here" : "Drag and drop or click to select file"}
+                    <br />
+                    <span className="text-[10px] text-[var(--color-text-tertiary)]">PDF, DOCX, TXT, MD, PNG, JPG - max 10MB</span>
+                  </span>
+                )}
               </div>
             )}
+            {uploadError ? (
+              <p className="text-xs text-red-400">{uploadError}</p>
+            ) : null}
             <div className="flex justify-end gap-2">
               <button
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => { setShowCreateForm(false); setUploadError(null); setNewFile(null); }}
                 className="rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
               >
                 Cancel
