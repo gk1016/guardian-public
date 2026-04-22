@@ -1,5 +1,5 @@
 # ---- Builder ----
-FROM rust:latest AS builder
+FROM rust:1.95 AS builder
 
 WORKDIR /app
 
@@ -17,6 +17,7 @@ FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Create data directory for cert storage
@@ -25,5 +26,8 @@ RUN mkdir -p /data/guardian/certs
 COPY --from=builder /app/target/release/guardian-engine /usr/local/bin/guardian-engine
 
 EXPOSE 3420 3421
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --spider -q http://localhost:3420/health || exit 1
 
 ENTRYPOINT ["guardian-engine"]
