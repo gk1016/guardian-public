@@ -767,44 +767,6 @@ async function main() {
   }
 
 
-  // --- AI System Documentation (.docx bundled file) ---
-  const aiDocPath = new URL("./assets/Guardian_AI_System_Documentation.docx", import.meta.url);
-  try {
-    const fs = await import("node:fs");
-    const mammothLib = await import("mammoth");
-    const docBuffer = fs.readFileSync(aiDocPath);
-    const htmlResult = await mammothLib.default.convertToHtml({ buffer: docBuffer });
-    const plainResult = await mammothLib.default.extractRawText({ buffer: docBuffer });
-    const aiDocBody = htmlResult.value || plainResult.value || "";
-
-    const aiDocTitle = "Guardian AI System Documentation";
-    const existingAiDoc = await prisma.manualEntry.findFirst({
-      where: { orgId: org.id, title: aiDocTitle },
-    });
-
-    const aiDocData = {
-      orgId: org.id,
-      authorId: reaper.id,
-      title: aiDocTitle,
-      category: "reference",
-      entryType: "file",
-      body: aiDocBody,
-      fileName: "Guardian_AI_System_Documentation.docx",
-      fileSize: docBuffer.length,
-      fileMimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      fileData: docBuffer,
-    };
-
-    if (existingAiDoc) {
-      await prisma.manualEntry.update({ where: { id: existingAiDoc.id }, data: aiDocData });
-    } else {
-      await prisma.manualEntry.create({ data: aiDocData });
-    }
-    console.log("  AI System Documentation seeded.");
-  } catch (err) {
-    console.log("  AI System Documentation skipped (file not found or mammoth error):", err.message);
-  }
-
   console.log("Guardian seed complete.");
 }
 
