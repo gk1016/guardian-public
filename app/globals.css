@@ -150,9 +150,7 @@ a {
   box-shadow: 0 2px 4px var(--color-shadow), 0 8px 20px var(--color-shadow-deep);
 }
 
-/* Fix native <select> dropdown option visibility on dark themes.
-   Browser <option> elements inherit text color but render on a
-   platform-default white background, making white text invisible. */
+/* Fix native <select> dropdown option visibility on dark themes. */
 select option,
 select optgroup {
   background-color: #1a1a2e;
@@ -163,4 +161,71 @@ select optgroup {
 [data-theme="daylight"] select optgroup {
   background-color: #ffffff;
   color: #1e293b;
+}
+
+/* Mammoth-extracted .docx content styling */
+.manual-doc-content {
+  color: var(--color-text-secondary);
+}
+
+.manual-doc-content h1,
+.manual-doc-content h2,
+.manual-doc-content h3,
+.manual-doc-content h4 {
+  color: var(--color-text-strong);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.manual-doc-content h1 { font-size: 1.5rem; }
+.manual-doc-content h2 { font-size: 1.25rem; }
+.manual-doc-content h3 { font-size: 1.1rem; }
+
+.manual-doc-content p {
+  margin-bottom: 0.75em;
+  line-height: 1.75;
+}
+
+.manual-doc-content strong,
+.manual-doc-content b {
+  color: var(--color-text-strong);
+  font-weight: 600;
+}
+
+.manual-doc-content ul,
+.manual-doc-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.manual-doc-content li {
+  margin-bottom: 0.25em;
+}
+
+.manual-doc-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.85rem;
+}
+
+.manual-doc-content th,
+.manual-doc-content td {
+  border: 1px solid var(--color-border-bright);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.manual-doc-content th {
+  background: var(--color-overlay-subtle);
+  color: var(--color-text-strong);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.manual-doc-content tr:nth-child(even) td {
+  background: var(--color-overlay-subtle);
 }

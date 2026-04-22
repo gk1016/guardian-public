@@ -66,6 +66,11 @@ function formatDate(iso: string): string {
   });
 }
 
+/** Check if the body content looks like HTML (from mammoth docx extraction). */
+function isHtmlContent(body: string): boolean {
+  return body.startsWith("<") && (body.includes("<p>") || body.includes("<h") || body.includes("<table"));
+}
+
 type CategoryFilter = "all" | "general" | "sop" | "procedures" | "training" | "reference" | "guides";
 
 export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
@@ -106,7 +111,6 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
       setUploadError("File exceeds 10MB limit.");
       return;
     }
-    // Also accept by extension since browser MIME detection can be unreliable
     const ext = file.name.split(".").pop()?.toLowerCase();
     const allowedExts = ["pdf", "docx", "doc", "txt", "md", "png", "jpg", "jpeg"];
     if (!allowedMimeTypes.includes(file.type) && (!ext || !allowedExts.includes(ext))) {
@@ -156,7 +160,6 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
             setUploadError(data.error ?? `Server error: ${res.status}`);
             return;
           }
-          // Refresh list
           const listRes = await fetch("/api/manual");
           const data = await listRes.json();
           if (data.ok) setItems(data.items);
@@ -352,6 +355,9 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
       <div className="space-y-2">
         {filtered.map((item) => {
           const isExpanded = expandedId === item.id;
+          const hasInlineContent = item.body && item.body.length > 0;
+          const bodyIsHtml = hasInlineContent && isHtmlContent(item.body);
+
           return (
             <div
               key={item.id}
@@ -362,7 +368,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-white/3"
               >
                 {isExpanded ? <ChevronDown size={14} className="text-[var(--color-text-tertiary)]" /> : <ChevronRight size={14} className="text-[var(--color-text-tertiary)]" />}
-                {item.entryType === "file" ? (
+                {item.entryType === "file" && !hasInlineContent ? (
                   <Download size={14} className="flex-shrink-0 text-cyan-300" />
                 ) : (
                   <FileText size={14} className="flex-shrink-0 text-[var(--color-accent)]" />
@@ -383,13 +389,23 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
 
               {isExpanded ? (
                 <div className="border-t border-[var(--color-border)] px-5 py-4">
-                  {item.entryType === "article" && item.body ? (
-                    <div className="prose-invert max-w-none text-sm leading-7 text-slate-300 whitespace-pre-wrap">
-                      {item.body}
-                    </div>
+                  {/* Inline content: article text or extracted file content */}
+                  {hasInlineContent ? (
+                    bodyIsHtml ? (
+                      <div
+                        className="manual-doc-content max-w-none text-sm leading-7 text-slate-300"
+                        dangerouslySetInnerHTML={{ __html: item.body }}
+                      />
+                    ) : (
+                      <div className="max-w-none text-sm leading-7 text-slate-300 whitespace-pre-wrap">
+                        {item.body}
+                      </div>
+                    )
                   ) : null}
+
+                  {/* Download button for file entries */}
                   {item.entryType === "file" ? (
-                    <div className="flex items-center gap-3">
+                    <div className={`flex items-center gap-3 ${hasInlineContent ? "mt-4 border-t border-[var(--color-border)] pt-3" : ""}`}>
                       <a
                         href={`/api/manual/${item.id}/download`}
                         className="flex items-center gap-2 rounded-[var(--radius-md)] border border-cyan-400/20 bg-cyan-400/8 px-3 py-2 text-xs font-medium uppercase tracking-[0.1em] text-cyan-200 transition hover:bg-cyan-400/15"
@@ -402,6 +418,14 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                       </span>
                     </div>
                   ) : null}
+
+                  {/* No content available */}
+                  {item.entryType === "file" && !hasInlineContent ? (
+                    <p className="mb-3 text-xs text-[var(--color-text-tertiary)]">
+                      Inline preview not available for this file type. Use the download button above.
+                    </p>
+                  ) : null}
+
                   {canAuthor ? (
                     <div className="mt-3 flex justify-end">
                       <button

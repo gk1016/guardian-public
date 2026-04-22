@@ -4,12 +4,49 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { canManageOperations } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import mammoth from "mammoth";
 
 const createArticleSchema = z.object({
   title: z.string().trim().min(2).max(200),
   category: z.enum(["general", "sop", "procedures", "training", "reference", "guides"]),
   body: z.string().min(1).max(50000),
 });
+
+/** Extract readable content from uploaded file buffer. */
+async function extractFileContent(
+  buffer: Buffer,
+  mimeType: string,
+  fileName: string,
+): Promise<{ html: string; plain: string } | null> {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+
+  // DOCX -> HTML via mammoth
+  if (
+    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    ext === "docx"
+  ) {
+    try {
+      const result = await mammoth.convertToHtml({ buffer });
+      const plain = (await mammoth.extractRawText({ buffer })).value;
+      return { html: result.value, plain };
+    } catch {
+      return null;
+    }
+  }
+
+  // Plain text / markdown -> read as UTF-8
+  if (
+    mimeType === "text/plain" ||
+    mimeType === "text/markdown" ||
+    ext === "txt" ||
+    ext === "md"
+  ) {
+    const text = buffer.toString("utf-8");
+    return { html: "", plain: text };
+  }
+
+  return null;
+}
 
 export async function GET(request: Request) {
   const session = await getSessionFromCookies();
@@ -55,8 +92,8 @@ export async function GET(request: Request) {
     ok: true,
     items: entries.map((e) => ({
       ...e,
-      body: e.entryType === "article" ? e.body : "",
-      bodyPreview: e.body.slice(0, 200),
+      body: e.body || "",
+      bodyPreview: (e.body || "").slice(0, 200),
       createdAt: e.createdAt.toISOString(),
       updatedAt: e.updatedAt.toISOString(),
       authorDisplay: e.author.displayName ?? e.author.handle,
@@ -116,6 +153,10 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Extract readable content for inline viewing
+    const extracted = await extractFileContent(buffer, file.type, file.name);
+    const body = extracted?.html || extracted?.plain || "";
+
     const entry = await prisma.manualEntry.create({
       data: {
         orgId: org.id,
@@ -123,7 +164,7 @@ export async function POST(request: Request) {
         title,
         category,
         entryType: "file",
-        body: "",
+        body,
         fileName: file.name,
         fileSize: file.size,
         fileMimeType: file.type,
