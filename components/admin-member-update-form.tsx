@@ -65,18 +65,18 @@ export function AdminMemberUpdateForm({
           value={form.displayName}
           onChange={(event) => updateField("displayName", event.target.value)}
           placeholder="Display name"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <input
           value={form.title}
           onChange={(event) => updateField("title", event.target.value)}
           placeholder="Roster title"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <select
           value={form.role}
           onChange={(event) => updateField("role", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="pilot">Pilot</option>
           <option value="rescue_coordinator">Rescue Coordinator</option>
@@ -87,7 +87,7 @@ export function AdminMemberUpdateForm({
         <select
           value={form.status}
           onChange={(event) => updateField("status", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="active">Active</option>
           <option value="pending">Pending</option>
@@ -97,14 +97,14 @@ export function AdminMemberUpdateForm({
           value={form.rank}
           onChange={(event) => updateField("rank", event.target.value)}
           placeholder="Membership rank"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <input
           value={form.password}
           onChange={(event) => updateField("password", event.target.value)}
           placeholder="Reset password"
           type="password"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
       </div>
 

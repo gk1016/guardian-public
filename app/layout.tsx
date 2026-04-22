@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, IBM_Plex_Sans } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const bodyFont = IBM_Plex_Sans({
@@ -19,14 +20,18 @@ export const metadata: Metadata = {
   description: "Standalone operations platform for anti-piracy, rescue, and mission planning.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const theme = cookieStore.get("guardian-theme")?.value ?? "midnight";
+
   return (
     <html
       lang="en"
+      data-theme={theme}
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

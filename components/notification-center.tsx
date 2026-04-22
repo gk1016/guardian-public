@@ -209,23 +209,23 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Total</p>
-          <p className="text-lg font-semibold text-white">{stats.total}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Total</p>
+          <p className="text-lg font-semibold text-[var(--color-text-strong)]">{stats.total}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-amber-400/15 bg-amber-400/5 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Unread</p>
-          <p className="text-lg font-semibold text-amber-300">{stats.unread}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Unread</p>
+          <p className="text-lg font-semibold text-[var(--color-accent)]">{stats.unread}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-red-500/15 bg-red-500/5 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Critical</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Critical</p>
           <p className="text-lg font-semibold text-red-400">{stats.bySeverity.critical}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-amber-400/15 bg-amber-400/5 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Warning</p>
-          <p className="text-lg font-semibold text-amber-300">{stats.bySeverity.warning}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Warning</p>
+          <p className="text-lg font-semibold text-[var(--color-accent)]">{stats.bySeverity.warning}</p>
         </div>
         <div className="rounded-[var(--radius-md)] border border-cyan-400/15 bg-cyan-400/5 px-3 py-2.5">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Info</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Info</p>
           <p className="text-lg font-semibold text-cyan-300">{stats.bySeverity.info}</p>
         </div>
       </div>
@@ -233,8 +233,8 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
       {/* Filter bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-slate-600"} />
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-[var(--color-text-faint)]"} />
             <span>{filtered.length} alerts</span>
             {connectionState === "connected" ? (
               <span className="rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-emerald-300">Live</span>
@@ -243,15 +243,15 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
 
           {/* Category filter */}
           <div className="flex items-center gap-1">
-            <Filter size={12} className="text-slate-500" />
+            <Filter size={12} className="text-[var(--color-text-tertiary)]" />
             {(["all", "ops", "intel", "rule", "rescue", "admin"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setCategoryFilter(f)}
                 className={`rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
                   categoryFilter === f
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 {f}
@@ -269,8 +269,8 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
                 onClick={() => setSeverityFilter(f)}
                 className={`rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
                   severityFilter === f
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 {f}
@@ -286,8 +286,8 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
                 onClick={() => setStatusFilter(f)}
                 className={`rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
                   statusFilter === f
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 {f === "acknowledged" ? "ack" : f}
@@ -314,7 +314,7 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
         {filtered.map((item) => (
           <div
             key={item.id}
-            className={`group flex items-start gap-3 rounded-[var(--radius-md)] border bg-white/2 px-4 py-3 transition hover:bg-white/4 ${
+            className={`group flex items-start gap-3 rounded-[var(--radius-md)] border bg-white/2 px-4 py-3 transition hover:bg-[var(--color-overlay-subtle)] ${
               severityBorder[item.severity] ?? "border-[var(--color-border)]"
             } ${item.status === "acknowledged" ? "opacity-60" : ""}`}
           >
@@ -333,16 +333,16 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
                 {item.status === "unread" ? (
                   <span className="rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-amber-200">unread</span>
                 ) : (
-                  <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-slate-500">ack</span>
+                  <span className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-1.5 py-0.5 text-[9px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">ack</span>
                 )}
-                <span className="ml-auto text-[10px] text-slate-600">
+                <span className="ml-auto text-[10px] text-[var(--color-text-faint)]">
                   {timeLabels[item.id] ?? formatEventTime(item.createdAt)}
                 </span>
               </div>
-              <p className="mt-1 text-sm font-medium text-white">{item.title}</p>
-              <p className="mt-0.5 text-sm leading-6 text-slate-400">{item.body}</p>
+              <p className="mt-1 text-sm font-medium text-[var(--color-text-strong)]">{item.title}</p>
+              <p className="mt-0.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.body}</p>
               {item.acknowledgedAt ? (
-                <span className="mt-1 inline-block text-[10px] text-slate-600">
+                <span className="mt-1 inline-block text-[10px] text-[var(--color-text-faint)]">
                   Acknowledged {formatEventTime(item.acknowledgedAt)}
                 </span>
               ) : null}
@@ -360,7 +360,7 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
                 <button
                   onClick={() => handleAck(item.id)}
                   disabled={ackingIds.has(item.id)}
-                  className="rounded-[var(--radius-sm)] border border-white/10 bg-white/5 p-1.5 text-slate-400 opacity-0 transition group-hover:opacity-100 hover:bg-white/10 hover:text-white disabled:opacity-50"
+                  className="rounded-[var(--radius-sm)] border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] p-1.5 text-[var(--color-text-secondary)] opacity-0 transition group-hover:opacity-100 hover:bg-[var(--color-overlay-strong)] hover:text-[var(--color-text-strong)] disabled:opacity-50"
                   title="Acknowledge"
                 >
                   {ackingIds.has(item.id) ? <LoaderCircle size={13} className="animate-spin" /> : <Check size={13} />}
@@ -370,7 +370,7 @@ export function NotificationCenter({ initialItems, initialStats, canCreate }: No
           </div>
         ))}
         {filtered.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-8 text-center text-sm text-slate-500">
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-8 text-center text-sm text-[var(--color-text-tertiary)]">
             No alerts match the current filters.
           </div>
         ) : null}

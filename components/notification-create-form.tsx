@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
 const inputClass =
-  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-400/40 focus:outline-none";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none";
 const selectClass =
-  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none";
-const labelClass = "block text-[10px] uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none";
+const labelClass = "block text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)] mb-1.5";
 
 export function NotificationCreateForm() {
   const router = useRouter();

@@ -66,10 +66,10 @@ export function OpsShell({
         <main className="min-h-screen flex-1 bg-[var(--color-bg)]">
           <div className="mx-auto max-w-[1400px] px-4 py-4">
             <header className="mb-4 border-b border-[var(--color-border)] pb-3 pl-10 md:pl-0">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-tertiary)]">
                 {orgName} / {section}
               </p>
-              <h1 className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white">
+              <h1 className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
                 {title}
               </h1>
             </header>

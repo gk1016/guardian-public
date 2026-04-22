@@ -18,13 +18,13 @@ export default function RecruitPage() {
       <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <div className="grid gap-4">
           {traits.map((trait) => (
-            <div key={trait} className="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 text-sm leading-8 text-slate-200">
+            <div key={trait} className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/60 px-5 py-4 text-sm leading-8 text-slate-200">
               {trait}
             </div>
           ))}
         </div>
-        <article className="rounded-3xl border border-white/10 bg-black/20 p-6">
-          <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Fit Check</p>
+        <article className="rounded-3xl border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] p-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Fit Check</p>
           <p className="mt-4 text-base leading-8 text-slate-300">
             If you want noise, ego, or vague “vibes,” this is the wrong org. If you want structure,
             mission ownership, and a serious crew around you, this is the lane.

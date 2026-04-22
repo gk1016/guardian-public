@@ -69,7 +69,7 @@ export function QrfDispatchForm({
         <select
           value={form.targetType}
           onChange={(event) => updateField("targetType", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="rescue">Rescue</option>
           <option value="mission">Mission</option>
@@ -81,7 +81,7 @@ export function QrfDispatchForm({
               ? updateField("missionId", event.target.value)
               : updateField("rescueId", event.target.value)
           }
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           {activeOptions.map((option) => (
             <option key={option.id} value={option.id}>
@@ -96,7 +96,7 @@ export function QrfDispatchForm({
         onChange={(event) => updateField("notes", event.target.value)}
         rows={3}
         placeholder="Dispatch notes"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <button

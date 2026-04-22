@@ -24,8 +24,8 @@ export default function StandardsPage() {
     >
       <section className="grid gap-6 md:grid-cols-3">
         {standards.map((standard) => (
-          <article key={standard.title} className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
-            <h2 className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-white">
+          <article key={standard.title} className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+            <h2 className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
               {standard.title}
             </h2>
             <p className="mt-4 text-sm leading-8 text-slate-300">{standard.body}</p>

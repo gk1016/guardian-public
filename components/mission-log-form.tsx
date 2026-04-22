@@ -58,11 +58,11 @@ export function MissionLogForm({ missionId }: MissionLogFormProps) {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Entry Type</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Entry Type</span>
         <select
           value={entryType}
           onChange={(event) => setEntryType(event.target.value as (typeof logEntryOptions)[number]["value"])}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         >
           {logEntryOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -73,12 +73,12 @@ export function MissionLogForm({ missionId }: MissionLogFormProps) {
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Timeline Entry</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Timeline Entry</span>
         <textarea
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           rows={5}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

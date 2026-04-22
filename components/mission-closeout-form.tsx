@@ -62,11 +62,11 @@ export function MissionCloseoutForm({
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Final Status</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Final Status</span>
         <select
           value={finalStatus}
           onChange={(event) => setFinalStatus(event.target.value as (typeof finalStatusOptions)[number]["value"])}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         >
           {finalStatusOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -77,22 +77,22 @@ export function MissionCloseoutForm({
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Closeout Summary</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Closeout Summary</span>
         <textarea
           value={closeoutSummary}
           onChange={(event) => setCloseoutSummary(event.target.value)}
           rows={4}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">AAR Package</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">AAR Package</span>
         <textarea
           value={aarSummary}
           onChange={(event) => setAarSummary(event.target.value)}
           rows={6}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

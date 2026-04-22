@@ -23,14 +23,14 @@ export function PublicShell({
         <section className="grid gap-8 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-cyan-200">{eyebrow}</p>
-            <h1 className="mt-5 font-[family:var(--font-display)] text-5xl uppercase leading-[0.94] tracking-[0.08em] text-white sm:text-6xl">
+            <h1 className="mt-5 font-[family:var(--font-display)] text-5xl uppercase leading-[0.94] tracking-[0.08em] text-[var(--color-text-strong)] sm:text-6xl">
               {title}
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">{description}</p>
           </div>
 
-          <aside className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Operating Idea</p>
+          <aside className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Operating Idea</p>
             <p className="mt-4 text-sm leading-8 text-slate-300">
               Guardian is designed like a watch floor and briefing room. Public pages explain intent.
               The protected side carries the actual workflow.

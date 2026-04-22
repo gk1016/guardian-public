@@ -15,8 +15,8 @@ export default function OpsPage() {
       description="Guardian is being shaped around how a military-flavored flight org actually runs operations: brief, launch, adapt, recover, and review."
     >
       <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
-          <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Command Intent</p>
+        <article className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Command Intent</p>
           <p className="mt-4 text-base leading-8 text-slate-300">
             The public side stays clean and modern. The protected side is meant to feel like a
             briefing room, kneeboard, and watch floor instead of another generic gamer app.
@@ -24,7 +24,7 @@ export default function OpsPage() {
         </article>
         <div className="grid gap-4">
           {workflows.map((workflow) => (
-            <div key={workflow} className="rounded-2xl border border-white/10 bg-black/20 px-5 py-4 text-sm leading-8 text-slate-200">
+            <div key={workflow} className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-5 py-4 text-sm leading-8 text-slate-200">
               {workflow}
             </div>
           ))}

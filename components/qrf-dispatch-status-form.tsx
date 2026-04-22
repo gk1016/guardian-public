@@ -45,7 +45,7 @@ export function QrfDispatchStatusForm({
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value)}
-          className="rounded-md border border-white/10 bg-slate-950/70 px-3 py-2 text-xs uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-md border border-[var(--color-border-bright)] bg-slate-950/70 px-3 py-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="tasked">Tasked</option>
           <option value="en_route">En Route</option>
@@ -58,7 +58,7 @@ export function QrfDispatchStatusForm({
           type="button"
           disabled={isPending}
           onClick={handleSubmit}
-          className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-strong)] transition hover:bg-[var(--color-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isPending ? <LoaderCircle size={14} className="animate-spin" /> : <Save size={14} />}
           Update dispatch

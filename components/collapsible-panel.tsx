@@ -27,7 +27,7 @@ export function CollapsiblePanel({
       className={
         isPrimary
           ? "rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] panel-elevated"
-          : "rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15"
+          : "rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)]"
       }
     >
       <button
@@ -41,11 +41,11 @@ export function CollapsiblePanel({
       >
         <ChevronRight
           size={isPrimary ? 14 : 12}
-          className={`shrink-0 text-slate-500 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+          className={`shrink-0 text-[var(--color-text-tertiary)] transition-transform duration-200 ${open ? "rotate-90" : ""}`}
         />
         {icon}
         <span
-          className={`font-[family:var(--font-display)] uppercase tracking-[0.1em] text-white ${
+          className={`font-[family:var(--font-display)] uppercase tracking-[0.1em] text-[var(--color-text-strong)] ${
             isPrimary ? "text-sm" : "text-[10px]"
           }`}
         >

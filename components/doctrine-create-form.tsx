@@ -57,59 +57,59 @@ export function DoctrineCreateForm() {
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Code</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Code</span>
           <input
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Category</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Category</span>
           <input
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
       </div>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Title</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Title</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Summary</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Summary</span>
         <textarea
           value={summary}
           onChange={(event) => setSummary(event.target.value)}
           rows={3}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Execution Checklist</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Execution Checklist</span>
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={6}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Escalation Guidance</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Escalation Guidance</span>
         <textarea
           value={escalation}
           onChange={(event) => setEscalation(event.target.value)}
           rows={3}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

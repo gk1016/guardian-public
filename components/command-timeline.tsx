@@ -27,7 +27,7 @@ const severityDot: Record<string, string> = {
 
 const severityText: Record<string, string> = {
   info: "text-cyan-300",
-  warning: "text-amber-300",
+  warning: "text-[var(--color-accent)]",
   critical: "text-red-400",
 };
 
@@ -97,15 +97,15 @@ export function CommandTimeline({ initialEvents }: CommandTimelineProps) {
     <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated">
       <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
         <div className="flex items-center gap-2">
-          <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-slate-600"} />
-          <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Command Log</p>
+          <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-[var(--color-text-faint)]"} />
+          <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Command Log</p>
           {connectionState === "connected" ? (
             <span className="rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-emerald-300">Live</span>
           ) : null}
         </div>
         <Link
           href="/notifications"
-          className="text-[10px] uppercase tracking-[0.1em] text-slate-500 transition hover:text-white"
+          className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)] transition hover:text-[var(--color-text-strong)]"
         >
           View all
         </Link>
@@ -115,13 +115,13 @@ export function CommandTimeline({ initialEvents }: CommandTimelineProps) {
         {events.map((event) => (
           <div
             key={event.id}
-            className="group flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 transition hover:bg-white/4"
+            className="group flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-1.5 transition hover:bg-[var(--color-overlay-subtle)]"
           >
             <div className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${severityDot[event.severity] ?? "bg-slate-500"}`} />
-            <span className="w-7 flex-shrink-0 text-right text-[10px] tabular-nums text-slate-600">
+            <span className="w-7 flex-shrink-0 text-right text-[10px] tabular-nums text-[var(--color-text-faint)]">
               {timeLabels[event.id] ?? formatCompactTime(event.createdAt)}
             </span>
-            <span className={`w-14 flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] ${severityText[event.severity] ?? "text-slate-400"}`}>
+            <span className={`w-14 flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] ${severityText[event.severity] ?? "text-[var(--color-text-secondary)]"}`}>
               {categoryAbbrev[event.category] ?? event.category.toUpperCase().slice(0, 5)}
             </span>
             <span className="min-w-0 flex-1 truncate text-[12px] text-slate-300">
@@ -130,7 +130,7 @@ export function CommandTimeline({ initialEvents }: CommandTimelineProps) {
             {event.href ? (
               <Link
                 href={event.href}
-                className="flex-shrink-0 text-slate-600 opacity-0 transition group-hover:opacity-100 hover:text-white"
+                className="flex-shrink-0 text-[var(--color-text-faint)] opacity-0 transition group-hover:opacity-100 hover:text-[var(--color-text-strong)]"
               >
                 <ArrowUpRight size={12} />
               </Link>
@@ -138,7 +138,7 @@ export function CommandTimeline({ initialEvents }: CommandTimelineProps) {
           </div>
         ))}
         {events.length === 0 ? (
-          <p className="py-3 text-center text-[11px] text-slate-600">No recent activity.</p>
+          <p className="py-3 text-center text-[11px] text-[var(--color-text-faint)]">No recent activity.</p>
         ) : null}
       </div>
     </div>

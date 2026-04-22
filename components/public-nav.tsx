@@ -23,13 +23,13 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
   return (
     <header
       className={`relative flex items-center justify-between border-b pb-4 ${
-        isLanding ? "border-white/8" : "border-white/10 pb-6"
+        isLanding ? "border-[var(--color-border)]" : "border-[var(--color-border-bright)] pb-6"
       }`}
     >
       <div>
         <Link
           href="/"
-          className={`font-[family:var(--font-display)] uppercase text-amber-300 ${
+          className={`font-[family:var(--font-display)] uppercase text-[var(--color-accent)] ${
             isLanding
               ? "text-xl tracking-[0.24em]"
               : "text-2xl tracking-[0.32em]"
@@ -38,9 +38,9 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
           Guardian
         </Link>
         <p
-          className={`mt-0.5 uppercase text-slate-400 ${
+          className={`mt-0.5 uppercase text-[var(--color-text-secondary)] ${
             isLanding
-              ? "text-[11px] tracking-[0.16em] text-slate-500"
+              ? "text-[11px] tracking-[0.16em] text-[var(--color-text-tertiary)]"
               : "mt-1 text-sm tracking-[0.24em]"
           }`}
         >
@@ -52,7 +52,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
 
       {/* Desktop nav */}
       <nav
-        className={`hidden gap-5 uppercase text-slate-400 md:flex ${
+        className={`hidden gap-5 uppercase text-[var(--color-text-secondary)] md:flex ${
           isLanding
             ? "text-xs tracking-[0.16em]"
             : "text-sm tracking-[0.2em] text-slate-300"
@@ -62,12 +62,12 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
           <Link
             key={item.href}
             href={item.href}
-            className="transition hover:text-white"
+            className="transition hover:text-[var(--color-text-strong)]"
           >
             {item.label}
           </Link>
         ))}
-        <Link href="/login" className="transition hover:text-white">
+        <Link href="/login" className="transition hover:text-[var(--color-text-strong)]">
           Sign In
         </Link>
       </nav>
@@ -75,7 +75,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen((v) => !v)}
-        className="rounded-[var(--radius-md)] border border-white/10 p-2 text-slate-400 transition hover:text-white md:hidden"
+        className="rounded-[var(--radius-md)] border border-[var(--color-border-bright)] p-2 text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)] md:hidden"
         aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
@@ -83,14 +83,14 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
 
       {/* Mobile dropdown */}
       {mobileOpen && (
-        <nav className="absolute left-0 right-0 top-full z-50 border-b border-white/10 bg-[var(--color-bg)] px-6 py-4 md:hidden">
+        <nav className="absolute left-0 right-0 top-full z-50 border-b border-[var(--color-border-bright)] bg-[var(--color-bg)] px-6 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="text-sm uppercase tracking-[0.16em] text-slate-300 transition hover:text-white"
+                className="text-sm uppercase tracking-[0.16em] text-slate-300 transition hover:text-[var(--color-text-strong)]"
               >
                 {item.label}
               </Link>

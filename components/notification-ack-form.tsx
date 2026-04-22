@@ -32,7 +32,7 @@ export function NotificationAckForm({
       type="button"
       disabled={disabled || isPending}
       onClick={handleAcknowledge}
-      className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+      className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-strong)] transition hover:bg-[var(--color-overlay-strong)] disabled:cursor-not-allowed disabled:opacity-70"
     >
       {isPending ? <LoaderCircle size={14} className="animate-spin" /> : null}
       Acknowledge

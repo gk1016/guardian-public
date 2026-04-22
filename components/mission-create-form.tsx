@@ -86,7 +86,7 @@ export function MissionCreateForm() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-cyan-200">Mission Template</p>
-            <h2 className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
+            <h2 className="mt-2 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
               {selectedTemplate.label}
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-200">{selectedTemplate.summary}</p>
@@ -100,7 +100,7 @@ export function MissionCreateForm() {
             <select
               value={templateCode}
               onChange={(event) => applyTemplate(event.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-cyan-300/40"
+              className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
             >
               {missionTemplates.map((template) => (
                 <option key={template.code} value={template.code}>
@@ -110,31 +110,31 @@ export function MissionCreateForm() {
             </select>
           </label>
 
-          <div className="grid gap-3 rounded-2xl border border-white/10 bg-slate-950/40 p-4 text-sm text-slate-200">
+          <div className="grid gap-3 rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/40 p-4 text-sm text-slate-200">
             <div>
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Expected Package</span>
-              <p className="mt-1 font-semibold uppercase tracking-[0.14em] text-white">
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Expected Package</span>
+              <p className="mt-1 font-semibold uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
                 {selectedTemplate.recommendedPackage}
               </p>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Suggested Doctrine</span>
-              <p className="mt-1 font-semibold uppercase tracking-[0.14em] text-white">
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Suggested Doctrine</span>
+              <p className="mt-1 font-semibold uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
                 {selectedTemplate.recommendedDoctrine}
               </p>
             </div>
             <div>
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Seeded Slots</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Seeded Slots</span>
               <div className="mt-2 space-y-2">
                 {selectedTemplate.slots.map((slot) => (
                   <div
                     key={`${selectedTemplate.code}-${slot.role}`}
-                    className="rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+                    className="rounded-xl border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-3 py-2"
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-strong)]">
                       {slot.role}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
                       {slot.platform}
                     </p>
                   </div>
@@ -147,43 +147,43 @@ export function MissionCreateForm() {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Callsign</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Callsign</span>
           <input
             value={callsign}
             onChange={(event) => setCallsign(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
             placeholder="VIGIL 21"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Type</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Type</span>
           <input
             value={missionType}
             onChange={(event) => setMissionType(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
             placeholder="counter-piracy"
           />
         </label>
       </section>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Title</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Title</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           placeholder="Interdict pirate strike package"
         />
       </label>
 
       <section className="grid gap-5 lg:grid-cols-3">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Status</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Status</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as (typeof statusOptions)[number]["value"])}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -194,11 +194,11 @@ export function MissionCreateForm() {
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Priority</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Priority</span>
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value as (typeof priorityOptions)[number]["value"])}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           >
             {priorityOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -209,23 +209,23 @@ export function MissionCreateForm() {
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Area of Operation</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Area of Operation</span>
           <input
             value={areaOfOperation}
             onChange={(event) => setAreaOfOperation(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
             placeholder="Yela common lanes"
           />
         </label>
       </section>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Brief</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Brief</span>
         <textarea
           value={missionBrief}
           onChange={(event) => setMissionBrief(event.target.value)}
           rows={6}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           placeholder="Tasking, threat, launch posture, and end state."
         />
       </label>
@@ -246,7 +246,7 @@ export function MissionCreateForm() {
           {isPending ? <LoaderCircle size={16} className="animate-spin" /> : <Crosshair size={16} />}
           {isPending ? "Creating mission" : "Create mission"}
         </button>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-[var(--color-text-secondary)]">
           Template selection seeds the sortie, attaches recommended doctrine when available, and opens the expected package slots for command to fill.
         </span>
       </div>

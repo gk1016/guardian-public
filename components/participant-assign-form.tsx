@@ -67,40 +67,40 @@ export function ParticipantAssignForm({ missionId }: ParticipantAssignFormProps)
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Handle</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Handle</span>
           <input
             value={handle}
             onChange={(event) => setHandle(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Role</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Role</span>
           <input
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Platform</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Platform</span>
           <input
             value={platform}
             onChange={(event) => setPlatform(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Readiness</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Readiness</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as (typeof participantStatusOptions)[number]["value"])}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           >
             {participantStatusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -112,12 +112,12 @@ export function ParticipantAssignForm({ missionId }: ParticipantAssignFormProps)
       </div>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Notes</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Notes</span>
         <textarea
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={4}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

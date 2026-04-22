@@ -24,10 +24,10 @@ export default function Home() {
             <Siren size={12} />
             Standalone Ops Platform
           </div>
-          <h1 className="mt-5 max-w-3xl font-[family:var(--font-display)] text-4xl uppercase leading-[0.95] tracking-[0.06em] text-white sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 max-w-3xl font-[family:var(--font-display)] text-4xl uppercase leading-[0.95] tracking-[0.06em] text-[var(--color-text-strong)] sm:text-5xl lg:text-6xl">
             Mission control for pilots who hunt pirates and pull people out alive.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-400">
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
             Guardian is a standalone operations platform for a military-pilot Star Citizen org.
             Planning, rescue, dispatch, readiness, and threat tracking in one system.
           </p>
@@ -46,7 +46,7 @@ export default function Home() {
           {capabilities.map((item) => (
             <div
               key={item}
-              className="rounded-[var(--radius-md)] border border-white/8 bg-white/3 px-4 py-3 text-sm text-slate-300"
+              className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3 text-sm text-slate-300"
             >
               {item}
             </div>
@@ -54,30 +54,30 @@ export default function Home() {
         </section>
 
         <section className="mt-14 grid gap-5 md:grid-cols-3">
-          <article className="rounded-[var(--radius-lg)] border border-white/8 bg-[var(--color-panel)] p-5">
-            <Shield size={18} className="text-amber-300" />
-            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
+            <Shield size={18} className="text-[var(--color-accent)]" />
+            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
               Serious Ops Tone
             </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
               The authenticated side reads like a briefing room, not a streamer overlay.
             </p>
           </article>
-          <article className="rounded-[var(--radius-lg)] border border-white/8 bg-[var(--color-panel)] p-5">
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <Crosshair size={18} className="text-cyan-300" />
-            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">
+            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
               Direct Action
             </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
               Built for anti-piracy, escort, rescue, and strike with minimal ceremony.
             </p>
           </article>
-          <article className="rounded-[var(--radius-lg)] border border-white/8 bg-[var(--color-panel)] p-5">
+          <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <Siren size={18} className="text-red-300" />
-            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">
+            <h3 className="mt-3 font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
               Fast Triage
             </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
               Command surfaces what matters first: active sorties, open rescue, threat changes.
             </p>
           </article>

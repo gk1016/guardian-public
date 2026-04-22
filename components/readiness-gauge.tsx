@@ -13,11 +13,11 @@ const subScoreBar = (label: string, value: number, weight: string) => {
   return (
     <div key={label} className="flex items-center gap-3">
       <div className="w-24 flex-shrink-0">
-        <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">{label}</p>
-        <p className="text-[9px] text-slate-600">{weight}</p>
+        <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">{label}</p>
+        <p className="text-[9px] text-[var(--color-text-faint)]">{weight}</p>
       </div>
       <div className="flex-1">
-        <div className="h-1.5 rounded-full bg-white/5">
+        <div className="h-1.5 rounded-full bg-[var(--color-overlay-subtle)]">
           <div
             className={`h-1.5 rounded-full ${colors.bg} transition-all duration-700`}
             style={{ width: `${value}%` }}
@@ -89,7 +89,7 @@ export function ReadinessGauge({ initialScore }: ReadinessGaugeProps) {
 
         <div className="flex-1 text-center sm:text-left">
           <div className="flex items-center justify-center gap-2 sm:justify-start">
-            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-white">
+            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-[var(--color-text-strong)]">
               Readiness: {statusLabel}
             </p>
             {live ? (
@@ -107,7 +107,7 @@ export function ReadinessGauge({ initialScore }: ReadinessGaugeProps) {
               {subScoreBar("Awareness", breakdown.threat_awareness, "25% weight")}
             </div>
           ) : (
-            <p className="mt-2 text-[11px] text-slate-500">Waiting for engine tick...</p>
+            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Waiting for engine tick...</p>
           )}
         </div>
       </div>

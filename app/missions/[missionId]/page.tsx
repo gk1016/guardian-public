@@ -48,7 +48,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           </p>
           <Link
             href="/missions"
-            className="mt-4 inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/12"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-overlay-medium)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--color-text-strong)] transition hover:bg-white/12"
           >
             <ArrowLeft size={13} />Back to board
           </Link>
@@ -68,10 +68,10 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
       session={session}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
-        <span className="text-sm text-slate-400">Sortie detail and package control</span>
+        <span className="text-sm text-[var(--color-text-secondary)]">Sortie detail and package control</span>
         <Link
           href="/missions"
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/8"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--color-text-strong)] transition hover:bg-[var(--color-overlay-medium)]"
         >
           <ArrowLeft size={13} />Board
         </Link>
@@ -86,69 +86,69 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Status</p>
-                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.status}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Status</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{mission.status}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Priority</p>
-                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.priority}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Priority</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{mission.priority}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Rev / Lead</p>
-                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">Rev {mission.revisionNumber}</p>
-                <p className="mt-0.5 text-[10px] text-slate-500">{mission.leadDisplay}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Rev / Lead</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-[var(--color-text-strong)]">Rev {mission.revisionNumber}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{mission.leadDisplay}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Readiness</p>
-                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{mission.packageSummary.readinessLabel}</p>
-                <p className="mt-0.5 text-[10px] text-slate-500">{mission.packageSummary.readyOrLaunched}/{mission.packageSummary.total} ready</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Readiness</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{mission.packageSummary.readinessLabel}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{mission.packageSummary.readyOrLaunched}/{mission.packageSummary.total} ready</p>
               </div>
             </div>
 
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Type / AO</p>
-                <p className="mt-1 text-xs text-white">{mission.missionType} / {mission.areaOfOperation ?? "Pending"}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Type / AO</p>
+                <p className="mt-1 text-xs text-[var(--color-text-strong)]">{mission.missionType} / {mission.areaOfOperation ?? "Pending"}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Timeline</p>
-                <p className="mt-1 text-xs text-white">Updated {mission.updatedAtLabel}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Timeline</p>
+                <p className="mt-1 text-xs text-[var(--color-text-strong)]">Updated {mission.updatedAtLabel}</p>
                 {mission.completedAtLabel ? <p className="mt-0.5 text-[10px] text-emerald-300">Closed {mission.completedAtLabel}</p> : null}
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Package</p>
-                <p className="mt-1 text-xs text-white">A{mission.packageSummary.assigned} / R{mission.packageSummary.ready} / L{mission.packageSummary.launched} / RTB{mission.packageSummary.rtb}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Package</p>
+                <p className="mt-1 text-xs text-[var(--color-text-strong)]">A{mission.packageSummary.assigned} / R{mission.packageSummary.ready} / L{mission.packageSummary.launched} / RTB{mission.packageSummary.rtb}</p>
               </div>
             </div>
 
-            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 p-4">
+            <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] p-4">
               <div className="flex items-center gap-2">
-                <ClipboardList size={15} className="text-amber-300" />
-                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Mission Brief</p>
+                <ClipboardList size={15} className="text-[var(--color-accent)]" />
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Mission Brief</p>
               </div>
-              <p className="mt-2 text-sm leading-7 text-slate-400">{mission.missionBrief ?? "Not yet recorded."}</p>
+              <p className="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]">{mission.missionBrief ?? "Not yet recorded."}</p>
             </div>
           </article>
 
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
-              <AlertTriangle size={15} className="text-amber-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Package Discipline</p>
+              <AlertTriangle size={15} className="text-[var(--color-accent)]" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Package Discipline</p>
             </div>
             <div className="mt-3 grid gap-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Profile</p>
-                <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-white">{mission.packageDiscipline.profileLabel}</p>
-                <p className="mt-0.5 text-[10px] text-slate-500">Coverage {mission.packageDiscipline.coverageLabel}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Profile</p>
+                <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-[var(--color-text-strong)]">{mission.packageDiscipline.profileLabel}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">Coverage {mission.packageDiscipline.coverageLabel}</p>
               </div>
               <div className="grid gap-3 xl:grid-cols-2">
                 {mission.packageDiscipline.roleChecks.map((rc) => (
                   <div key={rc.key} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-white">{rc.label}</p>
+                      <p className="text-xs font-medium text-[var(--color-text-strong)]">{rc.label}</p>
                       <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase ${rc.shortfall === 0 ? "border-emerald-400/20 bg-emerald-400/8 text-emerald-200" : "border-red-500/20 bg-red-500/8 text-red-200"}`}>{rc.matchedCount}/{rc.requiredCount}</span>
                     </div>
-                    <p className="mt-1.5 text-sm leading-6 text-slate-400">{[...rc.matchedHandles, ...rc.openHandles].join(", ") || "No match."}</p>
+                    <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{[...rc.matchedHandles, ...rc.openHandles].join(", ") || "No match."}</p>
                   </div>
                 ))}
               </div>
@@ -165,16 +165,16 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
               <FileCheck2 size={15} className="text-emerald-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Closeout</p>
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Closeout</p>
             </div>
             <div className="mt-3 grid gap-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Summary</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{mission.closeoutSummary ?? "Not filed."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Summary</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{mission.closeoutSummary ?? "Not filed."}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">AAR</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{mission.aarSummary ?? "Not filed."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">AAR</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{mission.aarSummary ?? "Not filed."}</p>
               </div>
             </div>
           </article>
@@ -182,22 +182,22 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
               <BookCheck size={15} className="text-lime-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Doctrine</p>
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Doctrine</p>
             </div>
             <div className="mt-3 grid gap-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">ROE Code</p>
-                <p className="mt-1 text-xs uppercase text-white">{mission.roeCode ?? "No ROE attached"}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">ROE Code</p>
+                <p className="mt-1 text-xs uppercase text-[var(--color-text-strong)]">{mission.roeCode ?? "No ROE attached"}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Attached Doctrine</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Attached Doctrine</p>
                 {mission.doctrineTemplate ? (
                   <>
-                    <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-white">{mission.doctrineTemplate.title}</p>
-                    <p className="mt-0.5 text-[10px] text-slate-500">{mission.doctrineTemplate.code} / {mission.doctrineTemplate.category}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">{mission.doctrineTemplate.summary}</p>
-                    <div className="mt-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/15 px-3 py-2">
-                      <p className="text-[10px] uppercase text-slate-500">Execution</p>
+                    <p className="mt-1 font-[family:var(--font-display)] text-sm uppercase text-[var(--color-text-strong)]">{mission.doctrineTemplate.title}</p>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{mission.doctrineTemplate.code} / {mission.doctrineTemplate.category}</p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{mission.doctrineTemplate.summary}</p>
+                    <div className="mt-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2">
+                      <p className="text-[10px] uppercase text-[var(--color-text-tertiary)]">Execution</p>
                       <p className="mt-1 text-sm leading-6 text-slate-300">{mission.doctrineTemplate.body}</p>
                     </div>
                     <div className="mt-2 rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-3 py-2">
@@ -205,7 +205,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                       <p className="mt-1 text-sm leading-6 text-amber-100/80">{mission.doctrineTemplate.escalation ?? "None."}</p>
                     </div>
                   </>
-                ) : <p className="mt-1 text-sm text-slate-500">No doctrine attached.</p>}
+                ) : <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">No doctrine attached.</p>}
               </div>
             </div>
           </article>
@@ -213,7 +213,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
               <Radar size={15} className="text-red-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Linked Intel</p>
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Linked Intel</p>
             </div>
             <div className="mt-3">
               {canManageMission ? (
@@ -222,12 +222,12 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 <div className="space-y-2">
                   {mission.linkedIntel.map((item) => (
                     <div key={item.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                      <p className="text-xs font-medium text-white">{item.title}</p>
-                      <p className="mt-0.5 text-[10px] text-slate-500">{item.reportType.replaceAll("_", " ")} / Sev {item.severity}</p>
-                      <p className="mt-1 text-sm text-slate-400">{item.locationName ?? "Unknown"} / {item.hostileGroup ?? "Unconfirmed"}</p>
+                      <p className="text-xs font-medium text-[var(--color-text-strong)]">{item.title}</p>
+                      <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{item.reportType.replaceAll("_", " ")} / Sev {item.severity}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{item.locationName ?? "Unknown"} / {item.hostileGroup ?? "Unconfirmed"}</p>
                     </div>
                   ))}
-                  {mission.linkedIntel.length === 0 ? <p className="text-[11px] text-slate-500">No linked intel.</p> : null}
+                  {mission.linkedIntel.length === 0 ? <p className="text-[11px] text-[var(--color-text-tertiary)]">No linked intel.</p> : null}
                 </div>
               )}
             </div>
@@ -236,7 +236,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
               <Users size={15} className="text-cyan-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Assigned Package</p>
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Assigned Package</p>
             </div>
             <div className="mt-3">
               {canManageMission ? (
@@ -246,14 +246,14 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                   {mission.participants.map((p) => (
                     <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
                       <div>
-                        <p className="text-xs font-medium text-white">{p.handle}</p>
-                        <p className="mt-0.5 text-[10px] text-slate-500">{p.role} / {p.platform ?? "Platform pending"}</p>
-                        {p.notes ? <p className="mt-1 text-sm text-slate-400">{p.notes}</p> : null}
+                        <p className="text-xs font-medium text-[var(--color-text-strong)]">{p.handle}</p>
+                        <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{p.role} / {p.platform ?? "Platform pending"}</p>
+                        {p.notes ? <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{p.notes}</p> : null}
                       </div>
                       <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{p.status}</span>
                     </div>
                   ))}
-                  {mission.participants.length === 0 ? <p className="text-[11px] text-slate-500">No package assigned.</p> : null}
+                  {mission.participants.length === 0 ? <p className="text-[11px] text-[var(--color-text-tertiary)]">No package assigned.</p> : null}
                 </div>
               )}
             </div>
@@ -261,20 +261,20 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
 
           <article className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center gap-2">
-              <NotebookText size={15} className="text-amber-300" />
-              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Timeline</p>
+              <NotebookText size={15} className="text-[var(--color-accent)]" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Timeline</p>
             </div>
             <div className="mt-3 space-y-2">
               {mission.logs.map((log) => (
                 <div key={log.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-200">{log.entryType}</p>
-                    <p className="text-[10px] text-slate-500">{log.authorDisplay} / {log.createdAtLabel}</p>
+                    <p className="text-[10px] text-[var(--color-text-tertiary)]">{log.authorDisplay} / {log.createdAtLabel}</p>
                   </div>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-400">{log.message}</p>
+                  <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{log.message}</p>
                 </div>
               ))}
-              {mission.logs.length === 0 ? <p className="text-[11px] text-slate-500">No timeline entries.</p> : null}
+              {mission.logs.length === 0 ? <p className="text-[11px] text-[var(--color-text-tertiary)]">No timeline entries.</p> : null}
             </div>
           </article>
         </div>
@@ -285,8 +285,8 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               {!isClosedMission ? (
                 <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                   <div className="flex items-center gap-2">
-                    <Crosshair size={15} className="text-amber-300" />
-                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Update Mission</p>
+                    <Crosshair size={15} className="text-[var(--color-accent)]" />
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Update Mission</p>
                   </div>
                   <div className="mt-4">
                     <MissionEditForm
@@ -307,7 +307,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                   <div className="flex items-center gap-2">
                     <RotateCcw size={15} className="text-cyan-300" />
-                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Reopen Mission</p>
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Reopen Mission</p>
                   </div>
                   <div className="mt-4"><MissionReopenForm missionId={mission.id} /></div>
                 </section>
@@ -316,7 +316,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                 <div className="flex items-center gap-2">
                   <BookCheck size={15} className="text-lime-300" />
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Attach Doctrine</p>
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Attach Doctrine</p>
                 </div>
                 <div className="mt-4">
                   <MissionDoctrineForm
@@ -330,7 +330,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                 <div className="flex items-center gap-2">
                   <Radar size={15} className="text-red-300" />
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Link Threat Report</p>
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Link Threat Report</p>
                 </div>
                 <div className="mt-4">
                   <MissionIntelLinkForm missionId={mission.id} availableIntel={mission.availableIntel} />
@@ -340,15 +340,15 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
               <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                 <div className="flex items-center gap-2">
                   <Users size={15} className="text-cyan-300" />
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Assign Package</p>
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Assign Package</p>
                 </div>
                 <div className="mt-4"><ParticipantAssignForm missionId={mission.id} /></div>
               </section>
 
               <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                 <div className="flex items-center gap-2">
-                  <NotebookText size={15} className="text-amber-300" />
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Log Entry</p>
+                  <NotebookText size={15} className="text-[var(--color-accent)]" />
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Log Entry</p>
                 </div>
                 <div className="mt-4"><MissionLogForm missionId={mission.id} /></div>
               </section>
@@ -357,7 +357,7 @@ export default async function MissionDetailPage({ params }: MissionDetailPagePro
                 <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5">
                   <div className="flex items-center gap-2">
                     <FileCheck2 size={15} className="text-emerald-300" />
-                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">Close Mission</p>
+                    <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">Close Mission</p>
                   </div>
                   <div className="mt-4">
                     <MissionCloseoutForm

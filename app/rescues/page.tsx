@@ -37,8 +37,8 @@ export default async function RescuesPage() {
           <article id={item.id} key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.survivorHandle}</p>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{item.locationName ?? "Location pending"} / {item.requesterDisplay}</p>
+                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{item.survivorHandle}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">{item.locationName ?? "Location pending"} / {item.requesterDisplay}</p>
               </div>
               <div className="text-right">
                 <span className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-2 py-0.5 text-[10px] uppercase text-cyan-200">{item.status}</span>
@@ -48,21 +48,21 @@ export default async function RescuesPage() {
 
             <div className="mt-4 grid gap-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Threat</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.threatSummary ?? "Pending."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Threat</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.threatSummary ?? "Pending."}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Condition</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.survivorCondition ?? "Not logged."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Condition</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.survivorCondition ?? "Not logged."}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Operator / Outcome</p>
-                <p className="mt-1.5 text-xs font-medium uppercase tracking-[0.08em] text-white">{item.operatorDisplay}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-400">{item.outcomeSummary ?? "Not filed."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Operator / Outcome</p>
+                <p className="mt-1.5 text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{item.operatorDisplay}</p>
+                <p className="mt-1 text-sm leading-6 text-[var(--color-text-secondary)]">{item.outcomeSummary ?? "Not filed."}</p>
               </div>
             </div>
 
-            <div className="mt-3 grid gap-1.5 text-[11px] text-slate-400">
+            <div className="mt-3 grid gap-1.5 text-[11px] text-[var(--color-text-secondary)]">
               <div className="flex items-center gap-2"><ShieldAlert size={13} className="text-red-300" />{item.medicalRequired ? "Medical required" : "No medical"} / {item.escortRequired ? "Escort required" : "Escort discretionary"}</div>
               <div className="flex items-center gap-2"><HeartPulse size={13} className="text-emerald-300" />Payment: {item.offeredPayment ? `${item.offeredPayment.toLocaleString()} aUEC` : "none"}</div>
             </div>
@@ -73,21 +73,21 @@ export default async function RescuesPage() {
                   {item.dispatches.map((d) => (
                     <div key={d.id} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium uppercase text-white">{d.qrfCallsign}</p>
-                        <span className="text-[10px] uppercase text-slate-500">{d.status}</span>
+                        <p className="text-xs font-medium uppercase text-[var(--color-text-strong)]">{d.qrfCallsign}</p>
+                        <span className="text-[10px] uppercase text-[var(--color-text-tertiary)]">{d.status}</span>
                       </div>
-                      <p className="mt-1 text-[10px] text-slate-500">{d.platform ?? "Platform pending"} / Tasked {d.dispatchedAtLabel}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-400">{d.notes ?? "No notes."}</p>
+                      <p className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">{d.platform ?? "Platform pending"} / Tasked {d.dispatchedAtLabel}</p>
+                      <p className="mt-1 text-sm leading-6 text-[var(--color-text-secondary)]">{d.notes ?? "No notes."}</p>
                     </div>
                   ))}
-                  {item.dispatches.length === 0 ? <p className="text-[11px] text-slate-500">No assets dispatched.</p> : null}
+                  {item.dispatches.length === 0 ? <p className="text-[11px] text-[var(--color-text-tertiary)]">No assets dispatched.</p> : null}
                 </div>
               </CollapsiblePanel>
             </div>
 
             <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-              <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Notes</p>
-              <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.rescueNotes ?? "None."}</p>
+              <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Notes</p>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.rescueNotes ?? "None."}</p>
             </div>
 
             {canManage ? (

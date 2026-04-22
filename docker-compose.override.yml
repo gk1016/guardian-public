@@ -1,0 +1,7 @@
+services:
+  guardian:
+    ports:
+      - "0.0.0.0:3410:3000"
+  guardian-engine:
+    ports:
+      - "0.0.0.0:3420:3420"

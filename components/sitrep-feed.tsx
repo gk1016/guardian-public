@@ -85,23 +85,23 @@ export function SitrepFeed({ initialEvents }: SitrepFeedProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-slate-600"} />
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+          <Radio size={14} className={connectionState === "connected" ? "text-emerald-400" : "text-[var(--color-text-faint)]"} />
           <span>{filtered.length} events</span>
           {connectionState === "connected" ? (
             <span className="rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/8 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em] text-emerald-300">Live</span>
           ) : null}
         </div>
         <div className="flex items-center gap-1">
-          <Filter size={12} className="text-slate-500" />
+          <Filter size={12} className="text-[var(--color-text-tertiary)]" />
           {(["all", "mission", "alert"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
                 filter === f
-                  ? "bg-white/10 text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]"
+                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
               }`}
             >
               {f}
@@ -114,7 +114,7 @@ export function SitrepFeed({ initialEvents }: SitrepFeedProps) {
         {filtered.map((event) => (
           <div
             key={event.id}
-            className={`group flex items-start gap-3 rounded-[var(--radius-md)] border bg-white/2 px-4 py-3 transition hover:bg-white/4 ${severityBorder[event.severity] ?? "border-[var(--color-border)]"}`}
+            className={`group flex items-start gap-3 rounded-[var(--radius-md)] border bg-white/2 px-4 py-3 transition hover:bg-[var(--color-overlay-subtle)] ${severityBorder[event.severity] ?? "border-[var(--color-border)]"}`}
           >
             <div className="mt-1.5 flex-shrink-0">
               <div className={`h-2 w-2 rounded-full ${severityIndicator[event.severity] ?? "bg-slate-500"}`} />
@@ -124,21 +124,21 @@ export function SitrepFeed({ initialEvents }: SitrepFeedProps) {
                 <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-200">
                   {event.source === "mission" ? event.missionCallsign ?? "MISSION" : event.category}
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.1em] text-slate-600">{event.category}</span>
-                <span className="ml-auto text-[10px] text-slate-600">
+                <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-faint)]">{event.category}</span>
+                <span className="ml-auto text-[10px] text-[var(--color-text-faint)]">
                   {timeLabels[event.id] ?? formatEventTime(event.timestamp)}
                 </span>
               </div>
-              <p className="mt-1 text-sm font-medium text-white">{event.title}</p>
-              <p className="mt-0.5 text-sm leading-6 text-slate-400">{event.body}</p>
+              <p className="mt-1 text-sm font-medium text-[var(--color-text-strong)]">{event.title}</p>
+              <p className="mt-0.5 text-sm leading-6 text-[var(--color-text-secondary)]">{event.body}</p>
               {event.authorDisplay ? (
-                <span className="mt-1 inline-block text-[10px] text-slate-600">{event.authorDisplay}</span>
+                <span className="mt-1 inline-block text-[10px] text-[var(--color-text-faint)]">{event.authorDisplay}</span>
               ) : null}
             </div>
             {event.href ? (
               <Link
                 href={event.href}
-                className="mt-1 flex-shrink-0 rounded-[var(--radius-sm)] p-1 text-slate-600 opacity-0 transition group-hover:opacity-100 hover:text-white"
+                className="mt-1 flex-shrink-0 rounded-[var(--radius-sm)] p-1 text-[var(--color-text-faint)] opacity-0 transition group-hover:opacity-100 hover:text-[var(--color-text-strong)]"
               >
                 <ArrowUpRight size={14} />
               </Link>
@@ -146,7 +146,7 @@ export function SitrepFeed({ initialEvents }: SitrepFeedProps) {
           </div>
         ))}
         {filtered.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-6 text-center text-sm text-slate-500">
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-6 text-center text-sm text-[var(--color-text-tertiary)]">
             No events match the current filter.
           </div>
         ) : null}

@@ -145,20 +145,20 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
       {/* Filter bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <BookOpen size={14} className="text-amber-300" />
+          <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+            <BookOpen size={14} className="text-[var(--color-accent)]" />
             <span>{filtered.length} entries</span>
           </div>
           <div className="flex items-center gap-1">
-            <Filter size={12} className="text-slate-500" />
+            <Filter size={12} className="text-[var(--color-text-tertiary)]" />
             {(["all", "sop", "procedures", "training", "reference", "guides", "general"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setCategoryFilter(f)}
                 className={`rounded-[var(--radius-sm)] px-2 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
                   categoryFilter === f
-                    ? "bg-white/10 text-white"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 {f}
@@ -181,12 +181,12 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
       {showCreateForm && canAuthor ? (
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
           <div className="flex items-center gap-3 border-b border-[var(--color-border)] pb-3">
-            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-white">New Entry</p>
+            <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">New Entry</p>
             <div className="flex gap-1">
               <button
                 onClick={() => setCreateMode("article")}
                 className={`rounded-[var(--radius-sm)] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
-                  createMode === "article" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"
+                  createMode === "article" ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 <FileText size={11} className="mr-1 inline" />
@@ -195,7 +195,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
               <button
                 onClick={() => setCreateMode("file")}
                 className={`rounded-[var(--radius-sm)] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] transition ${
-                  createMode === "file" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"
+                  createMode === "file" ? "bg-[var(--color-overlay-strong)] text-[var(--color-text-strong)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
                 }`}
               >
                 <Upload size={11} className="mr-1 inline" />
@@ -210,12 +210,12 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Entry title"
-                className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-amber-400/40 focus:outline-none"
+                className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
               />
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/5 px-3 py-2 text-sm text-white focus:border-amber-400/40 focus:outline-none"
+                className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-amber-400/40 focus:outline-none"
               >
                 <option value="general">General</option>
                 <option value="sop">SOP</option>
@@ -231,7 +231,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 onChange={(e) => setNewBody(e.target.value)}
                 placeholder="Write markdown content..."
                 rows={8}
-                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/5 px-3 py-2 font-mono text-sm text-white placeholder:text-slate-600 focus:border-amber-400/40 focus:outline-none"
+                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2 font-mono text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
               />
             ) : (
               <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] bg-white/3 px-4 py-6 text-center">
@@ -244,9 +244,9 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 />
                 <label
                   htmlFor="manual-file-input"
-                  className="cursor-pointer text-sm text-slate-400 transition hover:text-white"
+                  className="cursor-pointer text-sm text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
                 >
-                  <Upload size={20} className="mx-auto mb-2 text-slate-500" />
+                  <Upload size={20} className="mx-auto mb-2 text-[var(--color-text-tertiary)]" />
                   {newFile ? (
                     <span className="text-amber-200">{newFile.name} ({formatFileSize(newFile.size)})</span>
                   ) : (
@@ -258,7 +258,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-slate-400 transition hover:text-white"
+                className="rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
               >
                 Cancel
               </button>
@@ -288,17 +288,17 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                 onClick={() => setExpandedId(isExpanded ? null : item.id)}
                 className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-white/3"
               >
-                {isExpanded ? <ChevronDown size={14} className="text-slate-500" /> : <ChevronRight size={14} className="text-slate-500" />}
+                {isExpanded ? <ChevronDown size={14} className="text-[var(--color-text-tertiary)]" /> : <ChevronRight size={14} className="text-[var(--color-text-tertiary)]" />}
                 {item.entryType === "file" ? (
                   <Download size={14} className="flex-shrink-0 text-cyan-300" />
                 ) : (
-                  <FileText size={14} className="flex-shrink-0 text-amber-300" />
+                  <FileText size={14} className="flex-shrink-0 text-[var(--color-accent)]" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-white">
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
                     {item.title}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-slate-500">
+                  <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">
                     {item.authorDisplay} / {formatDate(item.updatedAt)}
                     {item.fileName ? ` / ${item.fileName} (${formatFileSize(item.fileSize ?? 0)})` : ""}
                   </p>
@@ -324,7 +324,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
                         <Download size={13} />
                         Download {item.fileName}
                       </a>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-[var(--color-text-tertiary)]">
                         {formatFileSize(item.fileSize ?? 0)} / {item.fileMimeType}
                       </span>
                     </div>
@@ -347,7 +347,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
           );
         })}
         {filtered.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-8 text-center text-sm text-slate-500">
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-8 text-center text-sm text-[var(--color-text-tertiary)]">
             No manual entries yet.{canAuthor ? " Create one above." : ""}
           </div>
         ) : null}

@@ -49,7 +49,7 @@ export function MissionIntelLinkForm({
 
   if (availableIntel.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+      <div className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4 text-sm text-slate-300">
         No unlinked intel reports remain for this sortie.
       </div>
     );
@@ -58,11 +58,11 @@ export function MissionIntelLinkForm({
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Attach Intel Report</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Attach Intel Report</span>
         <select
           value={intelId}
           onChange={(event) => setIntelId(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-cyan-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           {availableIntel.map((item) => (
             <option key={item.id} value={item.id}>

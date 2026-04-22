@@ -90,7 +90,7 @@ export default async function NotificationsPage() {
       session={session}
     >
       {canCreate ? (
-        <CollapsiblePanel label="Send Alert" icon={<Bell size={14} className="text-amber-300" />}>
+        <CollapsiblePanel label="Send Alert" icon={<Bell size={14} className="text-[var(--color-accent)]" />}>
           <NotificationCreateForm />
         </CollapsiblePanel>
       ) : null}

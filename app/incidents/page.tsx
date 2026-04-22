@@ -35,7 +35,7 @@ export default async function IncidentsPage() {
       ) : null}
 
       {canManage ? (
-        <CollapsiblePanel label="File Incident" icon={<FileWarning size={16} className="text-amber-300" />}>
+        <CollapsiblePanel label="File Incident" icon={<FileWarning size={16} className="text-[var(--color-accent)]" />}>
           <IncidentCreateForm missionOptions={data.missionOptions} rescueOptions={data.rescueOptions} />
         </CollapsiblePanel>
       ) : null}
@@ -45,35 +45,35 @@ export default async function IncidentsPage() {
           <article key={item.id} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{item.title}</p>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{item.category}{item.missionLabel ? ` / ${item.missionLabel}` : ""}{item.rescueLabel ? ` / ${item.rescueLabel}` : ""}</p>
+                <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{item.title}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">{item.category}{item.missionLabel ? ` / ${item.missionLabel}` : ""}{item.rescueLabel ? ` / ${item.rescueLabel}` : ""}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${severityTone[item.severity as keyof typeof severityTone] ?? severityTone[3]}`}>Sev {item.severity}</span>
-                <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase text-slate-400">{item.status}</span>
+                <span className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-2 py-0.5 text-[10px] uppercase text-[var(--color-text-secondary)]">{item.status}</span>
               </div>
             </div>
 
             <div className="mt-4 grid gap-3">
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Summary</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.summary}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Summary</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.summary}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Lessons</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.lessonsLearned ?? "Not filed."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Lessons</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.lessonsLearned ?? "Not filed."}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Action Items</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.actionItems ?? "None."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Action Items</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.actionItems ?? "None."}</p>
               </div>
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
-                <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Public Summary</p>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">{item.publicSummary ?? "Not published."}</p>
+                <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Public Summary</p>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.publicSummary ?? "Not published."}</p>
               </div>
             </div>
 
-            <p className="mt-3 text-[10px] text-slate-500">
+            <p className="mt-3 text-[10px] text-[var(--color-text-tertiary)]">
               Reporter {item.reporterDisplay} / Reviewer {item.reviewerDisplay} / {item.updatedAtLabel}
               {item.closedAtLabel ? ` / Closed ${item.closedAtLabel}` : ""}
             </p>

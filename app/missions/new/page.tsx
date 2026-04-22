@@ -23,10 +23,10 @@ export default async function NewMissionPage() {
       session={session}
     >
       <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
-        <span className="text-sm text-slate-400">New sortie creation</span>
+        <span className="text-sm text-[var(--color-text-secondary)]">New sortie creation</span>
         <Link
           href="/missions"
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-white transition hover:bg-white/8"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] text-[var(--color-text-strong)] transition hover:bg-[var(--color-overlay-medium)]"
         >
           <ArrowLeft size={13} />Board
         </Link>

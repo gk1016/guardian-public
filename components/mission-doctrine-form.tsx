@@ -56,11 +56,11 @@ export function MissionDoctrineForm({
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Doctrine</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Doctrine</span>
         <select
           value={doctrineTemplateId}
           onChange={(event) => setDoctrineTemplateId(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         >
           <option value="">No doctrine attached</option>
           {availableDoctrineTemplates.map((template) => (
@@ -72,7 +72,7 @@ export function MissionDoctrineForm({
       </label>
 
       {doctrineTemplateId ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+        <div className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4 text-sm text-slate-300">
           {availableDoctrineTemplates.find((template) => template.id === doctrineTemplateId)?.summary}
         </div>
       ) : null}

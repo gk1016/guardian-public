@@ -244,21 +244,21 @@ export function ParticipantRosterManager({
         return (
         <div
           key={participant.id}
-          className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4"
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+              <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
                 {participant.handle}
               </p>
-              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">Package control row</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">Package control row</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={participantDrafts[participant.id]?.status ?? participant.status}
                 onChange={(event) => setParticipantDraft(participant.id, "status", event.target.value)}
-                className="rounded-md border border-white/10 bg-slate-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100 outline-none transition focus:border-cyan-300/40"
+                className="rounded-md border border-[var(--color-border-bright)] bg-slate-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100 outline-none transition focus:border-cyan-300/40"
               >
                 {participantStatusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -300,62 +300,62 @@ export function ParticipantRosterManager({
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Handle</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Handle</span>
               <input
                 value={participantDrafts[participant.id]?.handle ?? participant.handle}
                 onChange={(event) => setParticipantDraft(participant.id, "handle", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+                className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Role</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Role</span>
               <input
                 value={participantDrafts[participant.id]?.role ?? participant.role}
                 onChange={(event) => setParticipantDraft(participant.id, "role", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+                className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Platform</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Platform</span>
               <input
                 value={participantDrafts[participant.id]?.platform ?? (participant.platform ?? "")}
                 onChange={(event) => setParticipantDraft(participant.id, "platform", event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+                className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
               />
             </label>
           </div>
 
           <label className="mt-4 block space-y-2">
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Notes</span>
+            <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Notes</span>
             <textarea
               value={participantDrafts[participant.id]?.notes ?? (participant.notes ?? "")}
               onChange={(event) => setParticipantDraft(participant.id, "notes", event.target.value)}
               rows={3}
-              className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+              className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
             />
           </label>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Quick Fill Recommendations</p>
+          <div className="mt-4 rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Quick Fill Recommendations</p>
             <div className="mt-3 grid gap-3">
               {recommendedCrew.map((candidate) => (
                 <button
                   key={`${participant.id}-${candidate.handle}`}
                   type="button"
                   onClick={() => applyCrewSuggestion(participant.id, candidate)}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition hover:bg-white/10"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-3 text-left transition hover:bg-[var(--color-overlay-strong)]"
                 >
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-text-strong)]">
                       {candidate.displayName ?? candidate.handle}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
                       {candidate.handle} / {candidate.suggestedPlatform ?? "Platform pending"}
                     </p>
                     {candidate.commitments.length > 0 ? (
-                      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">
                         {candidate.commitments[0].callsign} / {candidate.commitments[0].assignmentStatus} / {candidate.commitments[0].role}
                       </p>
                     ) : null}
@@ -370,7 +370,7 @@ export function ParticipantRosterManager({
                     <p className="mt-2 text-xs uppercase tracking-[0.16em] text-cyan-100">
                       {candidate.qrfStatus ?? candidate.sourceLabel}
                     </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
                       {candidate.orgRole}
                     </p>
                   </div>
@@ -383,7 +383,7 @@ export function ParticipantRosterManager({
       })}
 
       {participants.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+        <div className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4 text-sm text-slate-300">
           No package assigned yet.
         </div>
       ) : null}

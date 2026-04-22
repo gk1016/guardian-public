@@ -61,7 +61,7 @@ export function QrfStatusForm({ qrfId, initialAsset }: QrfStatusFormProps) {
         <select
           value={form.status}
           onChange={(event) => updateField("status", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="redcon1">REDCON 1</option>
           <option value="redcon2">REDCON 2</option>
@@ -77,19 +77,19 @@ export function QrfStatusForm({ qrfId, initialAsset }: QrfStatusFormProps) {
           type="number"
           min={1}
           placeholder="Crew"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <input
           value={form.platform}
           onChange={(event) => updateField("platform", event.target.value)}
           placeholder="Platform"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <input
           value={form.locationName}
           onChange={(event) => updateField("locationName", event.target.value)}
           placeholder="Location"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
       </div>
 
@@ -98,7 +98,7 @@ export function QrfStatusForm({ qrfId, initialAsset }: QrfStatusFormProps) {
         onChange={(event) => updateField("notes", event.target.value)}
         rows={3}
         placeholder="Readiness notes"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <button

@@ -84,18 +84,18 @@ export function IncidentCreateForm({
           value={form.title}
           onChange={(event) => updateField("title", event.target.value)}
           placeholder="Incident title"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40 md:col-span-2"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40 md:col-span-2"
         />
         <input
           value={form.category}
           onChange={(event) => updateField("category", event.target.value)}
           placeholder="Category"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <select
           value={form.status}
           onChange={(event) => updateField("status", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="open">Open</option>
           <option value="triage">Triage</option>
@@ -109,12 +109,12 @@ export function IncidentCreateForm({
           min={1}
           max={5}
           placeholder="Severity"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <select
           value={form.missionId}
           onChange={(event) => updateField("missionId", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="">No mission link</option>
           {missionOptions.map((option) => (
@@ -126,7 +126,7 @@ export function IncidentCreateForm({
         <select
           value={form.rescueId}
           onChange={(event) => updateField("rescueId", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="">No rescue link</option>
           {rescueOptions.map((option) => (
@@ -142,28 +142,28 @@ export function IncidentCreateForm({
         onChange={(event) => updateField("summary", event.target.value)}
         rows={3}
         placeholder="Summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.lessonsLearned}
         onChange={(event) => updateField("lessonsLearned", event.target.value)}
         rows={3}
         placeholder="Lessons learned"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.actionItems}
         onChange={(event) => updateField("actionItems", event.target.value)}
         rows={3}
         placeholder="Action items"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.publicSummary}
         onChange={(event) => updateField("publicSummary", event.target.value)}
         rows={2}
         placeholder="Public summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <button

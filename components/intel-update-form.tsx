@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
 const inputClass =
-  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-400/40 focus:outline-none";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none";
 const selectClass =
-  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none";
-const labelClass = "block text-[10px] uppercase tracking-[0.1em] text-slate-500 mb-1.5";
+  "w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none";
+const labelClass = "block text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)] mb-1.5";
 
 type IntelUpdateFormProps = {
   intelId: string;
@@ -89,7 +89,7 @@ export function IntelUpdateForm({
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex w-fit items-center gap-2 rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10 disabled:opacity-60"
+        className="inline-flex w-fit items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-strong)] transition hover:bg-[var(--color-overlay-strong)] disabled:opacity-60"
       >
         {isPending ? <LoaderCircle size={13} className="animate-spin" /> : null}
         Update Report

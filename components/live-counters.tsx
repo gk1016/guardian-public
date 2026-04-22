@@ -29,7 +29,7 @@ function CounterCard({
         </span>
       )}
       <p className="text-[10px] uppercase tracking-[0.14em] text-inherit opacity-80">{label}</p>
-      <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-white tabular-nums">
+      <p className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-[var(--color-text-strong)] tabular-nums">
         {value.toString().padStart(2, "0")}
       </p>
     </div>

@@ -66,18 +66,18 @@ export function RescueCreateForm() {
           value={form.survivorHandle}
           onChange={(event) => updateField("survivorHandle", event.target.value)}
           placeholder="Survivor handle"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <input
           value={form.locationName}
           onChange={(event) => updateField("locationName", event.target.value)}
           placeholder="Location"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
         <select
           value={form.urgency}
           onChange={(event) => updateField("urgency", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="flash">Flash</option>
           <option value="urgent">Urgent</option>
@@ -90,7 +90,7 @@ export function RescueCreateForm() {
           placeholder="Offered payment"
           type="number"
           min={0}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         />
       </div>
 
@@ -99,21 +99,21 @@ export function RescueCreateForm() {
         onChange={(event) => updateField("threatSummary", event.target.value)}
         rows={2}
         placeholder="Threat summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.survivorCondition}
         onChange={(event) => updateField("survivorCondition", event.target.value)}
         rows={2}
         placeholder="Survivor condition"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.rescueNotes}
         onChange={(event) => updateField("rescueNotes", event.target.value)}
         rows={3}
         placeholder="Rescue notes"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <div className="flex flex-wrap items-center gap-6 text-sm text-slate-300">

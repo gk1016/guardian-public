@@ -25,6 +25,7 @@ import {
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
 import { useEngine } from "@/lib/engine-context";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 const navSections = [
   {
@@ -143,7 +144,7 @@ export function Sidebar({
           <div key={section.title}>
             <button
               onClick={() => toggleSection(section.title)}
-              className="flex w-full items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 transition hover:text-slate-300"
+              className="flex w-full items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-tertiary)] transition hover:text-[var(--color-text-strong)]"
             >
               <span>{section.title}</span>
               <ChevronDown
@@ -168,11 +169,11 @@ export function Sidebar({
                           href={item.href}
                           className={`flex items-center gap-2 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm transition ${
                             isActive
-                              ? "bg-white/8 font-medium text-white"
-                              : "text-slate-400 hover:bg-white/4 hover:text-white"
+                              ? "bg-[var(--color-overlay-medium)] font-medium text-[var(--color-text-strong)]"
+                              : "text-[var(--color-text-secondary)] hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
                           }`}
                         >
-                          <Icon size={14} className={isActive ? "text-amber-300" : ""} />
+                          <Icon size={14} className={isActive ? "text-[var(--color-accent)]" : ""} />
                           <span>{item.label}</span>
                         </Link>
                       </li>
@@ -195,38 +196,39 @@ export function Sidebar({
             <div className={`absolute inset-0 h-2 w-2 animate-ping rounded-full ${statusColor} opacity-40`} />
           ) : null}
         </div>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           {statusLabel}
         </span>
         {tickAge ? (
-          <span className="text-[10px] text-slate-600">{tickAge}</span>
+          <span className="text-[10px] text-[var(--color-text-faint)]">{tickAge}</span>
         ) : null}
       </div>
       {opsSummary ? (
-        <p className="mt-0.5 text-[10px] text-slate-600">
+        <p className="mt-0.5 text-[10px] text-[var(--color-text-faint)]">
           {opsSummary.active_missions} msn / {opsSummary.qrf_ready} qrf / {opsSummary.active_intel} intel
         </p>
       ) : null}
       <div className="mt-2 flex items-center gap-2">
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/8 text-[9px] font-semibold text-amber-300">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-overlay-medium)] text-[9px] font-semibold text-[var(--color-accent)]">
           {session.handle?.charAt(0)?.toUpperCase() ?? "?"}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-white">{session.handle ?? "Operator"}</p>
-          <p className="text-[10px] text-slate-500">{session.role}</p>
+          <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">{session.handle ?? "Operator"}</p>
+          <p className="text-[10px] text-[var(--color-text-tertiary)]">{session.role}</p>
         </div>
         <button
           onClick={onToggleCollapse}
-          className="flex h-6 w-6 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
+          className="flex h-6 w-6 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] transition hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
           aria-label="Collapse sidebar"
         >
           <ChevronLeft size={13} />
         </button>
       </div>
+      <ThemeSwitcher />
       <form action="/api/auth/logout" method="POST" className="mt-1">
         <button
           type="submit"
-          className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-slate-500 transition hover:bg-white/4 hover:text-white"
+          className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-[var(--color-text-tertiary)] transition hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
         >
           <LogOut size={11} />
           <span>Sign out</span>
@@ -239,7 +241,7 @@ export function Sidebar({
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-40 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-panel)] p-2 text-slate-400 md:hidden"
+        className="fixed left-3 top-3 z-40 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-panel)] p-2 text-[var(--color-text-secondary)] md:hidden"
         aria-label="Open navigation"
       >
         <Menu size={18} />
@@ -248,22 +250,22 @@ export function Sidebar({
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-[var(--color-backdrop)]"
             onClick={() => setMobileOpen(false)}
           />
           <nav className="relative flex h-full w-56 flex-col bg-[var(--color-surface)] shadow-xl">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-2.5">
               <div>
-                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-[var(--color-accent)]">
                   Guardian
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
                   {orgName}
                 </p>
               </div>
               <button
                 onClick={() => setMobileOpen(false)}
-                className="text-slate-400"
+                className="text-[var(--color-text-secondary)]"
               >
                 <X size={18} />
               </button>
@@ -283,10 +285,10 @@ export function Sidebar({
           <>
             <div className="flex-shrink-0 border-b border-[var(--color-border)] px-3 py-2.5">
               <Link href="/command" className="block">
-                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-amber-300">
+                <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.12em] text-[var(--color-accent)]">
                   Guardian
                 </p>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
                   {orgName}
                 </p>
               </Link>
@@ -298,7 +300,7 @@ export function Sidebar({
           <>
             <div className="flex flex-shrink-0 flex-col items-center gap-1 py-2.5">
               <Link href="/command" className="block">
-                <p className="font-[family:var(--font-display)] text-sm text-amber-300">G</p>
+                <p className="font-[family:var(--font-display)] text-sm text-[var(--color-accent)]">G</p>
               </Link>
             </div>
             <div className="flex flex-1 flex-col items-center gap-0.5 overflow-y-auto py-1.5">
@@ -318,8 +320,8 @@ export function Sidebar({
                         href={item.href}
                         className={`flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] transition ${
                           isActive
-                            ? "bg-white/8 text-amber-300"
-                            : "text-slate-500 hover:bg-white/4 hover:text-white"
+                            ? "bg-[var(--color-overlay-medium)] text-[var(--color-accent)]"
+                            : "text-[var(--color-text-tertiary)] hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
                         }`}
                         title={item.label}
                       >
@@ -338,7 +340,7 @@ export function Sidebar({
               </div>
               <button
                 onClick={onToggleCollapse}
-                className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] text-slate-500 transition hover:bg-white/4 hover:text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] transition hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
                 aria-label="Expand sidebar"
               >
                 <ChevronRight size={13} />

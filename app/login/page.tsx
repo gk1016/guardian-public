@@ -35,24 +35,24 @@ function LoginScreen() {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-6 text-[var(--color-text)]">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <span className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.2em] text-amber-300">Guardian</span>
-          <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-slate-500">Sign in to operations</p>
+          <span className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.2em] text-[var(--color-accent)]">Guardian</span>
+          <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Sign in to operations</p>
         </div>
 
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-6">
           <form className="space-y-4" onSubmit={onSubmit}>
             <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500">Email</label>
+              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Email</label>
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5">
-                <User size={15} className="text-slate-600" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="pilot@guardian.local" />
+                <User size={15} className="text-[var(--color-text-faint)]" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-faint)]" placeholder="pilot@guardian.local" />
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-slate-500">Password</label>
+              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Password</label>
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5">
-                <KeyRound size={15} className="text-slate-600" />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Password" />
+                <KeyRound size={15} className="text-[var(--color-text-faint)]" />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-faint)]" placeholder="Password" />
               </div>
             </div>
             {error ? (
@@ -64,13 +64,13 @@ function LoginScreen() {
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
-          <p className="mt-4 text-center text-[11px] text-slate-500">
+          <p className="mt-4 text-center text-[11px] text-[var(--color-text-tertiary)]">
             Demo: reaper11@guardian.local / GuardianDemo!2026
           </p>
         </div>
 
-        <p className="mt-4 text-center text-[11px] text-slate-600">
-          <Link href="/" className="transition hover:text-white">Back to public site</Link>
+        <p className="mt-4 text-center text-[11px] text-[var(--color-text-faint)]">
+          <Link href="/" className="transition hover:text-[var(--color-text-strong)]">Back to public site</Link>
         </p>
       </div>
     </main>

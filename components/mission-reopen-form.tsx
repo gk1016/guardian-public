@@ -54,11 +54,11 @@ export function MissionReopenForm({ missionId }: MissionReopenFormProps) {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Reopen To</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Reopen To</span>
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value as (typeof reopenStatusOptions)[number]["value"])}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         >
           {reopenStatusOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -69,12 +69,12 @@ export function MissionReopenForm({ missionId }: MissionReopenFormProps) {
       </label>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Revision Reason</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Revision Reason</span>
         <textarea
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           rows={5}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

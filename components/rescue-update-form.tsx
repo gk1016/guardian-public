@@ -69,7 +69,7 @@ export function RescueUpdateForm({
         <select
           value={form.status}
           onChange={(event) => updateField("status", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="open">Open</option>
           <option value="dispatching">Dispatching</option>
@@ -82,7 +82,7 @@ export function RescueUpdateForm({
         <select
           value={form.operatorId}
           onChange={(event) => updateField("operatorId", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
+          className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
         >
           <option value="">Unassigned</option>
           {operatorOptions.map((option) => (
@@ -98,21 +98,21 @@ export function RescueUpdateForm({
         onChange={(event) => updateField("survivorCondition", event.target.value)}
         rows={2}
         placeholder="Survivor condition"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.rescueNotes}
         onChange={(event) => updateField("rescueNotes", event.target.value)}
         rows={3}
         placeholder="Rescue notes"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.outcomeSummary}
         onChange={(event) => updateField("outcomeSummary", event.target.value)}
         rows={3}
         placeholder="Outcome summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <button

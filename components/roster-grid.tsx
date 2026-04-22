@@ -36,7 +36,7 @@ const availabilityTone: Record<string, string> = {
 
 const tierTone: Record<string, { label: string; color: string; bar: string }> = {
   active: { label: "ACTIVE", color: "text-emerald-300", bar: "bg-emerald-400" },
-  moderate: { label: "MODERATE", color: "text-amber-300", bar: "bg-amber-400" },
+  moderate: { label: "MODERATE", color: "text-[var(--color-accent)]", bar: "bg-amber-400" },
   dormant: { label: "DORMANT", color: "text-orange-400", bar: "bg-orange-500" },
   dark: { label: "DARK", color: "text-red-400", bar: "bg-red-500" },
 };
@@ -58,8 +58,8 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
   return (
     <>
       <div className="mb-4 flex items-center gap-2">
-        <ArrowUpDown size={13} className="text-slate-500" />
-        <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Sort:</span>
+        <ArrowUpDown size={13} className="text-[var(--color-text-tertiary)]" />
+        <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Sort:</span>
         {(["activity", "alpha", "availability"] as const).map((mode) => (
           <button
             key={mode}
@@ -67,7 +67,7 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
             className={`rounded-[var(--radius-sm)] border px-2.5 py-1 text-[10px] uppercase tracking-[0.1em] transition ${
               sortMode === mode
                 ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
-                : "border-[var(--color-border)] bg-white/3 text-slate-500 hover:text-slate-300"
+                : "border-[var(--color-border)] bg-white/3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-strong)]"
             }`}
           >
             {mode}
@@ -82,25 +82,25 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
             <article key={crew.handle} className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-white">{crew.displayName ?? crew.handle}</p>
-                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-slate-500">{crew.handle} / {crew.orgRole}</p>
+                  <p className="font-[family:var(--font-display)] text-base uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{crew.displayName ?? crew.handle}</p>
+                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">{crew.handle} / {crew.orgRole}</p>
                 </div>
                 <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${availabilityTone[crew.availabilityLabel]}`}>{crew.availabilityLabel}</span>
               </div>
 
-              <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/15 px-3 py-2.5">
+              <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Activity size={12} className={tier.color} />
                     <span className={`text-[10px] uppercase tracking-[0.1em] font-medium ${tier.color}`}>{tier.label}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                  <div className="flex items-center gap-3 text-[10px] text-[var(--color-text-tertiary)]">
                     <span>{crew.missionCount} msn</span>
                     <span>{crew.logCount} log</span>
                     {crew.lastActiveLabel ? <span>{crew.lastActiveLabel}</span> : null}
                   </div>
                 </div>
-                <div className="mt-2 h-1.5 w-full rounded-full bg-white/5">
+                <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--color-overlay-subtle)]">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${tier.bar}`}
                     style={{ width: `${crew.activityScore}%` }}
@@ -110,23 +110,23 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
 
               <div className="mt-3 grid gap-2 text-[11px]">
                 <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
-                  <span className="text-slate-500">Source:</span> <span className="text-white">{crew.sourceLabel}</span>
+                  <span className="text-[var(--color-text-tertiary)]">Source:</span> <span className="text-[var(--color-text-strong)]">{crew.sourceLabel}</span>
                 </div>
                 <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2">
-                  <span className="text-slate-500">QRF:</span> <span className="text-white">{crew.qrfStatus ?? "None"}</span> / <span className="text-slate-500">Platform:</span> <span className="text-white">{crew.suggestedPlatform ?? "Pending"}</span>
+                  <span className="text-[var(--color-text-tertiary)]">QRF:</span> <span className="text-[var(--color-text-strong)]">{crew.qrfStatus ?? "None"}</span> / <span className="text-[var(--color-text-tertiary)]">Platform:</span> <span className="text-[var(--color-text-strong)]">{crew.suggestedPlatform ?? "Pending"}</span>
                 </div>
               </div>
 
-              <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-black/15 px-3 py-2.5">
+              <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2.5">
                 <div className="flex items-center gap-2">
                   <Radar size={13} className="text-cyan-300" />
-                  <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Commitments</p>
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Commitments</p>
                 </div>
                 <div className="mt-2 space-y-1.5">
                   {crew.commitments.length > 0 ? crew.commitments.map((c) => (
-                    <Link key={`${crew.handle}-${c.missionId}`} href={`/missions/${c.missionId}`} className="block rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2 transition hover:bg-white/5">
-                      <p className="text-xs font-medium text-white">{c.callsign}</p>
-                      <p className="mt-0.5 text-[10px] text-slate-500">{c.assignmentStatus} / {c.role}</p>
+                    <Link key={`${crew.handle}-${c.missionId}`} href={`/missions/${c.missionId}`} className="block rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2 transition hover:bg-[var(--color-overlay-subtle)]">
+                      <p className="text-xs font-medium text-[var(--color-text-strong)]">{c.callsign}</p>
+                      <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{c.assignmentStatus} / {c.role}</p>
                     </Link>
                   )) : (
                     <p className="text-[11px] text-emerald-300">No active commitments.</p>
@@ -134,11 +134,11 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
                 </div>
               </div>
 
-              {crew.notes ? <p className="mt-2 text-sm leading-6 text-slate-400">{crew.notes}</p> : null}
+              {crew.notes ? <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{crew.notes}</p> : null}
             </article>
           );
         })}
-        {sorted.length === 0 ? <p className="text-sm text-slate-500">No crew loaded.</p> : null}
+        {sorted.length === 0 ? <p className="text-sm text-[var(--color-text-tertiary)]">No crew loaded.</p> : null}
       </section>
     </>
   );

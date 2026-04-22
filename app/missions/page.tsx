@@ -26,7 +26,7 @@ export default async function MissionsPage() {
       orgName={data.orgName}
       session={session}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5 text-sm text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">
         <span>{data.items.length} missions loaded</span>
         {canCreateMission ? (
           <Link
@@ -52,20 +52,20 @@ export default async function MissionsPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-white">{mission.callsign}</p>
-                  <span className="rounded-[var(--radius-sm)] border border-white/8 bg-white/4 px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-slate-400">Rev {mission.revisionNumber}</span>
+                  <p className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{mission.callsign}</p>
+                  <span className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Rev {mission.revisionNumber}</span>
                 </div>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-slate-500">{mission.missionType}</p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">{mission.missionType}</p>
               </div>
               <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${statusTone[mission.status as keyof typeof statusTone] ?? statusTone.planning}`}>{mission.status}</span>
             </div>
 
-            <h2 className="mt-3 text-sm font-medium text-white">{mission.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">{mission.missionBrief ?? "Mission brief pending."}</p>
+            <h2 className="mt-3 text-sm font-medium text-[var(--color-text-strong)]">{mission.title}</h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{mission.missionBrief ?? "Mission brief pending."}</p>
 
-            <div className="mt-4 grid gap-2 text-[11px] text-slate-400">
+            <div className="mt-4 grid gap-2 text-[11px] text-[var(--color-text-secondary)]">
               <div className="flex items-center gap-2">
-                <ShieldAlert size={13} className="text-amber-300" />
+                <ShieldAlert size={13} className="text-[var(--color-accent)]" />
                 <span className="uppercase tracking-[0.1em]">{mission.priority}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export default async function MissionsPage() {
         ))}
 
         {data.items.length === 0 ? (
-          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3 text-sm text-slate-400">No missions loaded yet.</div>
+          <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-3 text-sm text-[var(--color-text-secondary)]">No missions loaded yet.</div>
         ) : null}
       </section>
     </OpsShell>

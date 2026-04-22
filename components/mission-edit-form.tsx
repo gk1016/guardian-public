@@ -78,40 +78,40 @@ export function MissionEditForm({ missionId, initialMission }: MissionEditFormPr
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Callsign</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Callsign</span>
           <input
             value={callsign}
             onChange={(event) => setCallsign(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Type</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Type</span>
           <input
             value={missionType}
             onChange={(event) => setMissionType(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
       </div>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Title</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Title</span>
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Status</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Status</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -122,11 +122,11 @@ export function MissionEditForm({ missionId, initialMission }: MissionEditFormPr
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Priority</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Priority</span>
           <select
             value={priority}
             onChange={(event) => setPriority(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           >
             {priorityOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -137,22 +137,22 @@ export function MissionEditForm({ missionId, initialMission }: MissionEditFormPr
         </label>
 
         <label className="space-y-2">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Area of Operation</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Area of Operation</span>
           <input
             value={areaOfOperation}
             onChange={(event) => setAreaOfOperation(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-amber-300/40"
+            className="w-full rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
           />
         </label>
       </div>
 
       <label className="space-y-2">
-        <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Mission Brief</span>
+        <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">Mission Brief</span>
         <textarea
           value={missionBrief}
           onChange={(event) => setMissionBrief(event.target.value)}
           rows={6}
-          className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white outline-none transition focus:border-amber-300/40"
+          className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40"
         />
       </label>
 

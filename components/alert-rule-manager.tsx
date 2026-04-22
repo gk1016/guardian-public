@@ -130,7 +130,7 @@ export function AlertRuleManager() {
   const opLabel = (op: string) => OPERATORS.find((o) => o.value === op)?.label ?? op;
   const metricLabel = (m: string) => METRICS.find((x) => x.value === m)?.label ?? m;
 
-  if (loading) return <p className="text-sm text-slate-500">Loading alert rules...</p>;
+  if (loading) return <p className="text-sm text-[var(--color-text-tertiary)]">Loading alert rules...</p>;
 
   return (
     <div className="space-y-4">
@@ -141,44 +141,44 @@ export function AlertRuleManager() {
       </button>
 
       {showForm ? (
-        <form onSubmit={handleCreate} className="rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-black/15 p-4 space-y-3">
+        <form onSubmit={handleCreate} className="rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] p-4 space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Rule Name</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Rule Name</span>
               <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-cyan-400/40 focus:outline-none"
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none"
                 placeholder="e.g. Low QRF coverage" />
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Metric</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Metric</span>
               <select value={formData.metric} onChange={(e) => setFormData({ ...formData, metric: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none">
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none">
                 {METRICS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Operator</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Operator</span>
               <select value={formData.operator} onChange={(e) => setFormData({ ...formData, operator: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none">
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none">
                 {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Threshold</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Threshold</span>
               <input type="number" required step="any" value={formData.threshold} onChange={(e) => setFormData({ ...formData, threshold: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none" />
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none" />
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Severity</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Severity</span>
               <select value={formData.severity} onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none">
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none">
                 {SEVERITIES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </label>
             <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Cooldown (minutes)</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Cooldown (minutes)</span>
               <input type="number" required min="1" value={formData.cooldownMinutes} onChange={(e) => setFormData({ ...formData, cooldownMinutes: e.target.value })}
-                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-black/20 px-3 py-2 text-sm text-white focus:border-cyan-400/40 focus:outline-none" />
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none" />
             </label>
           </div>
           <button type="submit" disabled={submitting}
@@ -189,33 +189,33 @@ export function AlertRuleManager() {
       ) : null}
 
       {rules.length === 0 ? (
-        <p className="text-sm text-slate-500">No alert rules configured. Create one to get proactive engine alerts.</p>
+        <p className="text-sm text-[var(--color-text-tertiary)]">No alert rules configured. Create one to get proactive engine alerts.</p>
       ) : (
         <div className="space-y-3">
           {rules.map((rule) => (
-            <div key={rule.id} className={`rounded-[var(--radius-md)] border bg-black/15 p-4 ${rule.isEnabled ? "border-[var(--color-border-bright)]" : "border-[var(--color-border)] opacity-60"}`}>
+            <div key={rule.id} className={`rounded-[var(--radius-md)] border bg-[var(--color-input-bg)] p-4 ${rule.isEnabled ? "border-[var(--color-border-bright)]" : "border-[var(--color-border)] opacity-60"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-white">{rule.name}</p>
-                  <p className="mt-1 text-[11px] text-slate-400">
-                    When <span className="text-white">{metricLabel(rule.metric)}</span>{" "}
+                  <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">{rule.name}</p>
+                  <p className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
+                    When <span className="text-[var(--color-text-strong)]">{metricLabel(rule.metric)}</span>{" "}
                     <span className="text-cyan-300">{opLabel(rule.operator)}</span>{" "}
-                    <span className="text-white">{rule.threshold}</span>
+                    <span className="text-[var(--color-text-strong)]">{rule.threshold}</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-[var(--radius-sm)] border px-2 py-0.5 text-[10px] uppercase ${severityTone[rule.severity] ?? severityTone.info}`}>
                     {rule.severity}
                   </span>
-                  <button onClick={() => handleToggle(rule)} className="text-slate-500 transition hover:text-white" title={rule.isEnabled ? "Disable" : "Enable"}>
+                  <button onClick={() => handleToggle(rule)} className="text-[var(--color-text-tertiary)] transition hover:text-[var(--color-text-strong)]" title={rule.isEnabled ? "Disable" : "Enable"}>
                     {rule.isEnabled ? <ToggleRight size={18} className="text-emerald-400" /> : <ToggleLeft size={18} />}
                   </button>
-                  <button onClick={() => handleDelete(rule.id)} className="text-slate-500 transition hover:text-red-400" title="Delete">
+                  <button onClick={() => handleDelete(rule.id)} className="text-[var(--color-text-tertiary)] transition hover:text-red-400" title="Delete">
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-4 text-[10px] text-slate-500">
+              <div className="mt-2 flex items-center gap-4 text-[10px] text-[var(--color-text-tertiary)]">
                 <span>Cooldown: {rule.cooldownMinutes}m</span>
                 {rule.lastTriggeredAt ? <span>Last fired: {new Date(rule.lastTriggeredAt).toLocaleString()}</span> : <span>Never triggered</span>}
               </div>

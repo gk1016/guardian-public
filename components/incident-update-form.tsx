@@ -58,7 +58,7 @@ export function IncidentUpdateForm({
       <select
         value={form.status}
         onChange={(event) => updateField("status", event.target.value)}
-        className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
+        className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       >
         <option value="open">Open</option>
         <option value="triage">Triage</option>
@@ -72,21 +72,21 @@ export function IncidentUpdateForm({
         onChange={(event) => updateField("lessonsLearned", event.target.value)}
         rows={3}
         placeholder="Lessons learned"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.actionItems}
         onChange={(event) => updateField("actionItems", event.target.value)}
         rows={3}
         placeholder="Action items"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
       <textarea
         value={form.publicSummary}
         onChange={(event) => updateField("publicSummary", event.target.value)}
         rows={2}
         placeholder="Public summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
+        className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40"
       />
 
       <button

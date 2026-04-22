@@ -24,8 +24,8 @@ export default function AboutPage() {
     >
       <section className="grid gap-6 lg:grid-cols-3">
         {sections.map((section) => (
-          <article key={section.title} className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
-            <h2 className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-white">
+          <article key={section.title} className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+            <h2 className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
               {section.title}
             </h2>
             <p className="mt-4 text-sm leading-8 text-slate-300">{section.body}</p>

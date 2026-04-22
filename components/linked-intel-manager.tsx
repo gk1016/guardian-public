@@ -52,16 +52,16 @@ export function LinkedIntelManager({
       {intelLinks.map((item) => (
         <div
           key={item.id}
-          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-4"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4"
         >
           <div>
             <div className="flex items-center gap-2">
               <Radar size={16} className="text-red-300" />
-              <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
+              <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
                 {item.title}
               </p>
             </div>
-            <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+            <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
               {item.reportType.replaceAll("_", " ")} / Severity {item.severity}
             </p>
             <p className="mt-2 text-sm text-slate-300">
@@ -81,7 +81,7 @@ export function LinkedIntelManager({
       ))}
 
       {intelLinks.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+        <div className="rounded-2xl border border-[var(--color-border-bright)] bg-[var(--color-overlay-subtle)] px-4 py-4 text-sm text-slate-300">
           No linked intel for this sortie yet.
         </div>
       ) : null}
