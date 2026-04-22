@@ -49,7 +49,7 @@ services:
       retries: 3
 
   guardian-backup:
-    image: postgres:16-alpine
+    image: postgres:16-bookworm
     container_name: guardian-backup
     restart: unless-stopped
     environment:
@@ -97,7 +97,7 @@ services:
     command: sh -lc "npx prisma db push && npm run db:seed"
 
   guardian-postgres:
-    image: postgres:16-alpine
+    image: postgres:16-bookworm
     container_name: guardian-postgres
     restart: unless-stopped
     environment:
@@ -115,7 +115,7 @@ services:
       retries: 10
 
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2
     container_name: guardian-caddy
     restart: unless-stopped
     ports:
