@@ -7,6 +7,8 @@ services:
       - "3000"
     env_file:
       - .env
+    environment:
+      HOSTNAME: "0.0.0.0"
     depends_on:
       guardian-postgres:
         condition: service_healthy
@@ -14,7 +16,7 @@ services:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
       interval: 30s
       timeout: 5s
-      start_period: 30s
+      start_period: 60s
       retries: 3
 
   guardian-engine:
