@@ -4,6 +4,7 @@ import {
   getSessionCookieName,
   verifySessionToken,
 } from "@/lib/auth-core";
+import { prisma } from "@/lib/prisma";
 
 export type { GuardianSession } from "@/lib/auth-core";
 
@@ -14,7 +15,31 @@ export async function getSessionFromCookies() {
     return null;
   }
 
-  return verifySessionToken(token);
+  const session = await verifySessionToken(token);
+  if (!session) {
+    return null;
+  }
+
+  // Live DB check: verify user still exists, is still active, and session
+  // was not invalidated (e.g. after admin role/status change).
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { status: true, sessionsInvalidatedAt: true },
+  });
+
+  if (!user || user.status !== "active") {
+    return null;
+  }
+
+  if (
+    user.sessionsInvalidatedAt &&
+    session.iat &&
+    user.sessionsInvalidatedAt.getTime() / 1000 > session.iat
+  ) {
+    return null;
+  }
+
+  return session;
 }
 
 export async function requireSession(nextPath?: string) {

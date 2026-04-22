@@ -23,6 +23,7 @@ export type GuardianSession = {
   status: string;
   orgId?: string;
   orgTag?: string;
+  iat?: number;
 };
 
 function getSessionSecret() {
@@ -68,6 +69,7 @@ export async function verifySessionToken(token: string) {
       status: payload.status,
       orgId: payload.orgId,
       orgTag: payload.orgTag,
+      iat: payload.iat,
     } satisfies GuardianSession;
   } catch {
     return null;

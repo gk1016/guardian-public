@@ -15,6 +15,7 @@ model User {
   passwordHash String?
   role         String        @default("pilot")
   status       String        @default("pending")
+  sessionsInvalidatedAt DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   memberships  OrgMember[]

@@ -57,6 +57,16 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Member not found in this organization." }, { status: 404 });
   }
 
+  // Check if role or status is changing — if so, invalidate existing sessions
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, status: true },
+  });
+
+  const roleOrStatusChanged =
+    currentUser &&
+    (currentUser.role !== payload.data.role || currentUser.status !== payload.data.status);
+
   const passwordHash =
     payload.data.password && payload.data.password.trim().length > 0
       ? await bcrypt.hash(payload.data.password, 12)
@@ -70,6 +80,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
         role: payload.data.role,
         status: payload.data.status,
         passwordHash,
+        // Invalidate all existing sessions when role or status changes
+        ...(roleOrStatusChanged && { sessionsInvalidatedAt: new Date() }),
       },
       select: {
         id: true,
