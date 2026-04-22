@@ -48,6 +48,42 @@ services:
       start_period: 10s
       retries: 3
 
+  guardian-backup:
+    image: postgres:16-alpine
+    container_name: guardian-backup
+    restart: unless-stopped
+    environment:
+      PGHOST: guardian-postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+    volumes:
+      - guardian-backups:/backups
+    depends_on:
+      guardian-postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Guardian backup sidecar started (interval: $${BACKUP_INTERVAL_HOURS}h, retention: $${BACKUP_RETENTION_DAYS}d)"
+        sleep 60
+        while true; do
+          TIMESTAMP=$$(date +%Y%m%d-%H%M%S)
+          DUMP="/backups/$${PGDATABASE}-$${TIMESTAMP}.sql.gz"
+          pg_dump -h "$$PGHOST" -U "$$PGUSER" "$$PGDATABASE" | gzip > "$$DUMP"
+          if [ -s "$$DUMP" ]; then
+            echo "OK: $$DUMP ($$(du -h "$$DUMP" | cut -f1))"
+          else
+            echo "ERROR: backup produced empty file" >&2
+            rm -f "$$DUMP"
+          fi
+          find /backups -name "*.sql.gz" -mtime +$${BACKUP_RETENTION_DAYS} -delete
+          echo "Backups on disk: $$(find /backups -name '*.sql.gz' | wc -l)"
+          sleep $$((BACKUP_INTERVAL_HOURS * 3600))
+        done
+
   guardian-tools:
     build:
       context: .
@@ -96,4 +132,5 @@ services:
 volumes:
   guardian-postgres-data:
   guardian-engine-certs:
+  guardian-backups:
   caddy_data:
