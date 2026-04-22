@@ -6,10 +6,8 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { href: "/about", label: "About" },
-  { href: "/ops", label: "Ops" },
   { href: "/standards", label: "Standards" },
   { href: "/recruit", label: "Recruit" },
-  { href: "/aar", label: "AAR" },
 ];
 
 type PublicNavProps = {
