@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition, useRef, DragEvent } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Filter,
   FileText,
@@ -69,6 +71,11 @@ function formatDate(iso: string): string {
 /** Check if the body content looks like HTML (from mammoth docx extraction). */
 function isHtmlContent(body: string): boolean {
   return body.startsWith("<") && (body.includes("<p>") || body.includes("<h") || body.includes("<table"));
+}
+
+/** Check if the body content looks like markdown (headers, tables, bold, lists). */
+function isMarkdownContent(body: string): boolean {
+  return /^#{1,4}\s/m.test(body) || /^\|.*\|$/m.test(body) || /\*\*[^*]+\*\*/m.test(body);
 }
 
 type CategoryFilter = "all" | "general" | "sop" | "procedures" | "training" | "reference" | "guides";
@@ -357,6 +364,7 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
           const isExpanded = expandedId === item.id;
           const hasInlineContent = item.body && item.body.length > 0;
           const bodyIsHtml = hasInlineContent && isHtmlContent(item.body);
+          const bodyIsMarkdown = hasInlineContent && !bodyIsHtml && isMarkdownContent(item.body);
 
           return (
             <div
@@ -389,13 +397,17 @@ export function ManualCenter({ initialItems, canAuthor }: ManualCenterProps) {
 
               {isExpanded ? (
                 <div className="border-t border-[var(--color-border)] px-5 py-4">
-                  {/* Inline content: article text or extracted file content */}
+                  {/* Inline content: HTML (mammoth), markdown, or plain text */}
                   {hasInlineContent ? (
                     bodyIsHtml ? (
                       <div
                         className="manual-doc-content max-w-none text-sm leading-7 text-slate-300"
                         dangerouslySetInnerHTML={{ __html: item.body }}
                       />
+                    ) : bodyIsMarkdown ? (
+                      <div className="manual-doc-content max-w-none text-sm leading-7">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.body}</ReactMarkdown>
+                      </div>
                     ) : (
                       <div className="max-w-none text-sm leading-7 text-slate-300 whitespace-pre-wrap">
                         {item.body}
