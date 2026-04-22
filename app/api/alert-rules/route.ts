@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { canManageAdministration } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+
+const createRuleSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  metric: z.string().trim().min(2).max(60),
+  operator: z.string().trim().min(1).max(10),
+  threshold: z.number(),
+  severity: z.enum(["info", "warning", "critical"]).default("warning"),
+  cooldownMinutes: z.number().int().min(1).max(1440).default(60),
+});
 
 export async function GET() {
   const session = await getSessionFromCookies();
@@ -38,22 +48,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No organization found." }, { status: 400 });
   }
 
-  const body = await request.json();
-  const { name, metric, operator, threshold, severity, cooldownMinutes } = body;
-
-  if (!name || !metric || !operator || threshold === undefined) {
-    return NextResponse.json({ error: "Missing required fields: name, metric, operator, threshold." }, { status: 400 });
+  const payload = createRuleSchema.safeParse(await request.json());
+  if (!payload.success) {
+    return NextResponse.json({ error: "Invalid alert rule payload." }, { status: 400 });
   }
 
   const rule = await prisma.alertRule.create({
     data: {
       orgId: org.id,
-      name,
-      metric,
-      operator,
-      threshold: parseFloat(threshold),
-      severity: severity || "warning",
-      cooldownMinutes: parseInt(cooldownMinutes) || 60,
+      name: payload.data.name,
+      metric: payload.data.metric,
+      operator: payload.data.operator,
+      threshold: payload.data.threshold,
+      severity: payload.data.severity,
+      cooldownMinutes: payload.data.cooldownMinutes,
     },
   });
 

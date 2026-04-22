@@ -4,6 +4,37 @@ import { z } from "zod";
 import { createSessionToken, getSessionCookieName } from "@/lib/auth-core";
 import { prisma } from "@/lib/prisma";
 
+// ---------------------------------------------------------------------------
+// Per-IP rate limiter — 10 attempts per 15-minute window, no dependencies
+// ---------------------------------------------------------------------------
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 10;
+
+type RateBucket = { count: number; resetAt: number };
+const rateBuckets = new Map<string, RateBucket>();
+
+// Sweep expired buckets every 5 minutes to prevent unbounded growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, bucket] of rateBuckets) {
+    if (now >= bucket.resetAt) rateBuckets.delete(ip);
+  }
+}, 5 * 60 * 1000).unref();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+
+  if (!bucket || now >= bucket.resetAt) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT_MAX;
+}
+// ---------------------------------------------------------------------------
+
 const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
@@ -11,6 +42,16 @@ const loginSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // Rate limit by IP
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Try again later." },
+        { status: 429 },
+      );
+    }
+
     const payload = loginSchema.safeParse(await request.json());
     if (!payload.success) {
       return NextResponse.json(

@@ -32,10 +32,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "File not found." }, { status: 404 });
   }
 
+  // Sanitize filename to prevent Content-Disposition header injection
+  const safeName = (entry.fileName ?? "download").replace(/[^a-zA-Z0-9._-]/g, "_");
+
   return new NextResponse(entry.fileData, {
     headers: {
       "Content-Type": entry.fileMimeType ?? "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${entry.fileName ?? "download"}"`,
+      "Content-Disposition": `attachment; filename="${safeName}"`,
       "Content-Length": String(entry.fileData.length),
     },
   });
