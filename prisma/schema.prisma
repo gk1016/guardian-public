@@ -48,6 +48,8 @@ model Organization {
   notifications Notification[]
   alertRules  AlertRule[]
   manualEntries ManualEntry[]
+  aiConfigs   AiConfig[]
+  aiAnalyses  AiAnalysis[]
 }
 
 model OrgMember {
@@ -342,4 +344,38 @@ model ManualEntry {
   author       User         @relation("manual_author", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([orgId, category])
+}
+
+model AiConfig {
+  id               String       @id @default(cuid())
+  orgId            String
+  provider         String       @default("anthropic")
+  model            String       @default("claude-sonnet-4-20250514")
+  apiKey           String?
+  baseUrl          String?
+  maxTokens        Int          @default(2048)
+  temperature      Float        @default(0.3)
+  enabled          Boolean      @default(false)
+  tickIntervalSecs Int          @default(300)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+model AiAnalysis {
+  id            String       @id @default(cuid())
+  orgId         String
+  analysisType  String
+  targetId      String?
+  summary       String
+  provider      String
+  model         String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, analysisType, createdAt])
+  @@index([targetId])
 }

@@ -4,6 +4,7 @@ mod routes;
 mod compute;
 mod federation;
 mod state;
+mod ai;
 
 use tracing::info;
 
@@ -43,6 +44,11 @@ async fn main() -> anyhow::Result<()> {
     // Build shared app state
     let app_state = state::AppState::new(pool, cfg.clone(), identity.fingerprint.clone());
 
+    // Initialize AI state — load provider from DB config
+    if let Err(e) = app_state.ai().reload(app_state.pool()).await {
+        tracing::warn!(error = %e, "failed to load AI config on startup (non-fatal)");
+    }
+
     // Start federation manager (background task) with TLS
     let fed_handle = federation::manager::start(app_state.clone(), identity);
     info!("federation manager started (TLS enabled)");
@@ -62,6 +68,23 @@ async fn main() -> anyhow::Result<()> {
     });
     info!("compute tick loop started (30s interval)");
 
+    // Start AI analysis tick loop (configurable interval, default 5 minutes)
+    let ai_state = app_state.clone();
+    let ai_handle = tokio::spawn(async move {
+        // Wait 15 seconds on startup before first AI tick
+        tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+        loop {
+            // Read tick interval from current config (allows runtime changes)
+            let interval_secs = match ai_state.ai().config().await {
+                Some(cfg) if cfg.enabled => cfg.tick_interval_secs as u64,
+                _ => 300, // default 5 min if not configured
+            };
+            tokio::time::sleep(std::time::Duration::from_secs(interval_secs)).await;
+            ai::tick(&ai_state).await;
+        }
+    });
+    info!("AI analysis tick loop started");
+
     // Build router
     let app = routes::router(app_state);
 
@@ -74,6 +97,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Cleanup
     compute_handle.abort();
+    ai_handle.abort();
     fed_handle.abort();
     info!("guardian-engine stopped");
     Ok(())

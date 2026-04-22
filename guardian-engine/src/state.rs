@@ -4,6 +4,7 @@ use tokio::sync::broadcast;
 
 use crate::config::Config;
 use crate::federation::types::FederationEvent;
+use crate::ai::AiState;
 
 /// Shared application state passed to all route handlers and background tasks.
 #[derive(Clone)]
@@ -20,6 +21,8 @@ struct Inner {
     pub federation_tx: broadcast::Sender<FederationEvent>,
     /// This instance's TLS certificate fingerprint (SHA-256 hex)
     pub cert_fingerprint: String,
+    /// AI provider state (runtime-swappable)
+    pub ai: Arc<AiState>,
 }
 
 impl AppState {
@@ -33,6 +36,7 @@ impl AppState {
                 event_tx,
                 federation_tx,
                 cert_fingerprint,
+                ai: Arc::new(AiState::new()),
             }),
         }
     }
@@ -55,5 +59,9 @@ impl AppState {
 
     pub fn cert_fingerprint(&self) -> &str {
         &self.inner.cert_fingerprint
+    }
+
+    pub fn ai(&self) -> &AiState {
+        &self.inner.ai
     }
 }
