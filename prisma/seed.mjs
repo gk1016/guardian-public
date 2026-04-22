@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { manualEntries, qrhEntry } from "./manual-seed-content.mjs";
 
 const prisma = new PrismaClient();
 
@@ -693,6 +694,36 @@ async function main() {
           ...notificationSeed,
         },
       });
+    }
+  }
+
+  // --- Manual entries (operational manual + QRH) ---
+  const allManualEntries = [...manualEntries, qrhEntry];
+
+  for (const entry of allManualEntries) {
+    const existing = await prisma.manualEntry.findFirst({
+      where: {
+        orgId: org.id,
+        title: entry.title,
+      },
+    });
+
+    const data = {
+      orgId: org.id,
+      authorId: reaper.id,
+      title: entry.title,
+      category: entry.category,
+      body: entry.body,
+      entryType: "article",
+    };
+
+    if (existing) {
+      await prisma.manualEntry.update({
+        where: { id: existing.id },
+        data,
+      });
+    } else {
+      await prisma.manualEntry.create({ data });
     }
   }
 
