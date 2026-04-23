@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { log } from "@/lib/logger";
 
 /**
  * Fire-and-forget audit log writer.
@@ -25,6 +26,11 @@ export async function auditLog(params: {
       },
     });
   } catch (e) {
-    console.error("[audit] Failed to write audit log:", e);
+    log.error("Failed to write audit log", {
+      component: "audit",
+      action: params.action,
+      targetType: params.targetType,
+      err: e instanceof Error ? e.message : String(e),
+    });
   }
 }

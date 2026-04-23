@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSessionToken, getSessionCookieName } from "@/lib/auth-core";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
+import { log } from "@/lib/logger";
 
 // ---------------------------------------------------------------------------
 // Per-IP rate limiter — 10 attempts per 15-minute window, no dependencies
@@ -38,22 +39,25 @@ function isRateLimited(ip: string): boolean {
 
 const loginSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
+  password: z.string().min(1).max(128),
 });
 
 export async function POST(request: Request) {
   try {
-    // Rate limit by IP
-    const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
     if (isRateLimited(ip)) {
+      log.warn("Login rate limited", { ip });
       return NextResponse.json(
         { error: "Too many login attempts. Try again later." },
         { status: 429 },
       );
     }
 
-    const payload = loginSchema.safeParse(await request.json());
+    const body = await request.json();
+    const payload = loginSchema.safeParse(body);
+
     if (!payload.success) {
       return NextResponse.json(
         { error: "Invalid email or password format." },
@@ -84,14 +88,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Look up org membership for the session
     const membership = await prisma.orgMember.findFirst({
       where: { userId: user.id },
       include: { org: { select: { id: true, tag: true } } },
       orderBy: { joinedAt: "asc" },
     });
 
-    const token = await createSessionToken({
+    const session = {
       userId: user.id,
       email: user.email,
       handle: user.handle,
@@ -100,7 +103,9 @@ export async function POST(request: Request) {
       status: user.status,
       orgId: membership?.org.id,
       orgTag: membership?.org.tag,
-    });
+    };
+
+    const token = await createSessionToken(session);
 
     const response = NextResponse.json({
       ok: true,
@@ -112,9 +117,7 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set({
-      name: getSessionCookieName(),
-      value: token,
+    response.cookies.set(getSessionCookieName(), token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -130,9 +133,13 @@ export async function POST(request: Request) {
       metadata: { ip, handle: user.handle },
     });
 
+    log.info("Login successful", { handle: user.handle, ip });
+
     return response;
   } catch (error) {
-    console.error("Guardian login failed", error);
+    log.error("Login failed", {
+      err: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to sign in." },
       { status: 500 },
