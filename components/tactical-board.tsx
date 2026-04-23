@@ -13,7 +13,6 @@ import {
   WifiOff,
   Maximize,
   Minimize,
-  ChevronRight,
 } from "lucide-react";
 
 type OpsSummary = {
@@ -54,31 +53,31 @@ function StatusIndicator({ value, max, label, color }: { value: number; max: num
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div className="flex items-center gap-2">
-      <div className="w-24 h-1.5 rounded-full bg-white/5 overflow-hidden">
+      <div className="w-28 h-2 rounded-full bg-white/10 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-1000 ${color}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-[10px] tabular-nums text-white/40 w-8 text-right">{pct}%</span>
-      <span className="text-[10px] text-white/30">{label}</span>
+      <span className="text-[11px] font-semibold tabular-nums text-white/70 w-10 text-right">{pct}%</span>
+      <span className="text-[11px] text-white/50">{label}</span>
     </div>
   );
 }
 
 function MetricBlock({ icon, value, label, color, pulse }: { icon: React.ReactNode; value: string | number; label: string; color: string; pulse?: boolean }) {
   return (
-    <div className={`rounded border ${color} px-3 py-2 relative`}>
+    <div className={`rounded-lg border-2 ${color} px-4 py-3 relative`}>
       {pulse && (
-        <span className="absolute top-1.5 right-1.5">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+        <span className="absolute top-2 right-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-current animate-pulse" />
         </span>
       )}
-      <div className="flex items-center gap-1.5 mb-1">
+      <div className="flex items-center gap-2 mb-1.5">
         {icon}
-        <span className="text-[9px] uppercase tracking-[0.16em] opacity-70">{label}</span>
+        <span className="text-[10px] uppercase tracking-[0.14em] font-semibold opacity-80">{label}</span>
       </div>
-      <p className="font-mono text-xl tabular-nums tracking-wide">
+      <p className="font-mono text-2xl font-bold tabular-nums tracking-wide">
         {typeof value === "number" ? value.toString().padStart(2, "0") : value}
       </p>
     </div>
@@ -87,27 +86,27 @@ function MetricBlock({ icon, value, label, color, pulse }: { icon: React.ReactNo
 
 function EventLine({ event, idx }: { event: AlertEvent; idx: number }) {
   const severityColor = {
-    critical: "text-red-400",
-    warning: "text-amber-400",
-    info: "text-cyan-400",
-  }[event.severity] || "text-white/50";
+    critical: "text-red-300 bg-red-500/10",
+    warning: "text-amber-300 bg-amber-500/10",
+    info: "text-cyan-300 bg-cyan-500/10",
+  }[event.severity] || "text-white/60 bg-white/5";
 
   const categoryIcon = {
-    compliance: <Shield size={10} />,
-    threat: <AlertTriangle size={10} />,
-    ops: <Crosshair size={10} />,
-    alert_rule: <Zap size={10} />,
-  }[event.category] || <Activity size={10} />;
+    compliance: <Shield size={11} />,
+    threat: <AlertTriangle size={11} />,
+    ops: <Crosshair size={11} />,
+    alert_rule: <Zap size={11} />,
+  }[event.category] || <Activity size={11} />;
 
   return (
     <div
-      className={`flex items-center gap-2 px-2 py-1 text-[10px] ${severityColor} animate-fade-in`}
+      className={`flex items-center gap-2 px-3 py-1.5 text-[11px] ${severityColor} rounded mx-1 mb-0.5 animate-fade-in`}
       style={{ animationDelay: `${idx * 50}ms` }}
     >
       {categoryIcon}
-      <span className="truncate flex-1 opacity-90">{event.title}</span>
+      <span className="truncate flex-1">{event.title}</span>
       {event.callsign && (
-        <span className="font-mono text-[9px] opacity-50">{event.callsign}</span>
+        <span className="font-mono text-[10px] opacity-60">{event.callsign}</span>
       )}
     </div>
   );
@@ -122,13 +121,11 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clock
   useEffect(() => {
     const interval = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // WebSocket connection
   const connect = useCallback(() => {
     if (wsRef.current) wsRef.current.close();
 
@@ -185,49 +182,55 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
     return "bg-red-500";
   };
 
+  const readinessGlow = (score: number) => {
+    if (score >= 80) return "shadow-[0_0_20px_rgba(52,211,153,0.4)]";
+    if (score >= 50) return "shadow-[0_0_20px_rgba(251,191,36,0.4)]";
+    return "shadow-[0_0_20px_rgba(248,113,113,0.4)]";
+  };
+
   return (
     <div className="h-full flex flex-col" style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-white/[0.02]">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/80">Guardian</span>
-          <span className="text-[10px] uppercase tracking-[0.16em] text-white/20">Tactical Overview</span>
-        </div>
+      <div className="flex items-center justify-between px-5 py-2.5 border-b border-cyan-500/20 bg-[#0d1520]">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-[0.2em] text-cyan-400 font-bold">Guardian</span>
+          <span className="text-xs uppercase tracking-[0.16em] text-white/40">Tactical Overview</span>
+        </div>
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2">
             {connected ? (
-              <><Wifi size={11} className="text-emerald-400" /><span className="text-[9px] uppercase tracking-wider text-emerald-400">Live</span></>
+              <><Wifi size={13} className="text-emerald-400" /><span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Live</span></>
             ) : (
-              <><WifiOff size={11} className="text-red-400" /><span className="text-[9px] uppercase tracking-wider text-red-400">Offline</span></>
+              <><WifiOff size={13} className="text-red-400" /><span className="text-[10px] uppercase tracking-wider text-red-400 font-bold">Offline</span></>
             )}
           </div>
-          <span className="text-[10px] tabular-nums text-white/30">
+          <span className="text-xs tabular-nums text-white/50 font-mono">
             {clock.toISOString().replace("T", " ").slice(0, 19)}Z
           </span>
-          <span className="text-[10px] text-cyan-400/50">{session.handle}</span>
-          <button onClick={toggleFullscreen} className="text-white/20 hover:text-white/60 transition-colors">
-            {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
+          <span className="text-xs text-cyan-400 font-semibold">{session.handle}</span>
+          <button onClick={toggleFullscreen} className="text-white/40 hover:text-white/80 transition-colors">
+            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>
         </div>
       </div>
 
       {/* Main grid */}
-      <div className="flex-1 grid grid-cols-12 gap-px bg-white/[0.02] overflow-hidden">
+      <div className="flex-1 grid grid-cols-12 gap-1 bg-[#060a10] p-1 overflow-hidden">
 
-        {/* Left column — readiness + metrics */}
-        <div className="col-span-3 flex flex-col gap-px">
+        {/* Left column */}
+        <div className="col-span-3 flex flex-col gap-1">
           {/* Readiness score */}
-          <div className="bg-[#0c1018] p-4 flex-shrink-0">
-            <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-3">Org Readiness</p>
+          <div className="bg-[#0d1520] border border-white/10 rounded-lg p-5 flex-shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/60 font-semibold mb-3">Org Readiness</p>
             {summary ? (
               <>
-                <div className="flex items-end gap-2 mb-4">
-                  <span className={`font-mono text-5xl tabular-nums ${readinessColor(summary.readiness_score)}`}>
+                <div className="flex items-end gap-2 mb-5">
+                  <span className={`font-mono text-6xl font-bold tabular-nums ${readinessColor(summary.readiness_score)} ${readinessGlow(summary.readiness_score)}`}>
                     {summary.readiness_score}
                   </span>
-                  <span className="text-[10px] text-white/20 mb-1">/ 100</span>
+                  <span className="text-sm text-white/30 mb-2">/ 100</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <StatusIndicator value={summary.readiness.qrf_posture} max={100} label="QRF Posture" color={readinessBg(summary.readiness.qrf_posture)} />
                   <StatusIndicator value={summary.readiness.package_discipline} max={100} label="Pkg Discipline" color={readinessBg(summary.readiness.package_discipline)} />
                   <StatusIndicator value={summary.readiness.rescue_response} max={100} label="Rescue Response" color={readinessBg(summary.readiness.rescue_response)} />
@@ -235,82 +238,86 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
                 </div>
               </>
             ) : (
-              <p className="text-white/10 text-xs">Awaiting data...</p>
+              <p className="text-white/30 text-sm">Awaiting data...</p>
             )}
           </div>
 
           {/* Metric blocks */}
-          <div className="bg-[#0c1018] p-3 grid grid-cols-2 gap-2 flex-1">
+          <div className="bg-[#0d1520] border border-white/10 rounded-lg p-3 grid grid-cols-2 gap-2 flex-1">
             <MetricBlock
-              icon={<Crosshair size={12} />}
+              icon={<Crosshair size={14} />}
               value={summary?.active_missions ?? "--"}
               label="Active Msn"
-              color="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
+              color="border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
               pulse={!!summary && summary.active_missions > 0}
             />
             <MetricBlock
-              icon={<Crosshair size={12} />}
+              icon={<Crosshair size={14} />}
               value={summary?.planning_missions ?? "--"}
               label="Planning"
-              color="border-cyan-500/20 bg-cyan-500/5 text-cyan-300"
+              color="border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
             />
             <MetricBlock
-              icon={<Shield size={12} />}
+              icon={<Shield size={14} />}
               value={summary ? `${summary.qrf_ready}/${summary.qrf_total}` : "--"}
               label="QRF Ready"
-              color="border-amber-500/20 bg-amber-500/5 text-amber-300"
+              color="border-amber-500/40 bg-amber-500/10 text-amber-300"
               pulse={!!summary && summary.qrf_ready > 0}
             />
             <MetricBlock
-              icon={<Radio size={12} />}
+              icon={<Radio size={14} />}
               value={summary?.open_rescues ?? "--"}
               label="Open Rescue"
-              color="border-red-500/20 bg-red-500/5 text-red-300"
+              color="border-red-500/40 bg-red-500/10 text-red-300"
               pulse={!!summary && summary.open_rescues > 0}
             />
             <MetricBlock
-              icon={<Eye size={12} />}
+              icon={<Eye size={14} />}
               value={summary?.active_intel ?? "--"}
               label="Active Intel"
-              color="border-violet-500/20 bg-violet-500/5 text-violet-300"
+              color="border-violet-500/40 bg-violet-500/10 text-violet-300"
             />
             <MetricBlock
-              icon={<AlertTriangle size={12} />}
+              icon={<AlertTriangle size={14} />}
               value={summary?.threat_clusters ?? "--"}
-              label="Threat Clusters"
-              color="border-orange-500/20 bg-orange-500/5 text-orange-300"
+              label="Threats"
+              color="border-orange-500/40 bg-orange-500/10 text-orange-300"
               pulse={!!summary && summary.threat_clusters > 0}
             />
           </div>
         </div>
 
-        {/* Center — main display area */}
-        <div className="col-span-6 bg-[#080c12] flex flex-col">
+        {/* Center */}
+        <div className="col-span-6 bg-[#0a1018] border border-white/10 rounded-lg flex flex-col">
           {/* Status banner */}
-          <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full ${summary && summary.readiness_score >= 70 ? 'bg-emerald-400 animate-pulse' : summary ? 'bg-amber-400 animate-pulse' : 'bg-white/10'}`} />
-              <span className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+          <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${summary && summary.readiness_score >= 70 ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]' : summary ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-white/20'}`} />
+              <span className="text-xs uppercase tracking-[0.14em] text-white/60 font-semibold">
                 {summary && summary.readiness_score >= 80 ? 'Condition Normal' :
                  summary && summary.readiness_score >= 50 ? 'Elevated Readiness' :
                  summary ? 'Reduced Readiness' : 'Initializing'}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] text-white/20">
-              <span>{summary?.compliance_violations ?? 0} violations</span>
-              <span>{summary?.unread_alerts ?? 0} unread</span>
+            <div className="flex items-center gap-4 text-xs text-white/40">
+              <span className={summary && summary.compliance_violations > 0 ? 'text-amber-400 font-semibold' : ''}>
+                {summary?.compliance_violations ?? 0} violations
+              </span>
+              <span className={summary && summary.unread_alerts > 0 ? 'text-cyan-400 font-semibold' : ''}>
+                {summary?.unread_alerts ?? 0} unread
+              </span>
             </div>
           </div>
 
-          {/* Center visualization — readiness radar */}
+          {/* Center visualization */}
           <div className="flex-1 flex items-center justify-center relative">
             {summary ? (
-              <div className="relative w-72 h-72">
+              <div className="relative w-80 h-80">
                 {/* Concentric rings */}
                 {[100, 75, 50, 25].map((ring) => (
                   <div
                     key={ring}
-                    className="absolute rounded-full border border-white/[0.04]"
+                    className="absolute rounded-full border border-white/[0.08]"
                     style={{
                       width: `${ring}%`,
                       height: `${ring}%`,
@@ -321,87 +328,71 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
                 ))}
 
                 {/* Axis lines */}
-                <div className="absolute top-0 left-1/2 w-px h-full bg-white/[0.03]" />
-                <div className="absolute top-1/2 left-0 w-full h-px bg-white/[0.03]" />
+                <div className="absolute top-0 left-1/2 w-px h-full bg-white/[0.06]" />
+                <div className="absolute top-1/2 left-0 w-full h-px bg-white/[0.06]" />
 
                 {/* Quadrant labels */}
-                <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-emerald-400/40">QRF</span>
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-cyan-400/40">Rescue</span>
-                <span className="absolute top-1/2 left-2 -translate-y-1/2 text-[8px] uppercase tracking-widest text-violet-400/40">Intel</span>
-                <span className="absolute top-1/2 right-2 -translate-y-1/2 text-[8px] uppercase tracking-widest text-amber-400/40">Package</span>
+                <span className="absolute top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-emerald-400/70 font-semibold">QRF</span>
+                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-cyan-400/70 font-semibold">Rescue</span>
+                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-[10px] uppercase tracking-widest text-violet-400/70 font-semibold">Intel</span>
+                <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-widest text-amber-400/70 font-semibold">Package</span>
 
-                {/* Data points — positioned by readiness score in each quadrant */}
+                {/* Data points */}
                 <div
-                  className="absolute w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.5)] transition-all duration-1000"
-                  style={{
-                    left: '50%',
-                    top: `${50 - (summary.readiness.qrf_posture / 2)}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
+                  className="absolute w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.6)] transition-all duration-1000"
+                  style={{ left: '50%', top: `${50 - (summary.readiness.qrf_posture / 2)}%`, transform: 'translate(-50%, -50%)' }}
                 />
                 <div
-                  className="absolute w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)] transition-all duration-1000"
-                  style={{
-                    left: `${50 + (summary.readiness.package_discipline / 2)}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                  }}
+                  className="absolute w-4 h-4 rounded-full bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.6)] transition-all duration-1000"
+                  style={{ left: `${50 + (summary.readiness.package_discipline / 2)}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
                 />
                 <div
-                  className="absolute w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.5)] transition-all duration-1000"
-                  style={{
-                    left: '50%',
-                    top: `${50 + (summary.readiness.rescue_response / 2)}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
+                  className="absolute w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_16px_rgba(34,211,238,0.6)] transition-all duration-1000"
+                  style={{ left: '50%', top: `${50 + (summary.readiness.rescue_response / 2)}%`, transform: 'translate(-50%, -50%)' }}
                 />
                 <div
-                  className="absolute w-3 h-3 rounded-full bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.5)] transition-all duration-1000"
-                  style={{
-                    left: `${50 - (summary.readiness.threat_awareness / 2)}%`,
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                  }}
+                  className="absolute w-4 h-4 rounded-full bg-violet-400 shadow-[0_0_16px_rgba(167,139,250,0.6)] transition-all duration-1000"
+                  style={{ left: `${50 - (summary.readiness.threat_awareness / 2)}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
                 />
 
                 {/* Center score */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className={`font-mono text-3xl tabular-nums ${readinessColor(summary.readiness_score)}`}>
+                  <p className={`font-mono text-4xl font-bold tabular-nums ${readinessColor(summary.readiness_score)} ${readinessGlow(summary.readiness_score)}`}>
                     {summary.readiness_score}
                   </p>
-                  <p className="text-[8px] uppercase tracking-[0.2em] text-white/20 mt-0.5">Readiness</p>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 mt-1 font-semibold">Readiness</p>
                 </div>
 
-                {/* Sweep line animation */}
+                {/* Sweep line */}
                 <div
                   className="absolute top-1/2 left-1/2 w-[50%] h-px origin-left"
                   style={{
-                    background: 'linear-gradient(90deg, rgba(34,211,238,0.3) 0%, transparent 100%)',
+                    background: 'linear-gradient(90deg, rgba(34,211,238,0.4) 0%, transparent 100%)',
                     animation: 'sweep 8s linear infinite',
                   }}
                 />
               </div>
             ) : (
-              <div className="text-white/10 text-sm">Awaiting engine data...</div>
+              <div className="text-white/30 text-sm">Awaiting engine data...</div>
             )}
           </div>
 
-          {/* Bottom status bar */}
-          <div className="px-4 py-2 border-t border-white/5 flex items-center justify-between text-[9px] text-white/20">
+          {/* Bottom status */}
+          <div className="px-5 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40">
             <span>Last tick: {summary?.timestamp ? new Date(summary.timestamp).toLocaleTimeString() : '--'}</span>
             <span>30s refresh cycle</span>
           </div>
         </div>
 
         {/* Right column — event feed */}
-        <div className="col-span-3 bg-[#0c1018] flex flex-col">
-          <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-[0.2em] text-white/25">Event Feed</span>
-            <span className="text-[9px] tabular-nums text-white/15">{events.length}</span>
+        <div className="col-span-3 bg-[#0d1520] border border-white/10 rounded-lg flex flex-col">
+          <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/60 font-semibold">Event Feed</span>
+            <span className="text-[10px] tabular-nums text-white/30 font-mono">{events.length}</span>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto py-1">
             {events.length === 0 ? (
-              <p className="text-[10px] text-white/10 px-3 py-4">No events yet...</p>
+              <p className="text-xs text-white/20 px-4 py-6">No events yet...</p>
             ) : (
               events.map((event, i) => <EventLine key={`${i}-${event.title}`} event={event} idx={i} />)
             )}
@@ -409,7 +400,6 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
         </div>
       </div>
 
-      {/* CSS animation for sweep */}
       <style>{`
         @keyframes sweep {
           from { transform: rotate(0deg); }
