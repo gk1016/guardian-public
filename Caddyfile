@@ -2,8 +2,8 @@
     tls internal
 
     header {
-        # Content Security Policy — Next.js needs unsafe-inline for styles
-        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        # Content Security Policy — Next.js needs unsafe-inline for styles, wss: for WebSocket
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss: ws:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
@@ -21,14 +21,14 @@
     @options method OPTIONS
     respond @options 204
 
-    # All API routes → Rust engine
-    handle /api/* {
+    # Engine WebSocket — must be before /api/* to match first
+    handle /engine/* {
+        uri strip_prefix /engine
         reverse_proxy guardian-engine:3420
     }
 
-    # Engine internal routes (WebSocket, federation)
-    handle /engine/* {
-        uri strip_prefix /engine
+    # All API routes → Rust engine
+    handle /api/* {
         reverse_proxy guardian-engine:3420
     }
 
