@@ -10,7 +10,7 @@ tokio = { version = "1", features = ["full"] }
 
 # HTTP / WebSocket server
 axum = { version = "0.8", features = ["ws"] }
-axum-extra = { version = "0.10", features = ["typed-header"] }
+axum-extra = { version = "0.10", features = ["typed-header", "cookie"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 
@@ -53,6 +53,17 @@ dotenvy = "0.15"
 # Error handling
 thiserror = "2"
 anyhow = "1"
+
+# Auth
+jsonwebtoken = "9"
+bcrypt = "0.16"
+hmac = "0.12"
+sha-1 = "0.10"
+rand = "0.8"
+data-encoding = "2"
+
+# ID generation (cuid-compatible)
+cuid2 = "0.1"
 
 [profile.release]
 lto = true

@@ -2,6 +2,7 @@ use std::sync::Arc;
 use sqlx::PgPool;
 use tokio::sync::broadcast;
 
+use crate::auth::rate_limit::RateLimiter;
 use crate::config::Config;
 use crate::federation::types::FederationEvent;
 use crate::ai::AiState;
@@ -23,6 +24,8 @@ struct Inner {
     pub cert_fingerprint: String,
     /// AI provider state (runtime-swappable)
     pub ai: Arc<AiState>,
+    /// Login rate limiter
+    pub rate_limiter: Arc<RateLimiter>,
 }
 
 impl AppState {
@@ -37,6 +40,7 @@ impl AppState {
                 federation_tx,
                 cert_fingerprint,
                 ai: Arc::new(AiState::new()),
+                rate_limiter: Arc::new(RateLimiter::new()),
             }),
         }
     }
@@ -47,6 +51,10 @@ impl AppState {
 
     pub fn config(&self) -> &Config {
         &self.inner.config
+    }
+
+    pub fn auth_secret(&self) -> &str {
+        &self.inner.config.auth_secret
     }
 
     pub fn event_tx(&self) -> &broadcast::Sender<String> {
@@ -63,5 +71,16 @@ impl AppState {
 
     pub fn ai(&self) -> &AiState {
         &self.inner.ai
+    }
+
+    pub fn rate_limiter(&self) -> &RateLimiter {
+        &self.inner.rate_limiter
+    }
+}
+
+/// Allow extractors to get AppState from &AppState
+impl AsRef<AppState> for AppState {
+    fn as_ref(&self) -> &AppState {
+        self
     }
 }

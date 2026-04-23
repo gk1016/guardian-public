@@ -30,6 +30,9 @@ pub struct Config {
     /// Trusted peer certificate fingerprints (SHA-256 hex).
     /// If empty, trust-on-first-use mode is used (fingerprints logged).
     pub federation_trusted_fingerprints: Vec<String>,
+
+    /// Secret key for JWT signing/verification (shared with Next.js AUTH_SECRET)
+    pub auth_secret: String,
 }
 
 impl Config {
@@ -75,6 +78,9 @@ impl Config {
                 .filter(|s| !s.is_empty())
                 .collect();
 
+        let auth_secret = std::env::var("AUTH_SECRET")
+            .unwrap_or_else(|_| "guardian-dev-secret-change-me".into());
+
         Ok(Self {
             listen_addr: SocketAddr::from(([0, 0, 0, 0], listen_port)),
             database_url,
@@ -85,6 +91,7 @@ impl Config {
             federation_psk,
             cert_dir,
             federation_trusted_fingerprints,
+            auth_secret,
         })
     }
 }
