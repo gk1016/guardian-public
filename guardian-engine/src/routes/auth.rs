@@ -5,12 +5,13 @@ use axum::{
 };
 use axum_extra::extract::CookieJar;
 use axum::http::StatusCode;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::{info, warn};
 
 use crate::auth::{jwt, password, totp};
 use crate::auth::middleware::AuthSession;
+use crate::helpers::audit::audit_log;
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
@@ -29,46 +30,22 @@ struct LoginRequest {
     password: String,
 }
 
-#[derive(Serialize)]
-struct LoginResponse {
-    ok: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    redirect_to: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    user: Option<LoginUser>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    requires_totp: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    totp_token: Option<String>,
-}
-
-#[derive(Serialize)]
-struct LoginUser {
-    handle: String,
-    role: String,
-    display_name: Option<String>,
-}
-
 async fn login(
     State(state): State<AppState>,
     jar: CookieJar,
     Json(body): Json<LoginRequest>,
 ) -> Result<(CookieJar, Json<Value>), (StatusCode, Json<Value>)> {
-    // Rate limiting
-    // Note: in production behind Caddy, X-Forwarded-For would be used
-    let ip = "unknown"; // Will be extracted from headers in full implementation
+    let ip = "unknown";
     if state.rate_limiter().check(ip) {
         warn!(ip = ip, "Login rate limited");
         return Err((StatusCode::TOO_MANY_REQUESTS, Json(json!({"error": "Too many login attempts. Try again later."}))));
     }
 
-    // Validate input
     let email = body.email.to_lowercase();
     if email.is_empty() || body.password.is_empty() || body.password.len() > 128 {
         return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid email or password format."}))));
     }
 
-    // Find user
     let user = sqlx::query_as::<_, UserRow>(
         r#"SELECT id, email, handle, "displayName", "passwordHash", role, status,
                   "totpSecret", "totpEnabled"
@@ -87,7 +64,6 @@ async fn login(
         .as_deref()
         .ok_or_else(|| (StatusCode::UNAUTHORIZED, Json(json!({"error": "Invalid credentials."}))))?;
 
-    // Verify password (CPU-bound, run in blocking thread)
     let hash_owned = hash.to_string();
     let pass_owned = body.password.clone();
     let valid = tokio::task::spawn_blocking(move || {
@@ -116,7 +92,6 @@ async fn login(
         }))));
     }
 
-    // Standard login — get org membership
     let membership = sqlx::query_as::<_, OrgMembershipRow>(
         r#"SELECT o.id as org_id, o.tag as org_tag
            FROM "OrgMember" m JOIN "Organization" o ON m."orgId" = o.id
@@ -131,12 +106,8 @@ async fn login(
     })?;
 
     let claims = jwt::new_session_claims(
-        &user.id,
-        &user.email,
-        &user.handle,
-        &user.role,
-        user.display_name.as_deref(),
-        &user.status,
+        &user.id, &user.email, &user.handle, &user.role,
+        user.display_name.as_deref(), &user.status,
         membership.as_ref().map(|m| m.org_id.as_str()),
         membership.as_ref().map(|m| m.org_tag.as_str()),
     );
@@ -144,7 +115,6 @@ async fn login(
     let token = jwt::sign_session(&claims, state.auth_secret())
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to sign in."}))))?;
 
-    // Audit log
     audit_log(state.pool(), &user.id, membership.as_ref().map(|m| m.org_id.as_str()), "login", "session", None, Some(json!({"handle": user.handle}))).await;
 
     info!(handle = %user.handle, "Login successful");
@@ -162,9 +132,7 @@ async fn login(
     }))))
 }
 
-async fn logout(
-    jar: CookieJar,
-) -> (CookieJar, Json<Value>) {
+async fn logout(jar: CookieJar) -> (CookieJar, Json<Value>) {
     let jar = jar.remove(axum_extra::extract::cookie::Cookie::build("guardian_session").path("/"));
     (jar, Json(json!({"ok": true})))
 }
@@ -180,11 +148,8 @@ async fn totp_setup(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let user = sqlx::query_as::<_, TotpUserRow>(
         r#"SELECT id, email, "totpEnabled" FROM "User" WHERE id = $1"#
-    )
-    .bind(&session.user_id)
-    .fetch_one(state.pool())
-    .await
-    .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
+    ).bind(&session.user_id).fetch_one(state.pool()).await
+        .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
 
     if user.totp_enabled {
         return Err((StatusCode::CONFLICT, Json(json!({"error": "TOTP is already enabled. Disable it first to reconfigure."}))));
@@ -194,10 +159,8 @@ async fn totp_setup(
     let uri = totp::totp_uri(&secret, &user.email, "Guardian");
 
     sqlx::query(r#"UPDATE "User" SET "totpSecret" = $1, "totpEnabled" = false WHERE id = $2"#)
-        .bind(&secret)
-        .bind(&session.user_id)
-        .execute(state.pool())
-        .await
+        .bind(&secret).bind(&session.user_id)
+        .execute(state.pool()).await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to save TOTP secret."}))))?;
 
     audit_log(state.pool(), &session.user_id, session.org_id.as_deref(), "totp_setup_started", "user", Some(&session.user_id), None).await;
@@ -216,11 +179,8 @@ async fn totp_verify(
 
     let user = sqlx::query_as::<_, TotpSecretRow>(
         r#"SELECT "totpSecret", "totpEnabled" FROM "User" WHERE id = $1"#
-    )
-    .bind(&session.user_id)
-    .fetch_one(state.pool())
-    .await
-    .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
+    ).bind(&session.user_id).fetch_one(state.pool()).await
+        .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
 
     let secret = user.totp_secret
         .ok_or_else(|| (StatusCode::BAD_REQUEST, Json(json!({"error": "TOTP setup not started."}))))?;
@@ -234,9 +194,7 @@ async fn totp_verify(
     }
 
     sqlx::query(r#"UPDATE "User" SET "totpEnabled" = true WHERE id = $1"#)
-        .bind(&session.user_id)
-        .execute(state.pool())
-        .await
+        .bind(&session.user_id).execute(state.pool()).await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to enable TOTP."}))))?;
 
     audit_log(state.pool(), &session.user_id, session.org_id.as_deref(), "totp_enabled", "user", Some(&session.user_id), None).await;
@@ -267,11 +225,8 @@ async fn totp_validate(
         r#"SELECT id, email, handle, "displayName", "passwordHash", role, status,
                   "totpSecret", "totpEnabled"
            FROM "User" WHERE id = $1"#
-    )
-    .bind(&challenge.sub)
-    .fetch_one(state.pool())
-    .await
-    .map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "User not found."}))))?;
+    ).bind(&challenge.sub).fetch_one(state.pool()).await
+        .map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "User not found."}))))?;
 
     let secret = user.totp_secret
         .ok_or_else(|| (StatusCode::BAD_REQUEST, Json(json!({"error": "TOTP not configured."}))))?;
@@ -289,19 +244,12 @@ async fn totp_validate(
         r#"SELECT o.id as org_id, o.tag as org_tag
            FROM "OrgMember" m JOIN "Organization" o ON m."orgId" = o.id
            WHERE m."userId" = $1 ORDER BY m."joinedAt" ASC LIMIT 1"#
-    )
-    .bind(&user.id)
-    .fetch_optional(state.pool())
-    .await
-    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to sign in."}))))?;
+    ).bind(&user.id).fetch_optional(state.pool()).await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to sign in."}))))?;
 
     let claims = jwt::new_session_claims(
-        &user.id,
-        &user.email,
-        &user.handle,
-        &user.role,
-        user.display_name.as_deref(),
-        &user.status,
+        &user.id, &user.email, &user.handle, &user.role,
+        user.display_name.as_deref(), &user.status,
         membership.as_ref().map(|m| m.org_id.as_str()),
         membership.as_ref().map(|m| m.org_tag.as_str()),
     );
@@ -338,11 +286,8 @@ async fn totp_disable(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let user = sqlx::query_as::<_, PasswordRow>(
         r#"SELECT "passwordHash", "totpEnabled" FROM "User" WHERE id = $1"#
-    )
-    .bind(&session.user_id)
-    .fetch_one(state.pool())
-    .await
-    .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
+    ).bind(&session.user_id).fetch_one(state.pool()).await
+        .map_err(|_| (StatusCode::NOT_FOUND, Json(json!({"error": "User not found."}))))?;
 
     if !user.totp_enabled {
         return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "TOTP is not enabled."}))));
@@ -363,9 +308,7 @@ async fn totp_disable(
     }
 
     sqlx::query(r#"UPDATE "User" SET "totpSecret" = NULL, "totpEnabled" = false WHERE id = $1"#)
-        .bind(&session.user_id)
-        .execute(state.pool())
-        .await
+        .bind(&session.user_id).execute(state.pool()).await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to disable TOTP."}))))?;
 
     audit_log(state.pool(), &session.user_id, session.org_id.as_deref(), "totp_disabled", "user", Some(&session.user_id), None).await;
@@ -422,8 +365,6 @@ struct PasswordRow {
     totp_enabled: bool,
 }
 
-// --- Helpers ---
-
 fn session_cookie(token: String) -> axum_extra::extract::cookie::Cookie<'static> {
     axum_extra::extract::cookie::Cookie::build(("guardian_session", token))
         .http_only(true)
@@ -431,30 +372,4 @@ fn session_cookie(token: String) -> axum_extra::extract::cookie::Cookie<'static>
         .path("/")
         .max_age(time::Duration::days(7))
         .build()
-}
-
-/// Fire-and-forget audit log writer.
-async fn audit_log(
-    pool: &sqlx::PgPool,
-    user_id: &str,
-    org_id: Option<&str>,
-    action: &str,
-    target_type: &str,
-    target_id: Option<&str>,
-    metadata: Option<Value>,
-) {
-    let id = cuid2::create_id();
-    let _ = sqlx::query(
-        r#"INSERT INTO "AuditLog" (id, "userId", "orgId", action, "targetType", "targetId", metadata, "createdAt")
-           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())"#
-    )
-    .bind(&id)
-    .bind(user_id)
-    .bind(org_id)
-    .bind(action)
-    .bind(target_type)
-    .bind(target_id)
-    .bind(metadata)
-    .execute(pool)
-    .await;
 }

@@ -6,6 +6,7 @@ mod federation;
 mod state;
 mod ai;
 mod auth;
+mod helpers;
 
 use tracing::info;
 
