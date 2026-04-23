@@ -1,4 +1,4 @@
-use bcrypt::{hash, verify, DEFAULT_COST};
+use bcrypt::{hash, verify};
 
 const COST: u32 = 12;
 
@@ -6,8 +6,8 @@ pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
     hash(password, COST)
 }
 
-pub fn verify_password(password: &str, hash: &str) -> Result<bool, bcrypt::BcryptError> {
-    verify(password, hash)
+pub fn verify_password(password: &str, hashed: &str) -> Result<bool, bcrypt::BcryptError> {
+    verify(password, hashed)
 }
 
 /// Validate password against policy:

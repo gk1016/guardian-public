@@ -1,5 +1,5 @@
 use axum::{
-    extract::{FromRequestParts, Request},
+    extract::FromRequestParts,
     http::request::Parts,
     response::{IntoResponse, Response},
     Json,
