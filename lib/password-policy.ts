@@ -33,10 +33,12 @@ export const passwordSchema = z
   .string()
   .min(PASSWORD_MIN)
   .max(PASSWORD_MAX)
-  .refine(
-    (pw) => validatePassword(pw) === null,
-    (pw) => ({ message: validatePassword(pw) ?? "Invalid password." }),
-  );
+  .superRefine((pw, ctx) => {
+    const err = validatePassword(pw);
+    if (err) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: err });
+    }
+  });
 
 /** Zod schema for an optional password field (empty string = no change). */
 export const optionalPasswordSchema = z
@@ -44,7 +46,11 @@ export const optionalPasswordSchema = z
   .max(PASSWORD_MAX)
   .optional()
   .or(z.literal(""))
-  .refine(
-    (pw) => !pw || pw.trim().length === 0 || validatePassword(pw) === null,
-    (pw) => ({ message: pw ? (validatePassword(pw) ?? "Invalid password.") : "Invalid password." }),
-  );
+  .superRefine((pw, ctx) => {
+    if (pw && pw.trim().length > 0) {
+      const err = validatePassword(pw);
+      if (err) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: err });
+      }
+    }
+  });
