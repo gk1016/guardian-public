@@ -9,8 +9,6 @@ pub struct HealthResponse {
     pub instance_id: String,
     pub instance_name: String,
     pub version: &'static str,
-    /// SHA-256 fingerprint of this instance's federation TLS certificate.
-    /// Used for out-of-band peer verification.
     pub cert_fingerprint: String,
     pub federation_port: u16,
 }
@@ -26,6 +24,23 @@ async fn health(State(state): State<AppState>) -> Json<HealthResponse> {
     })
 }
 
+#[derive(Serialize)]
+struct ApiHealthResponse {
+    ok: bool,
+    service: &'static str,
+    timestamp: String,
+}
+
+async fn api_health() -> Json<ApiHealthResponse> {
+    Json(ApiHealthResponse {
+        ok: true,
+        service: "guardian",
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    })
+}
+
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/health", get(health))
+    Router::new()
+        .route("/health", get(health))
+        .route("/api/health", get(api_health))
 }
