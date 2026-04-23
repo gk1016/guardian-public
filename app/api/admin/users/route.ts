@@ -6,12 +6,13 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageAdministration } from "@/lib/roles";
 import { auditLog } from "@/lib/audit";
+import { passwordSchema } from "@/lib/password-policy";
 
 const createUserSchema = z.object({
   email: z.email(),
   handle: z.string().trim().min(2).max(32),
   displayName: z.string().trim().min(2).max(80),
-  password: z.string().min(8).max(128),
+  password: passwordSchema,
   role: z.enum(["pilot", "rescue_coordinator", "director", "admin", "commander"]),
   status: z.enum(["active", "pending", "disabled"]),
   rank: z.string().trim().min(2).max(40),
@@ -30,6 +31,10 @@ export async function POST(request: Request) {
 
   const payload = createUserSchema.safeParse(await request.json());
   if (!payload.success) {
+    const pwError = payload.error.issues.find((i) => i.path.includes("password"));
+    if (pwError) {
+      return NextResponse.json({ error: pwError.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Invalid user payload." }, { status: 400 });
   }
 

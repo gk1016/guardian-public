@@ -6,6 +6,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageAdministration } from "@/lib/roles";
 import { auditLog } from "@/lib/audit";
+import { optionalPasswordSchema } from "@/lib/password-policy";
 
 const updateUserSchema = z.object({
   displayName: z.string().trim().max(80).optional(),
@@ -13,7 +14,7 @@ const updateUserSchema = z.object({
   status: z.enum(["active", "pending", "disabled"]),
   rank: z.string().trim().min(2).max(40),
   title: z.string().trim().max(80).optional(),
-  password: z.string().min(8).max(128).optional().or(z.literal("")),
+  password: optionalPasswordSchema,
 });
 
 type RouteContext = {
@@ -34,6 +35,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const payload = updateUserSchema.safeParse(await request.json());
   if (!payload.success) {
+    const pwError = payload.error.issues.find((i) => i.path.includes("password"));
+    if (pwError) {
+      return NextResponse.json({ error: pwError.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Invalid user update payload." }, { status: 400 });
   }
 
