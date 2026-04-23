@@ -115,12 +115,13 @@ function EventLine({ event, idx }: { event: AlertEvent; idx: number }) {
 /** Convert a score (0-100) on a given axis to SVG coordinates.
  *  Axes: 0=top(QRF), 1=right(Package), 2=bottom(Rescue), 3=left(Intel) */
 function scoreToPoint(axisIndex: number, score: number, cx: number, cy: number, radius: number): [number, number] {
-  // Angles: top=-90, right=0, bottom=90, left=180
   const angles = [-90, 0, 90, 180];
   const rad = (angles[axisIndex] * Math.PI) / 180;
   const r = (score / 100) * radius;
   return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
 }
+
+type TextAnchorValue = "start" | "middle" | "end";
 
 function ReadinessRadar({ readiness, score }: { readiness: OpsSummary["readiness"]; score: number }) {
   const cx = 150, cy = 150, maxR = 120;
@@ -133,14 +134,18 @@ function ReadinessRadar({ readiness, score }: { readiness: OpsSummary["readiness
   const labels = ["QRF", "PKG", "RESCUE", "INTEL"];
   const colors = ["#34d399", "#fbbf24", "#22d3ee", "#a78bfa"];
 
-  // Build polygon points
   const polyPoints = scores.map((s, i) => scoreToPoint(i, s, cx, cy, maxR));
   const polyStr = polyPoints.map(([x, y]) => `${x},${y}`).join(" ");
 
-  // Grid ring percentages
   const rings = [25, 50, 75, 100];
-
   const scoreColor = score >= 80 ? "#34d399" : score >= 50 ? "#fbbf24" : "#f87171";
+
+  const axisConfig: { x: number; y: number; anchor: TextAnchorValue; label: string; score: number; color: string }[] = [
+    { x: cx, y: 16, anchor: "middle", label: labels[0], score: scores[0], color: colors[0] },
+    { x: 290, y: cy + 4, anchor: "end", label: labels[1], score: scores[1], color: colors[1] },
+    { x: cx, y: 294, anchor: "middle", label: labels[2], score: scores[2], color: colors[2] },
+    { x: 10, y: cy + 4, anchor: "start", label: labels[3], score: scores[3], color: colors[3] },
+  ];
 
   return (
     <svg viewBox="0 0 300 300" className="w-72 h-72">
@@ -196,12 +201,7 @@ function ReadinessRadar({ readiness, score }: { readiness: OpsSummary["readiness
       ))}
 
       {/* Axis labels + score values */}
-      {[
-        { x: cx, y: 16, anchor: "middle", label: labels[0], score: scores[0], color: colors[0] },
-        { x: 290, y: cy + 4, anchor: "end", label: labels[1], score: scores[1], color: colors[1] },
-        { x: cx, y: 294, anchor: "middle", label: labels[2], score: scores[2], color: colors[2] },
-        { x: 10, y: cy + 4, anchor: "start", label: labels[3], score: scores[3], color: colors[3] },
-      ].map((a, i) => (
+      {axisConfig.map((a, i) => (
         <g key={`axis-${i}`}>
           <text
             x={a.x}
@@ -473,7 +473,7 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          {/* Center visualization — spider/radar chart */}
+          {/* Center visualization */}
           <div className="flex-1 flex items-center justify-center relative">
             {summary ? (
               <ReadinessRadar readiness={summary.readiness} score={summary.readiness_score} />
@@ -489,7 +489,7 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
           </div>
         </div>
 
-        {/* Right column — event feed */}
+        {/* Right column */}
         <div className="col-span-3 bg-[#0d1520] border border-white/10 rounded-lg flex flex-col">
           <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
             <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/60 font-semibold">Event Feed</span>
