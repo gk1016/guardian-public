@@ -21,10 +21,17 @@
     @options method OPTIONS
     respond @options 204
 
+    # All API routes → Rust engine
+    handle /api/* {
+        reverse_proxy guardian-engine:3420
+    }
+
+    # Engine internal routes (WebSocket, federation)
     handle /engine/* {
         uri strip_prefix /engine
         reverse_proxy guardian-engine:3420
     }
 
+    # Everything else → Next.js frontend
     reverse_proxy guardian:3000
 }
