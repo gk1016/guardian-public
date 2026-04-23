@@ -10,7 +10,6 @@ use serde_json::{json, Value};
 
 use crate::auth::middleware::AuthSession;
 use crate::helpers::audit::audit_log;
-use crate::helpers::notifications::create_notification;
 use crate::helpers::org::get_org_for_user;
 use crate::state::AppState;
 
@@ -26,7 +25,8 @@ pub fn routes() -> Router<AppState> {
         // Doctrine
         .route("/api/doctrine", post(create_doctrine))
         // Manual entries
-        .route("/api/manual", get(list_manual).post(create_manual))
+        .route("/api/manual", get(list_manual).post(create_manual_article))
+        .route("/api/manual/upload", post(create_manual_upload))
         .route("/api/manual/{entryId}", get(get_manual).patch(update_manual).delete(delete_manual))
         .route("/api/manual/{entryId}/download", get(download_manual))
 }
@@ -38,7 +38,7 @@ fn require_ops(session: &crate::auth::session::Session) -> Result<(), (StatusCod
     Ok(())
 }
 
-fn require_admin(session: &crate::auth::session::Session) -> Result<(), (StatusCode, Json<Value>)> {
+fn require_admin_role(session: &crate::auth::session::Session) -> Result<(), (StatusCode, Json<Value>)> {
     if !session.can_manage_administration() {
         return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Admin authority required."}))));
     }
@@ -91,7 +91,6 @@ async fn list_notifications(
     for b in &binds { query = query.bind(b); }
     let items: Vec<NRow> = query.fetch_all(state.pool()).await.unwrap_or_default();
 
-    // Counts
     #[derive(sqlx::FromRow)]
     struct CountRow { status: String, count: i64 }
     let counts: Vec<CountRow> = sqlx::query_as(
@@ -186,7 +185,6 @@ async fn bulk_ack(
         return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Provide 1-100 ids."}))));
     }
 
-    // Build IN clause
     let placeholders: Vec<String> = (2..=body.ids.len() as u32 + 1).map(|i| format!("${}", i)).collect();
     let sql = format!(
         r#"UPDATE "Notification" SET status = 'acknowledged', "acknowledgedAt" = NOW(), "updatedAt" = NOW()
@@ -223,7 +221,7 @@ async fn create_alert_rule(
     AuthSession(session): AuthSession,
     Json(body): Json<CreateAlertRuleRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    require_admin(&session)?;
+    require_admin_role(&session)?;
     let org = require_org(state.pool(), &session.user_id).await?;
 
     let id = cuid2::create_id();
@@ -250,29 +248,9 @@ async fn update_alert_rule(
     Path(rule_id): Path<String>,
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    require_admin(&session)?;
+    require_admin_role(&session)?;
     let org = require_org(state.pool(), &session.user_id).await?;
 
-    // Dynamically update allowed fields
-    let allowed = ["name", "metric", "operator", "threshold", "severity", "isEnabled", "cooldownMinutes"];
-    let mut sets = vec![r#""updatedAt" = NOW()"#.to_string()];
-    let mut binds: Vec<Value> = vec![];
-    let mut idx = 2u32;
-
-    for field in &allowed {
-        if let Some(val) = body.get(field) {
-            let col = match *field {
-                "isEnabled" => r#""isEnabled""#,
-                "cooldownMinutes" => r#""cooldownMinutes""#,
-                _ => field,
-            };
-            sets.push(format!("{} = ${}", col, idx));
-            binds.push(val.clone());
-            idx += 1;
-        }
-    }
-
-    // Simple approach: update each field individually if present
     if let Some(name) = body.get("name").and_then(|v| v.as_str()) {
         sqlx::query(r#"UPDATE "AlertRule" SET name = $1, "updatedAt" = NOW() WHERE id = $2 AND "orgId" = $3"#)
             .bind(name).bind(&rule_id).bind(&org.id).execute(state.pool()).await.ok();
@@ -312,7 +290,7 @@ async fn delete_alert_rule(
     AuthSession(session): AuthSession,
     Path(rule_id): Path<String>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    require_admin(&session)?;
+    require_admin_role(&session)?;
     let org = require_org(state.pool(), &session.user_id).await?;
 
     sqlx::query(r#"DELETE FROM "AlertRule" WHERE id = $1 AND "orgId" = $2"#)
@@ -447,77 +425,13 @@ struct CreateArticleRequest {
     body: String,
 }
 
-async fn create_manual(
+async fn create_manual_article(
     State(state): State<AppState>,
     AuthSession(session): AuthSession,
-    body: axum::body::Body,
-    headers: axum::http::HeaderMap,
+    Json(article): Json<CreateArticleRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     require_ops(&session)?;
     let org = require_org(state.pool(), &session.user_id).await?;
-
-    let content_type = headers.get("content-type").and_then(|v| v.to_str().ok()).unwrap_or("");
-
-    if content_type.contains("multipart/form-data") {
-        // File upload
-        let mut multipart = Multipart::from_request(
-            axum::http::Request::builder()
-                .header("content-type", content_type)
-                .body(body)
-                .unwrap(),
-            &state,
-        ).await.map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid multipart data."}))))?;
-
-        let mut title = String::new();
-        let mut category = "general".to_string();
-        let mut file_name = String::new();
-        let mut file_mime = String::new();
-        let mut file_data: Vec<u8> = vec![];
-
-        while let Ok(Some(field)) = multipart.next_field().await {
-            let name = field.name().unwrap_or("").to_string();
-            match name.as_str() {
-                "title" => title = field.text().await.unwrap_or_default(),
-                "category" => category = field.text().await.unwrap_or_default(),
-                "file" => {
-                    file_name = field.file_name().unwrap_or("upload").to_string();
-                    file_mime = field.content_type().unwrap_or("application/octet-stream").to_string();
-                    file_data = field.bytes().await.map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "File read failed."}))))?.to_vec();
-                }
-                _ => {}
-            }
-        }
-
-        if title.len() < 2 {
-            return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Title required (min 2 chars)."}))));
-        }
-        if file_data.is_empty() {
-            return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "File required."}))));
-        }
-        if file_data.len() > 10 * 1024 * 1024 {
-            return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "File exceeds 10MB limit."}))));
-        }
-
-        let id = cuid2::create_id();
-        sqlx::query(
-            r#"INSERT INTO "ManualEntry" (id, "orgId", "authorId", title, category, "entryType", body, "fileName", "fileSize", "fileMimeType", "fileData", "createdAt", "updatedAt")
-               VALUES ($1, $2, $3, $4, $5, 'file', '', $6, $7, $8, $9, NOW(), NOW())"#
-        ).bind(&id).bind(&org.id).bind(&session.user_id).bind(&title).bind(&category)
-        .bind(&file_name).bind(file_data.len() as i32).bind(&file_mime).bind(&file_data)
-        .execute(state.pool()).await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to save file."}))))?;
-
-        audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "manual_entry", Some(&id),
-            Some(json!({"title": title, "entryType": "file", "fileName": file_name}))).await;
-
-        return Ok(Json(json!({"ok": true, "entry": {"id": id}})));
-    }
-
-    // JSON article
-    let bytes = axum::body::to_bytes(body, 52000).await
-        .map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid request body."}))))?;
-    let article: CreateArticleRequest = serde_json::from_slice(&bytes)
-        .map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid article payload."}))))?;
 
     let id = cuid2::create_id();
     sqlx::query(
@@ -529,6 +443,59 @@ async fn create_manual(
 
     audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "manual_entry", Some(&id),
         Some(json!({"title": article.title, "entryType": "article"}))).await;
+
+    Ok(Json(json!({"ok": true, "entry": {"id": id}})))
+}
+
+async fn create_manual_upload(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    mut multipart: Multipart,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let mut title = String::new();
+    let mut category = "general".to_string();
+    let mut file_name = String::new();
+    let mut file_mime = String::new();
+    let mut file_data: Vec<u8> = vec![];
+
+    while let Ok(Some(field)) = multipart.next_field().await {
+        let name = field.name().unwrap_or("").to_string();
+        match name.as_str() {
+            "title" => title = field.text().await.unwrap_or_default(),
+            "category" => category = field.text().await.unwrap_or_default(),
+            "file" => {
+                file_name = field.file_name().unwrap_or("upload").to_string();
+                file_mime = field.content_type().unwrap_or("application/octet-stream").to_string();
+                file_data = field.bytes().await.map_err(|_| (StatusCode::BAD_REQUEST, Json(json!({"error": "File read failed."}))))?.to_vec();
+            }
+            _ => {}
+        }
+    }
+
+    if title.len() < 2 {
+        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Title required (min 2 chars)."}))));
+    }
+    if file_data.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "File required."}))));
+    }
+    if file_data.len() > 10 * 1024 * 1024 {
+        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "File exceeds 10MB limit."}))));
+    }
+
+    let id = cuid2::create_id();
+    sqlx::query(
+        r#"INSERT INTO "ManualEntry" (id, "orgId", "authorId", title, category, "entryType", body, "fileName", "fileSize", "fileMimeType", "fileData", "createdAt", "updatedAt")
+           VALUES ($1, $2, $3, $4, $5, 'file', '', $6, $7, $8, $9, NOW(), NOW())"#
+    ).bind(&id).bind(&org.id).bind(&session.user_id).bind(&title).bind(&category)
+    .bind(&file_name).bind(file_data.len() as i32).bind(&file_mime).bind(&file_data)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to save file."}))))?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "manual_entry", Some(&id),
+        Some(json!({"title": title, "entryType": "file", "fileName": file_name}))).await;
 
     Ok(Json(json!({"ok": true, "entry": {"id": id}})))
 }
