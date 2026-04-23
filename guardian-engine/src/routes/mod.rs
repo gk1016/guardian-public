@@ -3,6 +3,7 @@ pub mod ws;
 pub mod ai;
 pub mod auth;
 pub mod admin;
+pub mod missions;
 
 use axum::Router;
 use tower_http::trace::TraceLayer;
@@ -16,6 +17,7 @@ pub fn router(state: AppState) -> Router {
         .merge(ai::routes())
         .merge(auth::routes())
         .merge(admin::routes())
+        .merge(missions::routes())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
