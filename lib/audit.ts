@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Fire-and-forget audit log writer.
@@ -20,7 +21,7 @@ export async function auditLog(params: {
         action: params.action,
         targetType: params.targetType,
         targetId: params.targetId ?? null,
-        metadata: params.metadata ?? undefined,
+        metadata: (params.metadata ?? undefined) as Prisma.InputJsonValue | undefined,
       },
     });
   } catch (e) {
