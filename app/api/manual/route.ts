@@ -62,6 +62,9 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const category = url.searchParams.get("category");
+  const cursor = url.searchParams.get("cursor");
+  const limitParam = url.searchParams.get("limit");
+  const limit = Math.min(Math.max(parseInt(limitParam || "50", 10) || 50, 1), 200);
 
   const where: Record<string, unknown> = { orgId: org.id };
   if (category && category !== "all") where.category = category;
@@ -69,6 +72,8 @@ export async function GET(request: Request) {
   const entries = await prisma.manualEntry.findMany({
     where,
     orderBy: [{ category: "asc" }, { updatedAt: "desc" }],
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     select: {
       id: true,
       title: true,
@@ -89,9 +94,13 @@ export async function GET(request: Request) {
     },
   });
 
+  const hasMore = entries.length > limit;
+  const items = hasMore ? entries.slice(0, limit) : entries;
+  const nextCursor = hasMore ? items[items.length - 1].id : null;
+
   return NextResponse.json({
     ok: true,
-    items: entries.map((e) => ({
+    items: items.map((e) => ({
       ...e,
       body: e.body || "",
       bodyPreview: (e.body || "").slice(0, 200),
@@ -99,6 +108,7 @@ export async function GET(request: Request) {
       updatedAt: e.updatedAt.toISOString(),
       authorDisplay: e.author.displayName ?? e.author.handle,
     })),
+    nextCursor,
   });
 }
 

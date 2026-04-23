@@ -9,9 +9,17 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        # CORS — restrict to same origin only
+        Access-Control-Allow-Origin "{$SITE_ADDRESS:https://localhost}"
+        Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+        Access-Control-Max-Age "86400"
         # Remove server identity headers
         -Server
     }
+
+    @options method OPTIONS
+    respond @options 204
 
     handle /engine/* {
         uri strip_prefix /engine
