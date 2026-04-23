@@ -1,27 +1,10 @@
 {$SITE_ADDRESS:localhost} {
     tls internal
 
-    header {
-        # Content Security Policy — Next.js needs unsafe-inline for styles, wss: for WebSocket
-        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss: ws:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-        X-Frame-Options "DENY"
-        X-Content-Type-Options "nosniff"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        # CORS — restrict to same origin only
-        Access-Control-Allow-Origin "{$SITE_ADDRESS:https://localhost}"
-        Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS"
-        Access-Control-Allow-Headers "Content-Type, Authorization"
-        Access-Control-Max-Age "86400"
-        # Remove server identity headers
-        -Server
-    }
-
     @options method OPTIONS
     respond @options 204
 
-    # Engine WebSocket — must be before /api/* to match first
+    # Engine WebSocket + internal routes — NO global headers (they break WS upgrade)
     handle /engine/* {
         uri strip_prefix /engine
         reverse_proxy guardian-engine:3420
@@ -29,9 +12,29 @@
 
     # All API routes → Rust engine
     handle /api/* {
+        header {
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            -Server
+        }
         reverse_proxy guardian-engine:3420
     }
 
-    # Everything else → Next.js frontend
-    reverse_proxy guardian:3000
+    # Everything else → Next.js frontend (with full security headers)
+    handle {
+        header {
+            Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' wss: ws:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+            X-Frame-Options "DENY"
+            X-Content-Type-Options "nosniff"
+            Referrer-Policy "strict-origin-when-cross-origin"
+            Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+            Strict-Transport-Security "max-age=31536000; includeSubDomains"
+            Access-Control-Allow-Origin "{$SITE_ADDRESS:https://localhost}"
+            Access-Control-Allow-Methods "GET, POST, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization"
+            Access-Control-Max-Age "86400"
+            -Server
+        }
+        reverse_proxy guardian:3000
+    }
 }
