@@ -4,7 +4,12 @@
     @options method OPTIONS
     respond @options 204
 
-    # Engine WebSocket + internal routes — NO global headers (they break WS upgrade)
+    # WebSocket — dedicated route, direct proxy, no prefix stripping
+    handle /ws {
+        reverse_proxy guardian-engine:3420
+    }
+
+    # Engine internal routes (non-WS)
     handle /engine/* {
         uri strip_prefix /engine
         reverse_proxy guardian-engine:3420

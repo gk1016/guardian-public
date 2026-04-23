@@ -58,12 +58,11 @@ export function useEngineWS(onEvent: (event: EngineEvent) => void) {
     cleanup();
     setState("connecting");
 
-    // Build WSS URL from current page origin
+    // Build WSS URL from current page origin — /ws is proxied directly by Caddy
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.hostname;
-    // Engine WS goes through Caddy on same port as the app (3411)
     const port = window.location.port || (proto === "wss:" ? "443" : "80");
-    const url = `${proto}//${host}:${port}/engine/ws`;
+    const url = `${proto}//${host}:${port}/ws`;
 
     const ws = new WebSocket(url);
     wsRef.current = ws;

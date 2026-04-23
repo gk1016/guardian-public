@@ -132,7 +132,7 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.hostname;
     const port = window.location.port || (proto === "wss:" ? "443" : "80");
-    const ws = new WebSocket(`${proto}//${host}:${port}/engine/ws`);
+    const ws = new WebSocket(`${proto}//${host}:${port}/ws`);
     wsRef.current = ws;
 
     ws.onopen = () => setConnected(true);
