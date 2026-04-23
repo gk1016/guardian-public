@@ -28,6 +28,7 @@ model User {
   incidentsReviewed Incident[] @relation("incident_reviewer")
   notificationsCreated Notification[] @relation("notification_creator")
   manualEntries ManualEntry[] @relation("manual_author")
+  auditLogs    AuditLog[]
 }
 
 model Organization {
@@ -51,6 +52,7 @@ model Organization {
   manualEntries ManualEntry[]
   aiConfigs   AiConfig[]
   aiAnalyses  AiAnalysis[]
+  auditLogs   AuditLog[]
 }
 
 model OrgMember {
@@ -379,4 +381,21 @@ model AiAnalysis {
 
   @@index([orgId, analysisType, createdAt])
   @@index([targetId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  orgId      String?
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org        Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+
+  @@index([orgId, createdAt])
+  @@index([userId, createdAt])
+  @@index([targetType, targetId])
 }

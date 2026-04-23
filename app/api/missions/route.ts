@@ -6,6 +6,7 @@ import { getMissionTemplate } from "@/lib/mission-templates";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionCreateSchema = z.object({
   callsign: z.string().trim().min(2).max(24),
@@ -113,6 +114,15 @@ export async function POST(request: Request) {
     title: `Mission created / ${mission.callsign}`,
     body: `${mission.title} opened with status ${mission.status}.`,
     href: `/missions/${mission.id}`,
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "mission",
+    targetId: mission.id,
+    metadata: { callsign: mission.callsign, status: mission.status },
   });
 
   return NextResponse.json({ ok: true, mission });

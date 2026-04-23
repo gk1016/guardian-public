@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionCloseoutSchema = z.object({
   finalStatus: z.enum(["complete", "aborted"]),
@@ -91,6 +92,15 @@ export async function POST(request: Request, context: RouteContext) {
     title: `Mission ${payload.data.finalStatus} / ${mission.callsign}`,
     body: `${mission.title} filed closeout and AAR packaging.`,
     href: `/missions/${mission.id}`,
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "closeout",
+    targetType: "mission",
+    targetId: missionId,
+    metadata: { callsign: mission.callsign, finalStatus: payload.data.finalStatus },
   });
 
   return NextResponse.json({ ok: true, mission: updatedMission });

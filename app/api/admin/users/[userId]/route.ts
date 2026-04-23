@@ -5,6 +5,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageAdministration } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const updateUserSchema = z.object({
   displayName: z.string().trim().max(80).optional(),
@@ -100,6 +101,21 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     });
 
     return user;
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "user",
+    targetId: userId,
+    metadata: {
+      handle: updated.handle,
+      role: payload.data.role,
+      status: payload.data.status,
+      passwordChanged: !!passwordHash,
+      sessionsInvalidated: !!roleOrStatusChanged,
+    },
   });
 
   return NextResponse.json({ ok: true, user: updated });

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const qrfUpdateSchema = z.object({
   status: z.enum(["redcon1", "redcon2", "redcon3", "redcon4", "tasked", "launched", "rtb"]),
@@ -66,6 +67,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       callsign: true,
       status: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "qrf",
+    targetId: qrfId,
+    metadata: { callsign: updated.callsign, status: payload.data.status },
   });
 
   return NextResponse.json({ ok: true, qrf: updated });

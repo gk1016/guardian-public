@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const rescueCreateSchema = z.object({
   survivorHandle: z.string().trim().min(2).max(40),
@@ -68,6 +69,15 @@ export async function POST(request: Request) {
     title: `New rescue intake / ${rescue.survivorHandle}`,
     body: `Rescue request opened with status ${rescue.status}. Escort requirement and survivor condition need review.`,
     href: "/rescues",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "rescue",
+    targetId: rescue.id,
+    metadata: { survivorHandle: rescue.survivorHandle, urgency: payload.data.urgency },
   });
 
   return NextResponse.json({ ok: true, rescue });

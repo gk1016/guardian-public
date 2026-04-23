@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 const bulkAckSchema = z.object({
   ids: z.array(z.string()).min(1).max(100),
@@ -34,6 +35,14 @@ export async function PATCH(request: Request) {
       status: "acknowledged",
       acknowledgedAt: new Date(),
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "bulk_acknowledge",
+    targetType: "notification",
+    metadata: { count: result.count, ids: payload.data.ids },
   });
 
   return NextResponse.json({ ok: true, acknowledged: result.count });

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const qrfCreateSchema = z.object({
   callsign: z.string().trim().min(2).max(40),
@@ -62,6 +63,15 @@ export async function POST(request: Request) {
       callsign: true,
       status: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "qrf",
+    targetId: qrf.id,
+    metadata: { callsign: qrf.callsign, status: qrf.status },
   });
 
   return NextResponse.json({ ok: true, qrf });

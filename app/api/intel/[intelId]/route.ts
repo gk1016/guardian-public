@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const intelUpdateSchema = z.object({
   severity: z.number().int().min(1).max(5).optional(),
@@ -61,6 +62,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       ...(payload.data.locationName !== undefined && { locationName: payload.data.locationName }),
     },
     select: { id: true, title: true },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "intel",
+    targetId: intelId,
+    metadata: payload.data,
   });
 
   return NextResponse.json({ ok: true, report: updated });

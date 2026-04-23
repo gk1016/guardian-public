@@ -5,6 +5,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageAdministration } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const createUserSchema = z.object({
   email: z.email(),
@@ -82,6 +83,15 @@ export async function POST(request: Request) {
     });
 
     return user;
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "user",
+    targetId: created.id,
+    metadata: { handle: created.handle, email: created.email, role: payload.data.role },
   });
 
   return NextResponse.json({ ok: true, user: created });

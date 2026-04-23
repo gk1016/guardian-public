@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const incidentCreateSchema = z.object({
   title: z.string().trim().min(4).max(140),
@@ -97,6 +98,15 @@ export async function POST(request: Request) {
     title: incident.title,
     body: `Incident opened with status ${incident.status}. Review and lessons-learned capture are required.`,
     href: "/incidents",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "incident",
+    targetId: incident.id,
+    metadata: { title: incident.title, severity: payload.data.severity },
   });
 
   return NextResponse.json({ ok: true, incident });

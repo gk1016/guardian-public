@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const participantCreateSchema = z.object({
   handle: z.string().trim().min(2).max(32),
@@ -81,6 +82,15 @@ export async function POST(request: Request, context: RouteContext) {
       entryType: "package",
       message: `Participant assigned: ${participant.handle} / ${participant.role} / ${participant.status}.`,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "mission_participant",
+    targetId: participant.id,
+    metadata: { missionId, handle: participant.handle, role: participant.role },
   });
 
   return NextResponse.json({ ok: true, participant });

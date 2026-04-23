@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const incidentUpdateSchema = z.object({
   status: z.enum(["open", "triage", "active", "closed", "archived"]),
@@ -79,6 +80,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     title: `Incident ${updated.status}`,
     body: `Incident ${incidentId} changed to ${updated.status}.`,
     href: "/incidents",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "incident",
+    targetId: incidentId,
+    metadata: { status: payload.data.status },
   });
 
   return NextResponse.json({ ok: true, incident: updated });

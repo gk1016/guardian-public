@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionToken, getSessionCookieName } from "@/lib/auth-core";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 // ---------------------------------------------------------------------------
 // Per-IP rate limiter — 10 attempts per 15-minute window, no dependencies
@@ -119,6 +120,14 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
+    });
+
+    auditLog({
+      userId: user.id,
+      orgId: membership?.org.id,
+      action: "login",
+      targetType: "session",
+      metadata: { ip, handle: user.handle },
     });
 
     return response;

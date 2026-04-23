@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
-import { canManageAdministration } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import { canManageAdministration } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const createRuleSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -13,25 +14,6 @@ const createRuleSchema = z.object({
   severity: z.enum(["info", "warning", "critical"]).default("warning"),
   cooldownMinutes: z.number().int().min(1).max(1440).default(60),
 });
-
-export async function GET() {
-  const session = await getSessionFromCookies();
-  if (!session) {
-    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  }
-
-  const org = await getOrgForUser(session.userId);
-  if (!org) {
-    return NextResponse.json({ error: "No organization found." }, { status: 400 });
-  }
-
-  const rules = await prisma.alertRule.findMany({
-    where: { orgId: org.id },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json({ rules });
-}
 
 export async function POST(request: Request) {
   const session = await getSessionFromCookies();
@@ -43,14 +25,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const org = await getOrgForUser(session.userId);
-  if (!org) {
-    return NextResponse.json({ error: "No organization found." }, { status: 400 });
-  }
-
   const payload = createRuleSchema.safeParse(await request.json());
   if (!payload.success) {
     return NextResponse.json({ error: "Invalid alert rule payload." }, { status: 400 });
+  }
+
+  const org = await getOrgForUser(session.userId);
+  if (!org) {
+    return NextResponse.json({ error: "No organization found." }, { status: 400 });
   }
 
   const rule = await prisma.alertRule.create({
@@ -65,5 +47,14 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ rule }, { status: 201 });
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "alert_rule",
+    targetId: rule.id,
+    metadata: { name: payload.data.name, metric: payload.data.metric },
+  });
+
+  return NextResponse.json({ ok: true, rule });
 }

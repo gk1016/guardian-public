@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const doctrineCreateSchema = z.object({
   code: z.string().trim().min(3).max(40),
@@ -65,6 +66,15 @@ export async function POST(request: Request) {
       title: true,
       category: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "doctrine",
+    targetId: doctrine.id,
+    metadata: { code: doctrine.code, title: doctrine.title },
   });
 
   return NextResponse.json({ ok: true, doctrine });

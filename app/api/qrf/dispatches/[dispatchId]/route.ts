@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const dispatchUpdateSchema = z.object({
   status: z.enum(["tasked", "en_route", "on_scene", "rtb", "complete", "aborted"]),
@@ -130,6 +131,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     title: `${dispatch.qrf.callsign} / ${dispatchStatus}`,
     body: `${dispatch.qrf.callsign} dispatch state changed to ${dispatchStatus}.`,
     href: "/qrf",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "qrf_dispatch",
+    targetId: dispatchId,
+    metadata: { callsign: dispatch.qrf.callsign, status: dispatchStatus },
   });
 
   return NextResponse.json({ ok: true });

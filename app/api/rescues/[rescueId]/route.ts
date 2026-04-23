@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const rescueUpdateSchema = z.object({
   status: z.enum(["open", "dispatching", "en_route", "on_scene", "recovered", "closed", "cancelled"]),
@@ -81,6 +82,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     title: `Rescue updated / ${updated.status}`,
     body: `Rescue ${rescueId} changed to ${updated.status}. Review survivor condition and outcome if this is a terminal state.`,
     href: "/rescues",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "rescue",
+    targetId: rescueId,
+    metadata: { status: payload.data.status },
   });
 
   return NextResponse.json({ ok: true, rescue: updated });

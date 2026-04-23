@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { canManageOperations } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 const notificationCreateSchema = z.object({
   category: z.enum(["ops", "intel", "admin", "rescue", "maintenance"]),
@@ -110,6 +111,15 @@ export async function POST(request: Request) {
     title: payload.data.title,
     body: payload.data.body,
     href: payload.data.href || null,
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "notification",
+    targetId: notification.id,
+    metadata: { category: payload.data.category, severity: payload.data.severity },
   });
 
   return NextResponse.json({ ok: true, notification: { id: notification.id } });

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { acknowledgeNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 const notificationUpdateSchema = z.object({
   status: z.enum(["acknowledged"]),
@@ -45,5 +46,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   await acknowledgeNotification(notificationId);
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "acknowledge",
+    targetType: "notification",
+    targetId: notificationId,
+  });
+
   return NextResponse.json({ ok: true });
 }

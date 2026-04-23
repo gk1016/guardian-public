@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionFromCookies } from "@/lib/auth";
+import { getOrgForUser } from "@/lib/guardian-data";
 import { canManageAdministration } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 type RouteContext = {
   params: Promise<{
@@ -20,6 +22,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const { ruleId } = await context.params;
+  const org = await getOrgForUser(session.userId);
+  if (!org) {
+    return NextResponse.json({ error: "No organization found." }, { status: 400 });
+  }
+
   const body = await request.json();
 
   // Only allow updating specific fields
@@ -43,6 +50,15 @@ export async function PATCH(request: Request, context: RouteContext) {
     data: updateData,
   });
 
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "alert_rule",
+    targetId: ruleId,
+    metadata: updateData,
+  });
+
   return NextResponse.json({ rule });
 }
 
@@ -57,8 +73,20 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   const { ruleId } = await context.params;
+  const org = await getOrgForUser(session.userId);
+  if (!org) {
+    return NextResponse.json({ error: "No organization found." }, { status: 400 });
+  }
 
   await prisma.alertRule.delete({ where: { id: ruleId } });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "delete",
+    targetType: "alert_rule",
+    targetId: ruleId,
+  });
 
   return NextResponse.json({ ok: true });
 }

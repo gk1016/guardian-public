@@ -1,0 +1,29 @@
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Fire-and-forget audit log writer.
+ * Never throws — audit failures must not break the request.
+ */
+export async function auditLog(params: {
+  userId: string;
+  orgId?: string | null;
+  action: string;
+  targetType: string;
+  targetId?: string | null;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: params.userId,
+        orgId: params.orgId ?? null,
+        action: params.action,
+        targetType: params.targetType,
+        targetId: params.targetId ?? null,
+        metadata: params.metadata ?? undefined,
+      },
+    });
+  } catch (e) {
+    console.error("[audit] Failed to write audit log:", e);
+  }
+}

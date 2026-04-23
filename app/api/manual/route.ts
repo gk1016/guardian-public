@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { canManageOperations } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 import mammoth from "mammoth";
 
 const createArticleSchema = z.object({
@@ -172,6 +173,15 @@ export async function POST(request: Request) {
       },
     });
 
+    auditLog({
+      userId: session.userId,
+      orgId: org.id,
+      action: "create",
+      targetType: "manual_entry",
+      targetId: entry.id,
+      metadata: { title, entryType: "file", fileName: file.name },
+    });
+
     return NextResponse.json({ ok: true, entry: { id: entry.id } });
   }
 
@@ -190,6 +200,15 @@ export async function POST(request: Request) {
       entryType: "article",
       body: payload.data.body,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "manual_entry",
+    targetId: entry.id,
+    metadata: { title: payload.data.title, entryType: "article" },
   });
 
   return NextResponse.json({ ok: true, entry: { id: entry.id } });

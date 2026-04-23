@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionReopenSchema = z.object({
   status: z.enum(["planning", "ready", "active"]),
@@ -105,6 +106,15 @@ export async function POST(request: Request, context: RouteContext) {
     title: `Mission reopened / ${mission.callsign}`,
     body: `${mission.callsign} moved back to ${payload.data.status} for revision ${updatedMission.revisionNumber}.`,
     href: `/missions/${mission.id}`,
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "reopen",
+    targetType: "mission",
+    targetId: missionId,
+    metadata: { callsign: mission.callsign, fromStatus: mission.status, toStatus: payload.data.status },
   });
 
   return NextResponse.json({ ok: true, mission: updatedMission });

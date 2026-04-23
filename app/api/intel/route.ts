@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const intelCreateSchema = z.object({
   title: z.string().trim().min(3).max(200),
@@ -57,6 +58,15 @@ export async function POST(request: Request) {
       title: true,
       severity: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "intel",
+    targetId: report.id,
+    metadata: { title: report.title, severity: report.severity },
   });
 
   return NextResponse.json({ ok: true, report });

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionIntelSchema = z.object({
   intelId: z.string().min(1),
@@ -83,6 +84,15 @@ export async function POST(request: Request, context: RouteContext) {
         },
       },
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "link",
+    targetType: "mission_intel",
+    targetId: missionId,
+    metadata: { intelId: intel.id },
   });
 
   return NextResponse.json({ ok: true, link });

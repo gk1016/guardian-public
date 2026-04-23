@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageOperations } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const dispatchCreateSchema = z
   .object({
@@ -140,6 +141,15 @@ export async function POST(request: Request, { params }: RouteContext) {
       ? `${qrf.callsign} has been tasked to a mission package.`
       : `${qrf.callsign} has been tasked to a rescue package.`,
     href: "/qrf",
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "dispatch",
+    targetType: "qrf_dispatch",
+    targetId: dispatch.id,
+    metadata: { qrfId, callsign: qrf.callsign, missionId: payload.data.missionId, rescueId: payload.data.rescueId },
   });
 
   return NextResponse.json({ ok: true, dispatch });

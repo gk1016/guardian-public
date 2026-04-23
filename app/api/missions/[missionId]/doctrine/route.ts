@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionDoctrineSchema = z.object({
   doctrineTemplateId: z.string().trim().nullable(),
@@ -110,6 +111,15 @@ export async function POST(request: Request, context: RouteContext) {
       select: { id: true },
     }),
   ]);
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "mission_doctrine",
+    targetId: missionId,
+    metadata: { doctrineTemplateId, roeCode },
+  });
 
   return NextResponse.json({ ok: true, mission: updatedMission });
 }

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { canManageOperations } from "@/lib/roles";
 import { prisma } from "@/lib/prisma";
+import { auditLog } from "@/lib/audit";
 
 const updateSchema = z.object({
   title: z.string().trim().min(2).max(200).optional(),
@@ -101,6 +102,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     data,
   });
 
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "manual_entry",
+    targetId: entryId,
+    metadata: data,
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -130,5 +140,14 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   await prisma.manualEntry.delete({ where: { id: entryId } });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "delete",
+    targetType: "manual_entry",
+    targetId: entryId,
+  });
+
   return NextResponse.json({ ok: true });
 }

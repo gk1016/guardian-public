@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionUpdateSchema = z.object({
   callsign: z.string().trim().min(2).max(24),
@@ -77,6 +78,15 @@ export async function PATCH(request: Request, context: RouteContext) {
       title: true,
       updatedAt: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "update",
+    targetType: "mission",
+    targetId: missionId,
+    metadata: { callsign: mission.callsign },
   });
 
   return NextResponse.json({ ok: true, mission });

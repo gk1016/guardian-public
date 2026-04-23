@@ -5,6 +5,7 @@ import { getOrgForUser } from "@/lib/guardian-data";
 import { createNotification } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const transitionSchema = z.object({
   targetStatus: z.enum(["planning", "ready", "active", "aborted"]),
@@ -170,6 +171,15 @@ export async function POST(request: Request, context: RouteContext) {
     title: `${mission.callsign} ${verbMap[targetStatus]}`,
     body: `${mission.title} / ${transitionLabel}`,
     href: `/missions/${mission.id}`,
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "transition",
+    targetType: "mission",
+    targetId: missionId,
+    metadata: { callsign: mission.callsign, from: mission.status, to: targetStatus },
   });
 
   return NextResponse.json({ ok: true, mission: updatedMission });

@@ -4,6 +4,7 @@ import { getSessionFromCookies } from "@/lib/auth";
 import { getOrgForUser } from "@/lib/guardian-data";
 import { prisma } from "@/lib/prisma";
 import { canManageMissions } from "@/lib/roles";
+import { auditLog } from "@/lib/audit";
 
 const missionLogSchema = z.object({
   entryType: z.enum(["status", "contact", "command", "aar"]),
@@ -65,6 +66,15 @@ export async function POST(request: Request, context: RouteContext) {
       message: true,
       createdAt: true,
     },
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "create",
+    targetType: "mission_log",
+    targetId: log.id,
+    metadata: { missionId, entryType: payload.data.entryType },
   });
 
   return NextResponse.json({ ok: true, log });
