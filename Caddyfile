@@ -1,6 +1,18 @@
 {$SITE_ADDRESS:localhost} {
     tls internal
 
+    header {
+        # Content Security Policy — Next.js needs unsafe-inline for styles
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        # Remove server identity headers
+        -Server
+    }
+
     handle /engine/* {
         uri strip_prefix /engine
         reverse_proxy guardian-engine:3420
