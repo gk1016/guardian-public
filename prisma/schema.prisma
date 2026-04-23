@@ -16,6 +16,8 @@ model User {
   passwordHash String?
   role         String        @default("pilot")
   status       String        @default("pending")
+  totpSecret   String?
+  totpEnabled  Boolean       @default(false)
   sessionsInvalidatedAt DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

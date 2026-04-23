@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { SignJWT } from "jose";
 import { createSessionToken, getSessionCookieName } from "@/lib/auth-core";
 import { prisma } from "@/lib/prisma";
 import { auditLog } from "@/lib/audit";
@@ -34,6 +35,12 @@ function isRateLimited(ip: string): boolean {
 
   bucket.count += 1;
   return bucket.count > RATE_LIMIT_MAX;
+}
+
+function getTotpSecret() {
+  return new TextEncoder().encode(
+    process.env.AUTH_SECRET || "guardian-dev-secret-change-me",
+  );
 }
 // ---------------------------------------------------------------------------
 
@@ -88,6 +95,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // --- TOTP challenge ---
+    if (user.totpEnabled && user.totpSecret) {
+      // Issue a short-lived TOTP challenge token instead of a session
+      const totpToken = await new SignJWT({ purpose: "totp-challenge" })
+        .setProtectedHeader({ alg: "HS256" })
+        .setSubject(user.id)
+        .setIssuedAt()
+        .setExpirationTime("5m")
+        .sign(getTotpSecret());
+
+      log.info("TOTP challenge issued", { handle: user.handle, ip });
+
+      return NextResponse.json({
+        ok: true,
+        requiresTotp: true,
+        totpToken,
+      });
+    }
+
+    // --- Standard login (no TOTP) ---
     const membership = await prisma.orgMember.findFirst({
       where: { userId: user.id },
       include: { org: { select: { id: true, tag: true } } },
