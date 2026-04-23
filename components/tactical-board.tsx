@@ -112,16 +112,182 @@ function EventLine({ event, idx }: { event: AlertEvent; idx: number }) {
   );
 }
 
+/** Convert a score (0-100) on a given axis to SVG coordinates.
+ *  Axes: 0=top(QRF), 1=right(Package), 2=bottom(Rescue), 3=left(Intel) */
+function scoreToPoint(axisIndex: number, score: number, cx: number, cy: number, radius: number): [number, number] {
+  // Angles: top=-90, right=0, bottom=90, left=180
+  const angles = [-90, 0, 90, 180];
+  const rad = (angles[axisIndex] * Math.PI) / 180;
+  const r = (score / 100) * radius;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function ReadinessRadar({ readiness, score }: { readiness: OpsSummary["readiness"]; score: number }) {
+  const cx = 150, cy = 150, maxR = 120;
+  const scores = [
+    readiness.qrf_posture,
+    readiness.package_discipline,
+    readiness.rescue_response,
+    readiness.threat_awareness,
+  ];
+  const labels = ["QRF", "PKG", "RESCUE", "INTEL"];
+  const colors = ["#34d399", "#fbbf24", "#22d3ee", "#a78bfa"];
+
+  // Build polygon points
+  const polyPoints = scores.map((s, i) => scoreToPoint(i, s, cx, cy, maxR));
+  const polyStr = polyPoints.map(([x, y]) => `${x},${y}`).join(" ");
+
+  // Grid ring percentages
+  const rings = [25, 50, 75, 100];
+
+  const scoreColor = score >= 80 ? "#34d399" : score >= 50 ? "#fbbf24" : "#f87171";
+
+  return (
+    <svg viewBox="0 0 300 300" className="w-72 h-72">
+      {/* Grid rings */}
+      {rings.map((pct) => (
+        <circle
+          key={pct}
+          cx={cx}
+          cy={cy}
+          r={(pct / 100) * maxR}
+          fill="none"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth="1"
+        />
+      ))}
+
+      {/* Ring labels */}
+      {rings.map((pct) => (
+        <text
+          key={`lbl-${pct}`}
+          x={cx + 4}
+          y={cy - (pct / 100) * maxR + 3}
+          fill="rgba(255,255,255,0.2)"
+          fontSize="8"
+          fontFamily="monospace"
+        >
+          {pct}
+        </text>
+      ))}
+
+      {/* Axis lines */}
+      <line x1={cx} y1={cy - maxR} x2={cx} y2={cy + maxR} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      <line x1={cx - maxR} y1={cy} x2={cx + maxR} y2={cy} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+      {/* Filled polygon */}
+      <polygon
+        points={polyStr}
+        fill="rgba(34,211,238,0.12)"
+        stroke="rgba(34,211,238,0.6)"
+        strokeWidth="2"
+        className="transition-all duration-1000"
+      />
+
+      {/* Score dots on each axis */}
+      {polyPoints.map(([x, y], i) => (
+        <g key={i}>
+          <circle cx={x} cy={y} r="5" fill={colors[i]} opacity="0.9" />
+          <circle cx={x} cy={y} r="5" fill="none" stroke={colors[i]} strokeWidth="1" opacity="0.4">
+            <animate attributeName="r" from="5" to="14" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
+          </circle>
+        </g>
+      ))}
+
+      {/* Axis labels + score values */}
+      {[
+        { x: cx, y: 16, anchor: "middle", label: labels[0], score: scores[0], color: colors[0] },
+        { x: 290, y: cy + 4, anchor: "end", label: labels[1], score: scores[1], color: colors[1] },
+        { x: cx, y: 294, anchor: "middle", label: labels[2], score: scores[2], color: colors[2] },
+        { x: 10, y: cy + 4, anchor: "start", label: labels[3], score: scores[3], color: colors[3] },
+      ].map((a, i) => (
+        <g key={`axis-${i}`}>
+          <text
+            x={a.x}
+            y={a.y}
+            textAnchor={a.anchor}
+            fill={a.color}
+            fontSize="10"
+            fontFamily="monospace"
+            fontWeight="600"
+            letterSpacing="0.1em"
+            opacity="0.8"
+          >
+            {a.label}
+          </text>
+          <text
+            x={a.x}
+            y={a.y + 12}
+            textAnchor={a.anchor}
+            fill={a.color}
+            fontSize="9"
+            fontFamily="monospace"
+            opacity="0.5"
+          >
+            {a.score}%
+          </text>
+        </g>
+      ))}
+
+      {/* Center score */}
+      <text
+        x={cx}
+        y={cy - 4}
+        textAnchor="middle"
+        fill={scoreColor}
+        fontSize="28"
+        fontFamily="monospace"
+        fontWeight="bold"
+      >
+        {score}
+      </text>
+      <text
+        x={cx}
+        y={cy + 12}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.3)"
+        fontSize="8"
+        fontFamily="monospace"
+        letterSpacing="0.2em"
+      >
+        READINESS
+      </text>
+
+      {/* Sweep line */}
+      <line
+        x1={cx}
+        y1={cy}
+        x2={cx + maxR}
+        y2={cy}
+        stroke="rgba(34,211,238,0.3)"
+        strokeWidth="1"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from={`0 ${cx} ${cy}`}
+          to={`360 ${cx} ${cy}`}
+          dur="8s"
+          repeatCount="indefinite"
+        />
+      </line>
+    </svg>
+  );
+}
+
 export function TacticalBoard({ session }: { session: SessionInfo }) {
   const [summary, setSummary] = useState<OpsSummary | null>(null);
   const [events, setEvents] = useState<AlertEvent[]>([]);
   const [connected, setConnected] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [clock, setClock] = useState(new Date());
+  const [clock, setClock] = useState<Date | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Set clock on mount to avoid hydration mismatch
   useEffect(() => {
+    setClock(new Date());
     const interval = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
@@ -202,8 +368,8 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
               <><WifiOff size={13} className="text-red-400" /><span className="text-[10px] uppercase tracking-wider text-red-400 font-bold">Offline</span></>
             )}
           </div>
-          <span className="text-xs tabular-nums text-white/50 font-mono">
-            {clock.toISOString().replace("T", " ").slice(0, 19)}Z
+          <span className="text-xs tabular-nums text-white/50 font-mono" suppressHydrationWarning>
+            {clock ? clock.toISOString().replace("T", " ").slice(0, 19) + "Z" : "--"}
           </span>
           <span className="text-xs text-cyan-400 font-semibold">{session.handle}</span>
           <button onClick={toggleFullscreen} className="text-white/40 hover:text-white/80 transition-colors">
@@ -307,69 +473,10 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
             </div>
           </div>
 
-          {/* Center visualization */}
+          {/* Center visualization — spider/radar chart */}
           <div className="flex-1 flex items-center justify-center relative">
             {summary ? (
-              <div className="relative w-80 h-80">
-                {/* Concentric rings */}
-                {[100, 75, 50, 25].map((ring) => (
-                  <div
-                    key={ring}
-                    className="absolute rounded-full border border-white/[0.08]"
-                    style={{
-                      width: `${ring}%`,
-                      height: `${ring}%`,
-                      left: `${(100 - ring) / 2}%`,
-                      top: `${(100 - ring) / 2}%`,
-                    }}
-                  />
-                ))}
-
-                {/* Axis lines */}
-                <div className="absolute top-0 left-1/2 w-px h-full bg-white/[0.06]" />
-                <div className="absolute top-1/2 left-0 w-full h-px bg-white/[0.06]" />
-
-                {/* Quadrant labels */}
-                <span className="absolute top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-emerald-400/70 font-semibold">QRF</span>
-                <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-widest text-cyan-400/70 font-semibold">Rescue</span>
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-[10px] uppercase tracking-widest text-violet-400/70 font-semibold">Intel</span>
-                <span className="absolute top-1/2 right-3 -translate-y-1/2 text-[10px] uppercase tracking-widest text-amber-400/70 font-semibold">Package</span>
-
-                {/* Data points */}
-                <div
-                  className="absolute w-4 h-4 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.6)] transition-all duration-1000"
-                  style={{ left: '50%', top: `${50 - (summary.readiness.qrf_posture / 2)}%`, transform: 'translate(-50%, -50%)' }}
-                />
-                <div
-                  className="absolute w-4 h-4 rounded-full bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.6)] transition-all duration-1000"
-                  style={{ left: `${50 + (summary.readiness.package_discipline / 2)}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-                />
-                <div
-                  className="absolute w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_16px_rgba(34,211,238,0.6)] transition-all duration-1000"
-                  style={{ left: '50%', top: `${50 + (summary.readiness.rescue_response / 2)}%`, transform: 'translate(-50%, -50%)' }}
-                />
-                <div
-                  className="absolute w-4 h-4 rounded-full bg-violet-400 shadow-[0_0_16px_rgba(167,139,250,0.6)] transition-all duration-1000"
-                  style={{ left: `${50 - (summary.readiness.threat_awareness / 2)}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-                />
-
-                {/* Center score */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className={`font-mono text-4xl font-bold tabular-nums ${readinessColor(summary.readiness_score)} ${readinessGlow(summary.readiness_score)}`}>
-                    {summary.readiness_score}
-                  </p>
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 mt-1 font-semibold">Readiness</p>
-                </div>
-
-                {/* Sweep line */}
-                <div
-                  className="absolute top-1/2 left-1/2 w-[50%] h-px origin-left"
-                  style={{
-                    background: 'linear-gradient(90deg, rgba(34,211,238,0.4) 0%, transparent 100%)',
-                    animation: 'sweep 8s linear infinite',
-                  }}
-                />
-              </div>
+              <ReadinessRadar readiness={summary.readiness} score={summary.readiness_score} />
             ) : (
               <div className="text-white/30 text-sm">Awaiting engine data...</div>
             )}
@@ -377,7 +484,7 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
 
           {/* Bottom status */}
           <div className="px-5 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40">
-            <span>Last tick: {summary?.timestamp ? new Date(summary.timestamp).toLocaleTimeString() : '--'}</span>
+            <span suppressHydrationWarning>Last tick: {summary?.timestamp ? new Date(summary.timestamp).toLocaleTimeString() : '--'}</span>
             <span>30s refresh cycle</span>
           </div>
         </div>
@@ -399,10 +506,6 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
       </div>
 
       <style>{`
-        @keyframes sweep {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
