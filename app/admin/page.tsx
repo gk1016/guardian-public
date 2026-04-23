@@ -1,9 +1,10 @@
-import { Shield, UserCog, Bell, Cpu } from "lucide-react";
+import { Shield, UserCog, Bell, Cpu, LayoutDashboard } from "lucide-react";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { AdminMemberUpdateForm } from "@/components/admin-member-update-form";
 import { AdminUserCreateForm } from "@/components/admin-user-create-form";
 import { AlertRuleManager } from "@/components/alert-rule-manager";
 import { AiConfigManager } from "@/components/ai-config-manager";
+import { AdminDashboard } from "@/components/admin-dashboard";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
 import { getAdminPageData } from "@/lib/ops-data";
@@ -33,7 +34,11 @@ export default async function AdminPage() {
         <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-200">{data.error}</div>
       ) : null}
 
-      <CollapsiblePanel label="Guardian AI" icon={<Cpu size={16} className="text-[var(--color-accent)]" />} defaultOpen>
+      <CollapsiblePanel label="Dashboard" icon={<LayoutDashboard size={16} className="text-[var(--color-accent)]" />} defaultOpen>
+        <AdminDashboard />
+      </CollapsiblePanel>
+
+      <CollapsiblePanel label="Guardian AI" icon={<Cpu size={16} className="text-[var(--color-accent)]" />}>
         <AiConfigManager />
       </CollapsiblePanel>
 
