@@ -55,6 +55,10 @@ async fn main() -> anyhow::Result<()> {
     let fed_handle = federation::manager::start(app_state.clone(), identity);
     info!("federation manager started (TLS enabled)");
 
+    // Start federation inbound message consumer
+    let consumer_handle = federation::consumer::start(app_state.clone());
+    info!("federation inbound consumer started");
+
     // Start compute tick loop (30-second interval)
     let compute_state = app_state.clone();
     let compute_handle = tokio::spawn(async move {
@@ -101,6 +105,7 @@ async fn main() -> anyhow::Result<()> {
     compute_handle.abort();
     ai_handle.abort();
     fed_handle.abort();
+    consumer_handle.abort();
     info!("guardian-engine stopped");
     Ok(())
 }

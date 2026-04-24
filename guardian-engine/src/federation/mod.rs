@@ -16,6 +16,7 @@
 //! - Self-signed TLS cert generated on first boot (stored on disk)
 //! - SHA-256 cert fingerprint used for peer identity verification
 //! - Configurable trusted fingerprints or trust-on-first-use mode
+//! - Optional pre-shared key (PSK) validation in Hello handshake
 
 pub mod types;
 pub mod protocol;
@@ -25,3 +26,4 @@ pub mod chat;
 pub mod file_transfer;
 pub mod data_sync;
 pub mod tls;
+pub mod consumer;
