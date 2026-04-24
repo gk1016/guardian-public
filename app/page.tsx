@@ -12,6 +12,14 @@ import {
   Radar,
   LifeBuoy,
   Zap,
+  MessageSquare,
+  Globe,
+  Map,
+  Lock,
+  ScrollText,
+  Sparkles,
+  MonitorDot,
+  Cog,
 } from "lucide-react";
 import { PublicNav } from "@/components/public-nav";
 
@@ -46,32 +54,92 @@ const operationsFeatures = [
     title: "Incident Review",
     desc: "After-action incident tracking with lessons learned, action items, and linkage to the missions and rescues that generated them.",
   },
+  {
+    icon: Map,
+    title: "Live Tactical Board",
+    desc: "Full-screen common operating picture with real-time mission status, active rescues, QRF readiness, threat posture, and org-wide alerts.",
+  },
+  {
+    icon: Radio,
+    title: "Command Deck",
+    desc: "Live watchstanding view with active missions, open rescues, QRF status, and threat changes surfaced in priority order.",
+  },
 ];
 
 const aiFeatures = [
   {
-    title: "Multi-Provider AI Engine",
-    desc: "Pluggable architecture supporting OpenAI, Anthropic, and local Ollama models. Configure per-analysis-type, swap providers without code changes.",
+    icon: Sparkles,
+    title: "AI Command Panel",
+    desc: "Natural language interface to your entire ops database. Query missions, intel, users, and manuals — or execute admin actions — by typing plain English.",
   },
   {
+    icon: MonitorDot,
+    title: "Dynamic Model Registry",
+    desc: "Live model discovery from OpenAI, Anthropic, and Ollama. Auto-refresh available models, select per-task, swap providers without touching config files.",
+  },
+  {
+    icon: Brain,
     title: "Threat Pattern Analysis",
     desc: "AI-driven analysis of intel reports to identify recurring hostile patterns, bait-beacon tactics, and interdiction geometry across your AO.",
   },
   {
+    icon: Crosshair,
     title: "Mission Risk Scoring",
-    desc: "Automated risk assessment that factors in current threat picture, escort availability, route history, and hostile contact density.",
+    desc: "Automated risk assessment factoring current threat picture, escort availability, route history, and hostile contact density.",
+  },
+];
+
+const federationFeatures = [
+  {
+    icon: Globe,
+    title: "Org-to-Org Peering",
+    desc: "WebSocket-based federation between Guardian instances. Establish mutual trust, share operational tempo, and coordinate across org boundaries.",
   },
   {
-    title: "Operational Recommendations",
-    desc: "Context-aware suggestions for ROE posture, escort composition, and route selection based on live intel and historical incident data.",
+    icon: MessageSquare,
+    title: "Cross-Org Chat",
+    desc: "Encrypted real-time messaging between federated orgs. Coordinate joint ops, share threat warnings, and maintain inter-org comms without third-party tools.",
+  },
+  {
+    icon: Radar,
+    title: "Shared Intel Feed",
+    desc: "Federated intel board where allied orgs push and receive threat reports, hostile sightings, and AO assessments in real time.",
+  },
+];
+
+const discordFeatures = [
+  {
+    icon: MessageSquare,
+    title: "Slash Commands",
+    desc: "Full command suite — /status, /missions, /intel, /qrf, /roster — operational queries without leaving Discord.",
+  },
+  {
+    icon: Bell,
+    title: "Live Event Feeds",
+    desc: "Real-time event bridge pushes mission launches, rescue dispatches, QRF activations, and threat alerts to configured Discord channels.",
+  },
+  {
+    icon: Brain,
+    title: "AI SITREP",
+    desc: "On-demand AI-generated situation reports summarizing current ops tempo, active threats, and resource posture — delivered straight to Discord.",
   },
 ];
 
 const platformFeatures = [
   {
-    icon: Radio,
-    title: "Command Deck",
-    desc: "Live watchstanding view with active missions, open rescues, QRF status, and threat changes surfaced in priority order.",
+    icon: Lock,
+    title: "MFA / TOTP",
+    desc: "Time-based one-time password support with QR enrollment, backup codes, and admin-initiated TOTP reset for locked-out members.",
+  },
+  {
+    icon: ScrollText,
+    title: "Audit Logging",
+    desc: "Every mutation logged with actor, action, target, and timestamp. Filterable audit trail with CSV export for compliance and review.",
+  },
+  {
+    icon: Users,
+    title: "Role-Based Access",
+    desc: "Commander, pilot, rescue coordinator, and admin roles with scoped permissions. Force-logout, session revocation, and password policy enforcement.",
   },
   {
     icon: BookOpen,
@@ -79,14 +147,14 @@ const platformFeatures = [
     desc: "Full operational manual with document upload, inline viewing, GitHub-style markdown rendering, and searchable reference library.",
   },
   {
+    icon: Cog,
+    title: "Setup Wizard",
+    desc: "First-run configuration flow creates your org, seeds the first admin, and configures all services. Factory reset available for clean redeploys.",
+  },
+  {
     icon: Bell,
     title: "Notification System",
     desc: "Severity-tiered alerts for QRF dispatch, incident escalation, rescue status changes, and threat board updates.",
-  },
-  {
-    icon: Users,
-    title: "Role-Based Access",
-    desc: "Commander, pilot, rescue coordinator, and admin roles with scoped permissions across all operational surfaces.",
   },
 ];
 
@@ -102,15 +170,16 @@ export default function Home() {
         <section className="pt-14">
           <div className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-amber-300/20 bg-amber-300/8 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-amber-200">
             <Siren size={12} />
-            Standalone Ops Platform
+            Self-Hosted Ops Platform
           </div>
           <h1 className="mt-5 max-w-3xl font-[family:var(--font-display)] text-4xl uppercase leading-[0.95] tracking-[0.06em] text-[var(--color-text-strong)] sm:text-5xl lg:text-6xl">
             Mission control for pilots who hunt pirates and pull people out alive.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
-            Guardian is a full-stack operations platform built for a military-pilot Star Citizen org.
-            Mission planning, CSAR dispatch, QRF readiness, intel fusion, doctrine enforcement,
-            AI-powered threat analysis, and incident review — one system, zero cloud dependency.
+            Guardian is a full-stack operations platform built for military-pilot Star Citizen orgs.
+            Mission planning, CSAR dispatch, QRF readiness, intel fusion, AI-powered command,
+            Discord integration, org-to-org federation, and a live tactical board — one system,
+            zero cloud dependency.
           </p>
 
           <div className="mt-7 flex gap-3">
@@ -138,9 +207,10 @@ export default function Home() {
             </h2>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
-            Every operational surface a combat org needs — from mission planning through incident review.
+            Every operational surface a combat org needs — from mission planning through
+            incident review, with a full-screen tactical board for real-time situational awareness.
           </p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {operationsFeatures.map((f) => (
               <article
                 key={f.title}
@@ -167,8 +237,9 @@ export default function Home() {
             </h2>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
-            Integrated AI analysis powered by a Rust engine with pluggable provider support.
-            Runs local with Ollama or connects to OpenAI and Anthropic — your choice, your data.
+            Rust-powered AI engine with a natural language command interface.
+            Query your entire ops database, run threat analysis, or execute admin actions
+            by typing plain English. Runs local with Ollama or connects to OpenAI and Anthropic.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {aiFeatures.map((f) => (
@@ -176,7 +247,8 @@ export default function Home() {
                 key={f.title}
                 className="rounded-[var(--radius-lg)] border border-violet-500/15 bg-violet-500/5 p-5"
               >
-                <h3 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
+                <f.icon size={18} className="text-violet-400/70" />
+                <h3 className="mt-3 font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
                   {f.title}
                 </h3>
                 <p className="mt-2 text-[13px] leading-[1.6] text-[var(--color-text-secondary)]">
@@ -187,18 +259,81 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Platform */}
+        {/* Federation */}
+        <section className="mt-20">
+          <div className="flex items-center gap-3">
+            <Globe size={16} className="text-emerald-400" />
+            <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.2em] text-emerald-400">
+              Federation
+            </h2>
+          </div>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
+            Connect Guardian instances across orgs. Federated peering lets allied organizations
+            share intel, coordinate joint operations, and communicate in real time — each org
+            keeps full sovereignty over their own data.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {federationFeatures.map((f) => (
+              <article
+                key={f.title}
+                className="rounded-[var(--radius-lg)] border border-emerald-500/15 bg-emerald-500/5 p-5"
+              >
+                <f.icon size={18} className="text-emerald-400/70" />
+                <h3 className="mt-3 font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
+                  {f.title}
+                </h3>
+                <p className="mt-2 text-[13px] leading-[1.6] text-[var(--color-text-secondary)]">
+                  {f.desc}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Discord */}
+        <section className="mt-20">
+          <div className="flex items-center gap-3">
+            <MessageSquare size={16} className="text-indigo-400" />
+            <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.2em] text-indigo-400">
+              Discord Integration
+            </h2>
+          </div>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
+            Bring your ops board into Discord. Configure your bot token through the admin panel,
+            bind channels to event types, and your org gets live operational feeds alongside
+            full slash-command access to Guardian data.
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {discordFeatures.map((f) => (
+              <article
+                key={f.title}
+                className="rounded-[var(--radius-lg)] border border-indigo-500/15 bg-indigo-500/5 p-5"
+              >
+                <f.icon size={18} className="text-indigo-400/70" />
+                <h3 className="mt-3 font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
+                  {f.title}
+                </h3>
+                <p className="mt-2 text-[13px] leading-[1.6] text-[var(--color-text-secondary)]">
+                  {f.desc}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Platform & Security */}
         <section className="mt-20">
           <div className="flex items-center gap-3">
             <Shield size={16} className="text-[var(--color-accent)]" />
             <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.2em] text-[var(--color-accent)]">
-              Platform
+              Platform & Security
             </h2>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
-            Self-hosted, air-gap ready. Next.js frontend, Rust analysis engine, PostgreSQL — all in one Docker Compose stack.
+            Self-hosted, air-gap ready. MFA-protected accounts, full audit trail, role-scoped
+            permissions, and a first-run setup wizard that gets you operational in minutes.
           </p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {platformFeatures.map((f) => (
               <article
                 key={f.title}
@@ -223,9 +358,9 @@ export default function Home() {
           </h2>
           <div className="mt-3 grid gap-x-8 gap-y-2 text-[13px] leading-6 text-[var(--color-text-secondary)] sm:grid-cols-2 lg:grid-cols-4">
             <div><span className="text-[var(--color-text-tertiary)]">Frontend</span> — Next.js 16, React 19, Tailwind 4</div>
-            <div><span className="text-[var(--color-text-tertiary)]">AI Engine</span> — Rust, multi-provider (OpenAI / Anthropic / Ollama)</div>
-            <div><span className="text-[var(--color-text-tertiary)]">Database</span> — PostgreSQL + Prisma ORM</div>
-            <div><span className="text-[var(--color-text-tertiary)]">Deploy</span> — Docker Compose, Caddy reverse proxy, self-hosted</div>
+            <div><span className="text-[var(--color-text-tertiary)]">Engine</span> — Rust (Axum), all API routes, AI orchestration, Discord bot</div>
+            <div><span className="text-[var(--color-text-tertiary)]">Database</span> — PostgreSQL + Prisma ORM, nightly backups</div>
+            <div><span className="text-[var(--color-text-tertiary)]">Deploy</span> — Docker Compose, Caddy reverse proxy, self-hosted, air-gap ready</div>
           </div>
         </section>
       </div>
