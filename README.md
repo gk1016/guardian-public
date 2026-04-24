@@ -10,13 +10,13 @@ Requires [Docker Desktop](https://www.docker.com/get-started/) and [Git](https:/
 git clone https://github.com/gk1016/guardian-public.git
 cd guardian-public
 cp .env.example .env
-# Edit .env — change AUTH_SECRET, POSTGRES_PASSWORD, and DATABASE_URL
+# Edit .env — change AUTH_SECRET and POSTGRES_PASSWORD (update DATABASE_URL to match)
 docker compose pull
-docker compose --profile tools run guardian-tools   # seeds the database
+docker compose --profile init run guardian-init
 docker compose up -d
 ```
 
-Open https://localhost, accept the self-signed cert, and log in with `reaper11@guardian.local` / `GuardianDemo!2026`.
+Open https://localhost, accept the self-signed cert, and complete the setup wizard to create your organization and admin account.
 
 ## Container Images
 
@@ -45,6 +45,7 @@ The frontend and API layer. Handles all pages, authentication, and database acce
 - Notification system with configurable alert rules
 - Roster and org member management
 - Admin panel for user and org administration
+- First-run setup wizard — creates your org and admin account in the browser
 
 ### Compute Engine (Rust)
 
@@ -62,7 +63,7 @@ The engine also supports federation — multiple Guardian instances can connect 
 
 - **PostgreSQL 16** — all persistent data (users, orgs, missions, intel, etc.)
 - **Caddy** — reverse proxy with automatic TLS. Self-signed certs by default, or Let's Encrypt for public domains.
-- **Docker Compose** — all five services defined in one file, one command to start
+- **Docker Compose** — all services defined in one file, one command to start
 
 ## Architecture
 
@@ -78,16 +79,6 @@ Browser
 ```
 
 All traffic goes through Caddy. The frontend and engine are not directly exposed to the network. Federation (engine-to-engine mTLS on port 3421) is the one exception — it bypasses Caddy because it uses its own TLS certificates.
-
-## Demo Credentials
-
-| Handle   | Email                    | Role                  |
-|----------|--------------------------|------------------------|
-| REAPER11 | reaper11@guardian.local  | commander (org owner)  |
-| SABER1   | saber1@guardian.local    | pilot                  |
-| VIKING2  | viking2@guardian.local   | rescue_coordinator     |
-
-Default password for all: `GuardianDemo!2026` (override with `GUARDIAN_DEMO_PASSWORD` in `.env`)
 
 ## Stack
 
@@ -109,7 +100,6 @@ npm install
 cp .env.example .env
 # Edit DATABASE_URL in .env to point to your local Postgres
 npx prisma db push
-npm run db:seed
 npm run dev
 ```
 

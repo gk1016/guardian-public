@@ -30,17 +30,13 @@ This copies the example config to a file called `.env` that Guardian will actual
 
 Open `.env` in any text editor (VS Code, Notepad, nano, whatever you have). You need to change at least two values:
 
-**AUTH_SECRET** — change this to any random string. This is used to sign login tokens. Example:
+**AUTH_SECRET** — change this to any random string. This is used to sign login tokens. You can generate one with:
 
-```
-AUTH_SECRET=my-guardian-instance-2026-xk9m
+```bash
+openssl rand -hex 32
 ```
 
-**POSTGRES_PASSWORD** — change this to a password of your choosing. Example:
-
-```
-POSTGRES_PASSWORD=my-secure-db-password
-```
+**POSTGRES_PASSWORD** — change this to a password of your choosing.
 
 **Important:** if you change `POSTGRES_PASSWORD`, you must also update the password inside `DATABASE_URL` to match. The format is:
 
@@ -48,28 +44,20 @@ POSTGRES_PASSWORD=my-secure-db-password
 DATABASE_URL=postgresql://guardian:YOUR_PASSWORD_HERE@guardian-postgres:5432/guardian
 ```
 
-So if you set `POSTGRES_PASSWORD=my-secure-db-password`, your DATABASE_URL should be:
-
-```
-DATABASE_URL=postgresql://guardian:my-secure-db-password@guardian-postgres:5432/guardian
-```
-
 Everything else can stay at the defaults. See the comments in `.env.example` for what each variable does.
 
-### 4. Pull images and seed the database
+### 4. Initialize the database
 
 ```bash
 docker compose pull
-docker compose --profile tools run guardian-tools
+docker compose --profile init run guardian-init
 ```
 
-Docker will download the pre-built images from GitHub Container Registry. This should take 1-3 minutes depending on your internet speed. Wait until you see:
+The first command pulls pre-built container images from GitHub Container Registry — takes a couple minutes. The second creates the database tables. You should see Prisma output ending with something like:
 
 ```
-Guardian seed complete.
+Your database is now in sync with your Prisma schema.
 ```
-
-That means the database is set up and loaded with demo data.
 
 ### 5. Start Guardian
 
@@ -79,9 +67,9 @@ docker compose up -d
 
 This starts all services in the background. Give it about 10 seconds to fully boot.
 
-### 6. Open Guardian
+### 6. Run the Setup Wizard
 
-Go to **https://localhost** in your browser.
+Open **https://localhost** in your browser.
 
 You will see a security warning about the certificate — this is expected. Guardian generates a self-signed TLS certificate on first boot. To proceed:
 
@@ -92,17 +80,12 @@ You will see a security warning about the certificate — this is expected. Guar
 
 This is safe — you're connecting to your own machine.
 
-### 7. Log in
+Guardian will detect this is a fresh install and present the **First-Run Setup** wizard. It walks you through two steps:
 
-Use any of the demo accounts:
+1. **Create your organization** — name, tag, and optional description.
+2. **Create your admin account** — email, callsign, display name, and password.
 
-| Handle   | Email                    | Role                  |
-|----------|--------------------------|------------------------|
-| REAPER11 | reaper11@guardian.local  | commander (org owner)  |
-| SABER1   | saber1@guardian.local    | pilot                  |
-| VIKING2  | viking2@guardian.local   | rescue_coordinator     |
-
-The password for all three is `GuardianDemo!2026` (unless you changed `GUARDIAN_DEMO_PASSWORD` in `.env`).
+Once complete, you're redirected to the login page. Sign in with the admin account you just created.
 
 ## TLS and Custom Domain
 
@@ -122,15 +105,16 @@ Set `SITE_ADDRESS=guardian.example.com` in `.env`, then edit the `Caddyfile` in 
 
 ## Services
 
-Guardian runs five Docker containers:
+Guardian runs four Docker containers:
 
 | Container         | What it does                                                    |
 |-------------------|-----------------------------------------------------------------|
 | guardian          | The web application (Next.js) — serves all pages and API routes |
 | guardian-engine   | Rust sidecar that runs threat correlation, alert generation, and ops summary every 30 seconds, then pushes updates to browsers via WebSocket |
 | guardian-postgres | The database (PostgreSQL 16)                                    |
-| guardian-tools    | One-shot container that creates database tables and seeds demo data — only runs when you explicitly start it |
 | caddy             | Reverse proxy that handles HTTPS and routes traffic to the frontend and engine |
+
+A backup sidecar (`guardian-backup`) also runs to take automated PostgreSQL dumps on a configurable schedule.
 
 ## Updating
 
@@ -164,9 +148,11 @@ To wipe the database and start completely fresh:
 ```bash
 docker compose down
 docker volume rm guardian-public_guardian-postgres-data
-docker compose --profile tools run guardian-tools
+docker compose --profile init run guardian-init
 docker compose up -d
 ```
+
+This re-creates the database tables and brings you back to the setup wizard.
 
 Note: the volume name includes your project directory name. If you cloned into a different folder, replace `guardian-public` with that folder name.
 
@@ -176,7 +162,7 @@ Note: the volume name includes your project directory name. If you cloned into a
 The container images are hosted on GitHub Container Registry (ghcr.io). If you're behind a corporate firewall or proxy, make sure `ghcr.io` is not blocked.
 
 **Can't connect after starting:**
-Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All five should show "Up" (guardian-tools will show "Exited" — that's normal, it only runs once).
+Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All containers should show "Up". The `guardian-init` container will show "Exited" — that's normal, it only runs once.
 
 **Certificate warning on every visit:**
 This is expected with self-signed certificates. To eliminate it, either use Let's Encrypt with a real domain, or import Caddy's root CA from the `caddy_data` Docker volume into your browser's trust store.

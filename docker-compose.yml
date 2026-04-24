@@ -83,16 +83,16 @@ services:
           sleep $$((BACKUP_INTERVAL_HOURS * 3600))
         done
 
-  guardian-tools:
+  guardian-init:
     image: ghcr.io/gk1016/guardian-flight:latest
-    profiles: ["tools"]
+    profiles: ["init"]
     env_file:
       - .env
     depends_on:
       guardian-postgres:
         condition: service_healthy
     entrypoint: ["sh", "-c"]
-    command: ["npx prisma db push && npm run db:seed"]
+    command: ["npx prisma db push"]
 
   guardian-postgres:
     image: postgres:16-bookworm
