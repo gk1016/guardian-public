@@ -73,6 +73,10 @@ type CrewCandidate = {
 };
 
 type RosterCrewItem = CrewCandidate & {
+  userId: string;
+  email: string;
+  rank: string;
+  status: string;
   activityScore: number;
   activityTier: "active" | "moderate" | "dormant" | "dark";
   lastActiveLabel: string | null;
@@ -1066,12 +1070,15 @@ export async function getRosterPageData(userId: string): Promise<RosterPagePaylo
         orderBy: [{ rank: "asc" }, { joinedAt: "asc" }],
         select: {
           title: true,
+          rank: true,
           user: {
             select: {
               id: true,
+              email: true,
               handle: true,
               displayName: true,
               role: true,
+              status: true,
             },
           },
         },
@@ -1182,8 +1189,14 @@ export async function getRosterPageData(userId: string): Promise<RosterPagePaylo
       const dates = [pActivity?.lastActive, lActivity?.lastActive].filter(Boolean) as Date[];
       const lastActive = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
 
+      // Look up member record for admin fields
+      const memberRecord = members.find(m => m.user.handle === crew.handle);
       return {
         ...crew,
+        userId: memberRecord?.user.id ?? '',
+        email: memberRecord?.user.email ?? '',
+        rank: memberRecord?.rank ?? 'member',
+        status: memberRecord?.user.status ?? 'active',
         activityScore,
         activityTier: computeActivityTier(activityScore),
         lastActiveLabel: lastActive ? formatRelativeTime(lastActive) : null,
