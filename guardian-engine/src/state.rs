@@ -4,6 +4,7 @@ use tokio::sync::broadcast;
 
 use crate::auth::rate_limit::RateLimiter;
 use crate::config::Config;
+use crate::federation::peer::PeerRegistry;
 use crate::federation::types::FederationEvent;
 use crate::ai::AiState;
 
@@ -26,6 +27,8 @@ struct Inner {
     pub ai: Arc<AiState>,
     /// Login rate limiter
     pub rate_limiter: Arc<RateLimiter>,
+    /// Federation peer registry (shared with manager and outbound functions)
+    pub peer_registry: PeerRegistry,
 }
 
 impl AppState {
@@ -41,6 +44,7 @@ impl AppState {
                 cert_fingerprint,
                 ai: Arc::new(AiState::new()),
                 rate_limiter: Arc::new(RateLimiter::new()),
+                peer_registry: PeerRegistry::new(),
             }),
         }
     }
@@ -75,6 +79,10 @@ impl AppState {
 
     pub fn rate_limiter(&self) -> &RateLimiter {
         &self.inner.rate_limiter
+    }
+
+    pub fn peers(&self) -> &PeerRegistry {
+        &self.inner.peer_registry
     }
 }
 
