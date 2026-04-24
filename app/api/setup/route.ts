@@ -23,6 +23,81 @@ const setupSchema = z.object({
   password: passwordSchema,
 });
 
+async function seedManuals(orgId: string, authorId: string) {
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+
+    // Load manual content at runtime to avoid TS module resolution issues with .mjs
+    const manualPath = path.join(process.cwd(), "prisma", "manual-seed-content.mjs");
+    const manualModule = await import(/* webpackIgnore: true */ manualPath);
+    const allEntries = [...manualModule.manualEntries, manualModule.qrhEntry];
+
+    for (const entry of allEntries) {
+      const existing = await prisma.manualEntry.findFirst({
+        where: { orgId, title: entry.title },
+      });
+
+      const data = {
+        orgId,
+        authorId,
+        title: entry.title,
+        category: entry.category,
+        body: entry.body,
+        entryType: "article" as const,
+      };
+
+      if (existing) {
+        await prisma.manualEntry.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.manualEntry.create({ data });
+      }
+    }
+
+    // AI System Documentation (.docx)
+    const mammothLib = await import("mammoth");
+    const aiDocPath = path.join(process.cwd(), "prisma", "assets", "Guardian_AI_System_Documentation.docx");
+
+    if (fs.existsSync(aiDocPath)) {
+      const docBuffer = fs.readFileSync(aiDocPath);
+      const htmlResult = await mammothLib.default.convertToHtml({ buffer: docBuffer });
+      const plainResult = await mammothLib.default.extractRawText({ buffer: docBuffer });
+      const aiDocBody = htmlResult.value || plainResult.value || "";
+
+      const aiDocTitle = "Guardian AI System Documentation";
+      const existingAiDoc = await prisma.manualEntry.findFirst({
+        where: { orgId, title: aiDocTitle },
+      });
+
+      const aiDocData = {
+        orgId,
+        authorId,
+        title: aiDocTitle,
+        category: "reference",
+        entryType: "file" as const,
+        body: aiDocBody,
+        fileName: "Guardian_AI_System_Documentation.docx",
+        fileSize: docBuffer.length,
+        fileMimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        fileData: docBuffer,
+      };
+
+      if (existingAiDoc) {
+        await prisma.manualEntry.update({ where: { id: existingAiDoc.id }, data: aiDocData });
+      } else {
+        await prisma.manualEntry.create({ data: aiDocData });
+      }
+    }
+
+    log.info("Manual entries seeded", { orgId, count: allEntries.length + 1 });
+  } catch (err) {
+    // Non-fatal — org is still operational without manuals
+    log.warn("Manual seeding failed (non-fatal)", {
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     // Guard: only works when no organization exists
@@ -98,6 +173,9 @@ export async function POST(request: Request) {
 
       return { orgId: org.id, orgTag: org.tag, userId: user.id, handle: user.handle };
     });
+
+    // Seed operational manuals (non-blocking — org is already created)
+    await seedManuals(result.orgId, result.userId);
 
     log.info("First-run setup completed", {
       orgId: result.orgId,
