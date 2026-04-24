@@ -21,7 +21,8 @@ type OpsShellProps = {
     | "/sitrep"
     | "/manual"
     | "/tactical"
-    | "/federation";
+    | "/federation"
+    | "/ai";
   section: string;
   title: string;
   orgName: string;

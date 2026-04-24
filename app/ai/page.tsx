@@ -13,10 +13,12 @@ export default async function AiPage() {
   return (
     <OpsShell
       currentPath="/ai"
+      section="Command"
+      title="AI"
       session={session}
       orgName={orgName}
     >
-      <div className="flex h-[calc(100vh-1rem)] flex-col">
+      <div className="flex h-[calc(100vh-10rem)] flex-col">
         <AiCommandPanel />
       </div>
     </OpsShell>
