@@ -5,27 +5,27 @@ const standards = [
   {
     icon: Target,
     title: "Positive Control",
-    body: "Package geometry, role ownership, and dispatch changes are explicit. If command has to guess, command is already behind. Guardian enforces this through structured mission phases, callsign assignment, and doctrine binding.",
+    body: "Role assignments, dispatch changes, and operational decisions are explicit and tracked. If leadership has to guess what happened, the system failed \u2014 not the people.",
   },
   {
     icon: LifeBuoy,
-    title: "Rescue Discipline",
-    body: "Distress traffic is not trusted blindly. Rescue launches are reviewed against the current threat picture before assets are committed. CSAR workflow enforces triage, escort coordination, and status tracking.",
+    title: "Operational Discipline",
+    body: "Every operation follows a structured workflow \u2014 planning, execution, review. Guardian enforces this through mission phases, participant rosters, and doctrine binding.",
   },
   {
     icon: Siren,
-    title: "After-Action Honesty",
-    body: "Lessons learned stay attached to the event that produced them, not buried in chat. Incident review links directly to the missions and rescues that generated it, with action items that carry forward.",
+    title: "After-Action Review",
+    body: "Lessons learned stay attached to the event that produced them. Incident review links directly to the missions and operations that generated it, with action items that carry forward.",
   },
   {
     icon: ScrollText,
     title: "Audit Trail",
-    body: "Every mutation is logged with actor, action, target, and timestamp. The audit log is filterable, exportable, and permanent. If it happened in Guardian, there is a record of who did what and when.",
+    body: "Every mutation is logged with actor, action, target, and timestamp. The audit log is filterable, exportable, and permanent. If it happened in Guardian, there is a record.",
   },
   {
     icon: Lock,
     title: "Operational Security",
-    body: "MFA-protected accounts, role-scoped permissions, session revocation, and password policy enforcement. The platform is designed to self-host with zero cloud dependency — your data stays on your iron.",
+    body: "MFA-protected accounts, role-scoped permissions, session revocation, and password policy enforcement. Self-hosted with zero cloud dependency \u2014 your data stays on your iron.",
   },
 ];
 
@@ -33,8 +33,8 @@ export default function StandardsPage() {
   return (
     <PublicShell
       eyebrow="Standards"
-      title="The point is not looking tactical. The point is being disciplined."
-      description="Guardian bakes standards into the workflow so doctrine and review survive contact with actual operations."
+      title="Structure is the point. Looking tactical is not."
+      description="Guardian bakes operational standards into the workflow so discipline and review survive contact with actual operations."
     >
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {standards.map((standard) => (

@@ -1,16 +1,17 @@
 import { Shield, Brain, Globe, Crosshair } from "lucide-react";
+import { PublicNav } from "@/components/public-nav";
 import { PublicShell } from "@/components/public-shell";
 
 const sections = [
   {
     icon: Crosshair,
     title: "Why Guardian Exists",
-    body: "Serious anti-piracy and rescue work falls apart when planning, dispatch, and review are scattered across Discord, screenshots, and memory. Guardian puts every operational surface in one system so command never has to reconstruct the fight from scraps.",
+    body: "Running an org gets complicated fast. Planning, dispatch, intel, and review end up scattered across Discord, spreadsheets, and memory. Guardian puts every operational surface in one system so leadership can focus on running ops, not chasing information.",
   },
   {
     icon: Shield,
     title: "What It Is",
-    body: "A full-stack operations platform for military-pilot Star Citizen orgs. Mission planning, CSAR dispatch, QRF readiness, intel fusion, AI-powered command, Discord integration, org-to-org federation, and a live tactical board — self-hosted, air-gap ready.",
+    body: "A full-stack operations platform for Star Citizen organizations. Mission planning, dispatch, QRF readiness, intel tracking, AI-powered command, Discord integration, org-to-org federation, and a live tactical board \u2014 self-hosted, air-gap ready, works for any playstyle.",
   },
   {
     icon: Brain,
@@ -20,7 +21,7 @@ const sections = [
   {
     icon: Globe,
     title: "Federation",
-    body: "Guardian instances can peer with allied orgs over WebSocket. Share intel, coordinate joint operations, and communicate across org boundaries — each org keeps full sovereignty over their own data and infrastructure.",
+    body: "Guardian instances can peer with allied orgs over WebSocket. Share intel, coordinate joint operations, and communicate across org boundaries \u2014 each org keeps full sovereignty over their own data and infrastructure.",
   },
 ];
 
@@ -28,8 +29,8 @@ export default function AboutPage() {
   return (
     <PublicShell
       eyebrow="Platform Overview"
-      title="Built for operators who would rather fly than babysit bad tooling."
-      description="Guardian keeps planning, dispatch, rescue, and review inside one system so command can focus on the fight."
+      title="One platform for everything your org actually does."
+      description="Guardian keeps planning, dispatch, intel, and review inside one system \u2014 so your leadership can focus on running ops, not reconstructing what happened from chat logs."
     >
       <section className="grid gap-4 sm:grid-cols-2">
         {sections.map((section) => (

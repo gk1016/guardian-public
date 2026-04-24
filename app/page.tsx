@@ -31,38 +31,38 @@ const operationsFeatures = [
   },
   {
     icon: LifeBuoy,
-    title: "Combat Search & Rescue",
-    desc: "Dedicated CSAR dispatch with survivor tracking, escort coordination, medical triage flags, and real-time rescue status.",
+    title: "Search & Rescue",
+    desc: "Dedicated SAR dispatch with survivor tracking, escort coordination, triage flags, and real-time rescue status updates.",
   },
   {
     icon: Zap,
     title: "QRF Readiness & Dispatch",
-    desc: "Quick Reaction Force board with REDCON status, platform tracking, and one-click dispatch tied to active missions or rescue ops.",
+    desc: "Quick Reaction Force board with readiness status, asset tracking, and one-click dispatch tied to active missions or rescue ops.",
   },
   {
     icon: Shield,
     title: "Doctrine & ROE Control",
-    desc: "Weapons Hold, Weapons Tight, Weapons Free — templated doctrine with escalation rules that bind directly to mission packages.",
+    desc: "Templated doctrine with escalation rules that bind directly to mission packages. Define your rules of engagement, enforce them in the field.",
   },
   {
     icon: Radar,
     title: "Intel Board",
-    desc: "Threat reports with severity scoring, hostile group tracking, confidence ratings, and direct linkage to missions and incidents.",
+    desc: "Intelligence reports with severity scoring, group tracking, confidence ratings, and direct linkage to missions and incidents.",
   },
   {
     icon: Siren,
     title: "Incident Review",
-    desc: "After-action incident tracking with lessons learned, action items, and linkage to the missions and rescues that generated them.",
+    desc: "After-action incident tracking with lessons learned, action items, and linkage to the missions and operations that generated them.",
   },
   {
     icon: Map,
     title: "Live Tactical Board",
-    desc: "Full-screen common operating picture with real-time mission status, active rescues, QRF readiness, threat posture, and org-wide alerts.",
+    desc: "Full-screen common operating picture with real-time mission status, active operations, QRF readiness, and org-wide alerts.",
   },
   {
     icon: Radio,
     title: "Command Deck",
-    desc: "Live watchstanding view with active missions, open rescues, QRF status, and threat changes surfaced in priority order.",
+    desc: "Live watchstanding view with active missions, open operations, QRF status, and intel changes surfaced in priority order.",
   },
 ];
 
@@ -70,7 +70,7 @@ const aiFeatures = [
   {
     icon: Sparkles,
     title: "AI Command Panel",
-    desc: "Natural language interface to your entire ops database. Query missions, intel, users, and manuals — or execute admin actions — by typing plain English.",
+    desc: "Natural language interface to your entire ops database. Query missions, intel, members, and manuals — or execute admin actions — by typing plain English.",
   },
   {
     icon: MonitorDot,
@@ -79,13 +79,13 @@ const aiFeatures = [
   },
   {
     icon: Brain,
-    title: "Threat Pattern Analysis",
-    desc: "AI-driven analysis of intel reports to identify recurring hostile patterns, bait-beacon tactics, and interdiction geometry across your AO.",
+    title: "Intel Pattern Analysis",
+    desc: "AI-driven analysis of intelligence reports to identify recurring patterns, operational trends, and risk factors across your area of operations.",
   },
   {
     icon: Crosshair,
     title: "Mission Risk Scoring",
-    desc: "Automated risk assessment factoring current threat picture, escort availability, route history, and hostile contact density.",
+    desc: "Automated risk assessment factoring current intel picture, asset availability, route history, and operational tempo.",
   },
 ];
 
@@ -98,12 +98,12 @@ const federationFeatures = [
   {
     icon: MessageSquare,
     title: "Cross-Org Chat",
-    desc: "Encrypted real-time messaging between federated orgs. Coordinate joint ops, share threat warnings, and maintain inter-org comms without third-party tools.",
+    desc: "Encrypted real-time messaging between federated orgs. Coordinate joint ops, share intel, and maintain inter-org comms without third-party tools.",
   },
   {
     icon: Radar,
     title: "Shared Intel Feed",
-    desc: "Federated intel board where allied orgs push and receive threat reports, hostile sightings, and AO assessments in real time.",
+    desc: "Federated intel board where allied orgs push and receive intelligence reports, sightings, and area assessments in real time.",
   },
 ];
 
@@ -116,12 +116,12 @@ const discordFeatures = [
   {
     icon: Bell,
     title: "Live Event Feeds",
-    desc: "Real-time event bridge pushes mission launches, rescue dispatches, QRF activations, and threat alerts to configured Discord channels.",
+    desc: "Real-time event bridge pushes mission launches, dispatch alerts, QRF activations, and intel updates to configured Discord channels.",
   },
   {
     icon: Brain,
     title: "AI SITREP",
-    desc: "On-demand AI-generated situation reports summarizing current ops tempo, active threats, and resource posture — delivered straight to Discord.",
+    desc: "On-demand AI-generated situation reports summarizing current ops tempo, active intel, and resource posture — delivered straight to Discord.",
   },
 ];
 
@@ -139,12 +139,12 @@ const platformFeatures = [
   {
     icon: Users,
     title: "Role-Based Access",
-    desc: "Commander, pilot, rescue coordinator, and admin roles with scoped permissions. Force-logout, session revocation, and password policy enforcement.",
+    desc: "Configurable roles with scoped permissions across all operational surfaces. Force-logout, session revocation, and password policy enforcement.",
   },
   {
     icon: BookOpen,
     title: "Manual Center",
-    desc: "Full operational manual with document upload, inline viewing, GitHub-style markdown rendering, and searchable reference library.",
+    desc: "Operational manual with document upload, inline viewing, markdown rendering, and searchable reference library.",
   },
   {
     icon: Cog,
@@ -154,7 +154,7 @@ const platformFeatures = [
   {
     icon: Bell,
     title: "Notification System",
-    desc: "Severity-tiered alerts for QRF dispatch, incident escalation, rescue status changes, and threat board updates.",
+    desc: "Severity-tiered alerts for dispatch events, incident escalation, status changes, and intel updates.",
   },
 ];
 
@@ -173,13 +173,13 @@ export default function Home() {
             Self-Hosted Ops Platform
           </div>
           <h1 className="mt-5 max-w-3xl font-[family:var(--font-display)] text-4xl uppercase leading-[0.95] tracking-[0.06em] text-[var(--color-text-strong)] sm:text-5xl lg:text-6xl">
-            Mission control for pilots who hunt pirates and pull people out alive.
+            Your org. Your ops. Your infrastructure. No compromises.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
-            Guardian is a full-stack operations platform built for military-pilot Star Citizen orgs.
-            Mission planning, CSAR dispatch, QRF readiness, intel fusion, AI-powered command,
-            Discord integration, org-to-org federation, and a live tactical board — one system,
-            zero cloud dependency.
+            Guardian is a full-stack operations platform for Star Citizen organizations.
+            Mission planning, dispatch, QRF readiness, intel fusion, AI-powered command,
+            Discord integration, org-to-org federation, and a live tactical board — one
+            system, zero cloud dependency. Works for any org, any playstyle.
           </p>
 
           <div className="mt-7 flex gap-3">
@@ -207,7 +207,7 @@ export default function Home() {
             </h2>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
-            Every operational surface a combat org needs — from mission planning through
+            Every operational surface an org needs — from mission planning through
             incident review, with a full-screen tactical board for real-time situational awareness.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -238,7 +238,7 @@ export default function Home() {
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-tertiary)]">
             Rust-powered AI engine with a natural language command interface.
-            Query your entire ops database, run threat analysis, or execute admin actions
+            Query your entire ops database, run intel analysis, or execute admin actions
             by typing plain English. Runs local with Ollama or connects to OpenAI and Anthropic.
           </p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
