@@ -209,8 +209,9 @@ function ModelComboBox({
             <div className="border-b border-[var(--color-border)] p-2">
               <input
                 autoFocus
-                autoComplete="off"
+                autoComplete="one-time-code"
                 name="model-search-nofill"
+                id="guardian-model-search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search models..."
@@ -263,8 +264,9 @@ function ModelComboBox({
                 <div className="flex items-center gap-2">
                   <input
                     autoFocus
-                    autoComplete="off"
+                    autoComplete="one-time-code"
                     name="custom-model-nofill"
+                    id="guardian-custom-model"
                     value={customModel}
                     onChange={(e) => setCustomModel(e.target.value)}
                     placeholder="model-name"
@@ -492,7 +494,12 @@ export function AiConfigManager() {
 
       {/* Config Form */}
       {showForm && (
-        <form onSubmit={handleSave} className="rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] p-4 space-y-3">
+        <form onSubmit={handleSave} autoComplete="off" className="rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] p-4 space-y-3">
+          {/* Hidden honeypot inputs to absorb Chrome autofill */}
+          <div aria-hidden="true" style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", opacity: 0 }}>
+            <input type="text" name="prevent_autofill_username" tabIndex={-1} />
+            <input type="password" name="prevent_autofill_password" tabIndex={-1} />
+          </div>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="block">
               <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Provider</span>
@@ -514,7 +521,7 @@ export function AiConfigManager() {
                 <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">
                   API Key {config?.hasApiKey && <span className="text-emerald-400">(configured)</span>}
                 </span>
-                <input type="password" value={form.apiKey} onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+                <input type="password" autoComplete="new-password" name="guardian-api-key" value={form.apiKey} onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
                   className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none"
                   placeholder={config?.hasApiKey ? "Leave blank to keep current" : "sk-..."} />
               </label>
