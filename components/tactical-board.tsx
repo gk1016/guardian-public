@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useEngine } from "@/lib/engine-context";
 import {
   Crosshair,
@@ -276,5 +277,3 @@ export function TacticalBoard() {
     </div>
   );
 }
-
-import { useState, useEffect } from "react";
