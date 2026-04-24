@@ -8,12 +8,12 @@ pub struct SessionClaims {
     pub email: String,
     pub handle: String,
     pub role: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "displayName")]
     pub display_name: Option<String>,
     pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "orgId")]
     pub org_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "orgTag")]
     pub org_tag: Option<String>,
     pub exp: i64,
     pub iat: i64,

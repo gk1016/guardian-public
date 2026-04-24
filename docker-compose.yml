@@ -36,6 +36,7 @@ services:
       GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"
       GUARDIAN_CERT_DIR: "/data/guardian/certs"
       RUST_LOG: "guardian_engine=info,tower_http=info"
+      AUTH_SECRET: "${AUTH_SECRET}"
     volumes:
       - guardian-engine-certs:/data/guardian/certs
     depends_on:
