@@ -18,56 +18,23 @@ git clone https://github.com/gk1016/guardian-public.git
 cd guardian-public
 ```
 
-### 2. Create your config file
+### 2. Run the setup script
+
+**Mac / Linux:**
 
 ```bash
-cp .env.example .env
+./setup.sh
 ```
 
-This copies the example config to a file called `.env` that Guardian will actually read.
+**Windows (PowerShell):**
 
-### 3. Edit `.env`
-
-Open `.env` in any text editor (VS Code, Notepad, nano, whatever you have). You need to change at least two values:
-
-**AUTH_SECRET** — change this to any random string. This is used to sign login tokens. You can generate one with:
-
-```bash
-openssl rand -hex 32
+```powershell
+.\setup.ps1
 ```
 
-**POSTGRES_PASSWORD** — change this to a password of your choosing.
+The script automatically generates secure credentials, pulls container images, initializes the database, and starts all services. This takes 1-3 minutes depending on your internet speed.
 
-**Important:** if you change `POSTGRES_PASSWORD`, you must also update the password inside `DATABASE_URL` to match. The format is:
-
-```
-DATABASE_URL=postgresql://guardian:YOUR_PASSWORD_HERE@guardian-postgres:5432/guardian
-```
-
-Everything else can stay at the defaults. See the comments in `.env.example` for what each variable does.
-
-### 4. Initialize the database
-
-```bash
-docker compose pull
-docker compose --profile init run guardian-init
-```
-
-The first command pulls pre-built container images from GitHub Container Registry — takes a couple minutes. The second creates the database tables. You should see Prisma output ending with something like:
-
-```
-Your database is now in sync with your Prisma schema.
-```
-
-### 5. Start Guardian
-
-```bash
-docker compose up -d
-```
-
-This starts all services in the background. Give it about 10 seconds to fully boot.
-
-### 6. Run the Setup Wizard
+### 3. Complete the Setup Wizard
 
 Open **https://localhost** in your browser.
 
@@ -80,12 +47,12 @@ You will see a security warning about the certificate — this is expected. Guar
 
 This is safe — you're connecting to your own machine.
 
-Guardian will detect this is a fresh install and present the **First-Run Setup** wizard. It walks you through two steps:
+Guardian's setup wizard walks you through two steps:
 
 1. **Create your organization** — name, tag, and optional description.
 2. **Create your admin account** — email, callsign, display name, and password.
 
-Once complete, you're redirected to the login page. Sign in with the admin account you just created.
+Once complete, sign in and you're operational.
 
 ## TLS and Custom Domain
 
@@ -93,15 +60,15 @@ Guardian uses Caddy for TLS. The default config generates a self-signed certific
 
 **Access from another device on your LAN (e.g. 192.168.1.50):**
 
-Set `SITE_ADDRESS=192.168.1.50` in `.env` and restart with `docker compose up -d`. Other devices on your network can then access `https://192.168.1.50`. They will see the same certificate warning — click through it.
+Edit `.env` and set `SITE_ADDRESS=192.168.1.50`, then restart with `docker compose up -d`. Other devices on your network can then access `https://192.168.1.50`. They will see the same certificate warning — click through it.
 
 **Use a different port (e.g. 3411):**
 
-Set `HTTPS_PORT=3411` in `.env` and restart. Access at `https://localhost:3411`.
+Edit `.env` and set `HTTPS_PORT=3411`, then restart. Access at `https://localhost:3411`.
 
 **Public domain with automatic Let's Encrypt:**
 
-Set `SITE_ADDRESS=guardian.example.com` in `.env`, then edit the `Caddyfile` in the repo root and remove the `tls internal` line. Caddy will automatically get a real certificate from Let's Encrypt. Your server must be reachable from the internet on ports 80 and 443.
+Edit `.env` and set `SITE_ADDRESS=guardian.example.com`, then edit the `Caddyfile` in the repo root and remove the `tls internal` line. Caddy will automatically get a real certificate from Let's Encrypt. Your server must be reachable from the internet on ports 80 and 443.
 
 ## Services
 
@@ -148,7 +115,7 @@ To wipe the database and start completely fresh:
 ```bash
 docker compose down
 docker volume rm guardian-public_guardian-postgres-data
-docker compose --profile init run guardian-init
+docker compose --profile init run --rm guardian-init
 docker compose up -d
 ```
 
@@ -162,7 +129,7 @@ Note: the volume name includes your project directory name. If you cloned into a
 The container images are hosted on GitHub Container Registry (ghcr.io). If you're behind a corporate firewall or proxy, make sure `ghcr.io` is not blocked.
 
 **Can't connect after starting:**
-Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All containers should show "Up". The `guardian-init` container will show "Exited" — that's normal, it only runs once.
+Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All containers should show "Up".
 
 **Certificate warning on every visit:**
 This is expected with self-signed certificates. To eliminate it, either use Let's Encrypt with a real domain, or import Caddy's root CA from the `caddy_data` Docker volume into your browser's trust store.

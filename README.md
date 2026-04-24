@@ -4,19 +4,15 @@ A self-hosted operational platform for Star Citizen organizations. Mission plann
 
 ## Quick Deploy
 
-Requires [Docker Desktop](https://www.docker.com/get-started/) and [Git](https://git-scm.com/downloads). See [DEPLOY.md](DEPLOY.md) for full step-by-step instructions and troubleshooting.
+Requires [Docker Desktop](https://www.docker.com/get-started/) and [Git](https://git-scm.com/downloads). See [DEPLOY.md](DEPLOY.md) for full instructions and troubleshooting.
 
 ```bash
 git clone https://github.com/gk1016/guardian-public.git
 cd guardian-public
-cp .env.example .env
-# Edit .env — change AUTH_SECRET and POSTGRES_PASSWORD (update DATABASE_URL to match)
-docker compose pull
-docker compose --profile init run guardian-init
-docker compose up -d
+./setup.sh        # Windows: .\setup.ps1
 ```
 
-Open https://localhost, accept the self-signed cert, and complete the setup wizard to create your organization and admin account.
+Open https://localhost, accept the self-signed cert, and the setup wizard walks you through creating your organization and admin account. That's it.
 
 ## Container Images
 
@@ -27,7 +23,7 @@ Pre-built images are published to GitHub Container Registry:
 | `ghcr.io/gk1016/guardian-flight` | Next.js web application |
 | `ghcr.io/gk1016/guardian-engine` | Rust compute engine |
 
-No build step required — `docker compose pull` downloads everything.
+No build step required — the setup script pulls everything automatically.
 
 ## What's Inside
 
