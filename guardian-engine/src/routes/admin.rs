@@ -66,6 +66,8 @@ async fn factory_reset(
         r#"DELETE FROM "AiConfig" WHERE "orgId" = $1"#,
         r#"DELETE FROM "AuditLog" WHERE "orgId" = $1"#,
         r#"DELETE FROM "DiscordConfig" WHERE "orgId" = $1"#,
+        r#"DELETE FROM "Application" WHERE "orgId" = $1"#,
+        r#"DELETE FROM "RecruitConfig" WHERE "orgId" = $1"#,
     ];
 
     let mut cleared = 0i32;

@@ -42,9 +42,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
               : "mt-1 text-sm tracking-[0.24em]"
           }`}
         >
-          {isLanding
-            ? "Anti-Piracy and Rescue Operations"
-            : "Operational Platform for Anti-Piracy and Rescue"}
+          Operational Platform
         </p>
       </div>
 
@@ -53,7 +51,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
         className={`hidden gap-5 uppercase text-[var(--color-text-secondary)] md:flex ${
           isLanding
             ? "text-xs tracking-[0.16em]"
-            : "text-sm tracking-[0.2em] text-slate-300"
+            : "text-sm tracking-[0.2em]"
         }`}
       >
         {navItems.map((item) => (
@@ -88,7 +86,7 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="text-sm uppercase tracking-[0.16em] text-slate-300 transition hover:text-[var(--color-text-strong)]"
+                className="text-sm uppercase tracking-[0.16em] text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
               >
                 {item.label}
               </Link>
