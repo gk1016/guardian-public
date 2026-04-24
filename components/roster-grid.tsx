@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Radar, ArrowUpDown, Activity } from "lucide-react";
+import { Radar, ArrowUpDown, Activity, ChevronRight, ChevronDown } from "lucide-react";
 import { RosterMemberAdmin } from "@/components/roster-member-admin";
 
 type RosterCrewItem = {
@@ -47,6 +47,38 @@ const tierTone: Record<string, { label: string; color: string; bar: string }> = 
 };
 
 type SortMode = "activity" | "alpha" | "availability";
+
+function CrewCommitments({ handle, commitments }: { handle: string; commitments: RosterCrewItem["commitments"] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const count = commitments.length;
+
+  return (
+    <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)]">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition hover:bg-white/3"
+      >
+        {isOpen ? <ChevronDown size={12} className="text-[var(--color-text-tertiary)]" /> : <ChevronRight size={12} className="text-[var(--color-text-tertiary)]" />}
+        <Radar size={13} className="text-cyan-300" />
+        <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Commitments</span>
+        <span className={"ml-auto text-[10px] " + (count > 0 ? "text-amber-300" : "text-emerald-300")}>{count > 0 ? count + " active" : "Clear"}</span>
+      </button>
+      {isOpen ? (
+        <div className="space-y-1.5 border-t border-[var(--color-border)] px-3 pb-3 pt-2">
+          {count > 0 ? commitments.map((c) => (
+            <Link key={handle + "-" + c.missionId} href={"/missions/" + c.missionId} className="block rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2 transition hover:bg-[var(--color-overlay-subtle)]">
+              <p className="text-xs font-medium text-[var(--color-text-strong)]">{c.callsign}</p>
+              <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{c.assignmentStatus} / {c.role}</p>
+            </Link>
+          )) : (
+            <p className="text-[11px] text-emerald-300">No active commitments.</p>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function RosterGrid({ items, isAdmin = false }: { items: RosterCrewItem[]; isAdmin?: boolean }) {
   const [sortMode, setSortMode] = useState<SortMode>("activity");
@@ -122,22 +154,7 @@ export function RosterGrid({ items, isAdmin = false }: { items: RosterCrewItem[]
                 </div>
               </div>
 
-              <div className="mt-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <Radar size={13} className="text-cyan-300" />
-                  <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Commitments</p>
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  {crew.commitments.length > 0 ? crew.commitments.map((c) => (
-                    <Link key={`${crew.handle}-${c.missionId}`} href={`/missions/${c.missionId}`} className="block rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-white/3 px-3 py-2 transition hover:bg-[var(--color-overlay-subtle)]">
-                      <p className="text-xs font-medium text-[var(--color-text-strong)]">{c.callsign}</p>
-                      <p className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">{c.assignmentStatus} / {c.role}</p>
-                    </Link>
-                  )) : (
-                    <p className="text-[11px] text-emerald-300">No active commitments.</p>
-                  )}
-                </div>
-              </div>
+              <CrewCommitments handle={crew.handle} commitments={crew.commitments} />
 
               {crew.notes ? <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{crew.notes}</p> : null}
 
