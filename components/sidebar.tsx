@@ -22,6 +22,7 @@ import {
   ScrollText,
   BookOpen,
   Monitor,
+  Network,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
@@ -35,6 +36,7 @@ const navSections = [
       { href: "/command", label: "Watch Floor", icon: LayoutDashboard },
       { href: "/tactical", label: "Tactical", icon: Monitor },
       { href: "/missions", label: "Missions", icon: Target },
+      { href: "/federation", label: "Federation", icon: Network },
     ],
   },
   {
