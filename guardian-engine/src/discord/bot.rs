@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use anyhow::{anyhow, Context as AnyhowContext};
 use serenity::all::{
     Client, Context, CreateCommand, CreateCommandOption, CommandOptionType,
@@ -60,10 +59,10 @@ impl EventHandler for Handler {
             info!("Registered 5 slash commands to guild {}", self.guild_id);
         }
 
-        // Start event bridge
+        // Start event bridge — ctx.http is already Arc<Http>
         let bridge_state = self.state.clone();
         let bridge_channels = self.channels.clone();
-        let http = Arc::new(ctx.http.clone());
+        let http = ctx.http.clone();
         tokio::spawn(async move {
             bridge::run(bridge_state, bridge_channels, http).await;
         });
