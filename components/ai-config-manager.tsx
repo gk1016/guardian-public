@@ -209,6 +209,8 @@ function ModelComboBox({
             <div className="border-b border-[var(--color-border)] p-2">
               <input
                 autoFocus
+                autoComplete="off"
+                name="model-search-nofill"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search models..."
@@ -261,6 +263,8 @@ function ModelComboBox({
                 <div className="flex items-center gap-2">
                   <input
                     autoFocus
+                    autoComplete="off"
+                    name="custom-model-nofill"
                     value={customModel}
                     onChange={(e) => setCustomModel(e.target.value)}
                     placeholder="model-name"
