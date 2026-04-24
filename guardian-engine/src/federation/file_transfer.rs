@@ -8,25 +8,30 @@
 //!
 //! Chunk size: 64KB (fits comfortably in a WebSocket text frame as hex)
 
-use crate::federation::types::{FileOfferData, FileAckData, FederationPayload};
+use sha2::{Sha256, Digest};
+use tracing::{info, warn};
+
+use crate::federation::types::{FileOfferData, FileChunkData, FileAckData, FederationPayload};
 use crate::federation::protocol;
 use crate::state::AppState;
 
 pub const CHUNK_SIZE: usize = 64 * 1024; // 64KB
 
 /// Initiate a file transfer to a specific peer.
+/// Returns the file_id for tracking, or None if peer is not connected.
 pub async fn offer_file(
     state: &AppState,
     target_instance: &str,
     filename: &str,
     data: &[u8],
-) -> String {
+) -> Option<String> {
     let file_id = uuid::Uuid::new_v4().to_string();
     let total_chunks = ((data.len() + CHUNK_SIZE - 1) / CHUNK_SIZE) as u32;
 
     // Compute SHA-256
-    // TODO: Use a proper SHA-256 implementation (ring or sha2 crate)
-    let sha256 = format!("{:x}", data.len()); // placeholder
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    let sha256 = hex::encode(hasher.finalize());
 
     let offer = protocol::envelope(
         &state.config().instance_id,
@@ -41,11 +46,58 @@ pub async fn offer_file(
         }),
     );
 
-    // TODO: Send offer via peer connection, wait for FileAck,
-    // then stream chunks.
-    let _ = offer;
+    if state.peers().send_msg_to(target_instance, &offer).await {
+        info!(
+            file_id = %file_id,
+            filename = %filename,
+            size = data.len(),
+            chunks = total_chunks,
+            target = %target_instance,
+            "file offer sent to peer"
+        );
+        Some(file_id)
+    } else {
+        warn!(
+            target = %target_instance,
+            filename = %filename,
+            "file offer failed: peer not connected"
+        );
+        None
+    }
+}
 
-    file_id
+/// Stream file chunks to a peer after offer acceptance.
+pub async fn send_chunks(
+    state: &AppState,
+    target_instance: &str,
+    file_id: &str,
+    data: &[u8],
+) -> usize {
+    let mut sent = 0;
+    for (i, chunk) in data.chunks(CHUNK_SIZE).enumerate() {
+        let msg = protocol::envelope(
+            &state.config().instance_id,
+            &state.config().instance_name,
+            Some(target_instance.to_string()),
+            FederationPayload::FileChunk(FileChunkData {
+                file_id: file_id.to_string(),
+                chunk_index: i as u32,
+                data: chunk.to_vec(),
+            }),
+        );
+
+        if state.peers().send_msg_to(target_instance, &msg).await {
+            sent += 1;
+        } else {
+            warn!(
+                file_id = %file_id,
+                chunk = i,
+                "file chunk send failed, aborting transfer"
+            );
+            break;
+        }
+    }
+    sent
 }
 
 /// Accept or reject an incoming file offer.
@@ -55,7 +107,7 @@ pub async fn respond_to_offer(
     file_id: &str,
     accept: bool,
     reason: Option<String>,
-) {
+) -> bool {
     let ack = protocol::envelope(
         &state.config().instance_id,
         &state.config().instance_name,
@@ -67,6 +119,5 @@ pub async fn respond_to_offer(
         }),
     );
 
-    // TODO: Send via peer connection
-    let _ = ack;
+    state.peers().send_msg_to(target_instance, &ack).await
 }

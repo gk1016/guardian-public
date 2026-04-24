@@ -10,6 +10,8 @@
 //! unless explicitly authorized.
 
 use sqlx::{PgPool, Row};
+use tracing::{info, warn};
+
 use crate::federation::types::{DataSyncPayload, FederationPayload};
 use crate::federation::protocol;
 use crate::state::AppState;
@@ -19,7 +21,7 @@ pub async fn share_intel(
     state: &AppState,
     pool: &PgPool,
     report_id: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<usize> {
     let row = sqlx::query(
         r#"
         SELECT id, title, "reportType", severity, description,
@@ -48,11 +50,17 @@ pub async fn share_intel(
             }),
         );
 
-        // TODO: Send to all peers via federation manager
-        let _ = msg;
+        let sent = state.peers().broadcast_msg(&msg).await;
+        info!(
+            report_id = %report_id,
+            peers_reached = sent,
+            "shared intel report with federation"
+        );
+        Ok(sent)
+    } else {
+        warn!(report_id = %report_id, "intel report not found for federation share");
+        Ok(0)
     }
-
-    Ok(())
 }
 
 /// Share a mission status summary with all federated peers.
@@ -60,7 +68,7 @@ pub async fn share_mission_status(
     state: &AppState,
     pool: &PgPool,
     mission_id: &str,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<usize> {
     let row = sqlx::query(
         r#"
         SELECT id, callsign, status, "missionType"
@@ -85,8 +93,54 @@ pub async fn share_mission_status(
             }),
         );
 
-        let _ = msg;
+        let sent = state.peers().broadcast_msg(&msg).await;
+        info!(
+            mission_id = %mission_id,
+            peers_reached = sent,
+            "shared mission status with federation"
+        );
+        Ok(sent)
+    } else {
+        warn!(mission_id = %mission_id, "mission not found for federation share");
+        Ok(0)
+    }
+}
+
+/// Share a QRF readiness snapshot with all federated peers.
+pub async fn share_qrf_status(
+    state: &AppState,
+    pool: &PgPool,
+) -> anyhow::Result<usize> {
+    let rows = sqlx::query(
+        r#"
+        SELECT callsign, status, "crewCount"
+        FROM "QrfTeam"
+        "#
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut total_sent = 0;
+    for r in &rows {
+        let msg = protocol::envelope(
+            &state.config().instance_id,
+            &state.config().instance_name,
+            None,
+            FederationPayload::DataSync(DataSyncPayload::QrfStatus {
+                callsign: r.get("callsign"),
+                status: r.get("status"),
+                available_crew: r.get("crewCount"),
+            }),
+        );
+        total_sent += state.peers().broadcast_msg(&msg).await;
     }
 
-    Ok(())
+    if !rows.is_empty() {
+        info!(
+            teams = rows.len(),
+            messages_sent = total_sent,
+            "shared QRF status with federation"
+        );
+    }
+    Ok(total_sent)
 }
