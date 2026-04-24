@@ -92,7 +92,7 @@ services:
       guardian-postgres:
         condition: service_healthy
     entrypoint: ["sh", "-c"]
-    command: ["npx prisma db push"]
+    command: ["npx prisma@6.19.0 db push"]
 
   guardian-postgres:
     image: postgres:16-bookworm
