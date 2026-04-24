@@ -110,8 +110,8 @@ model Mission {
 
 model DoctrineTemplate {
   id         String       @id @default(cuid())
-  orgId      String
   code       String
+  orgId      String
   title      String
   category   String
   summary    String
@@ -193,6 +193,25 @@ model IntelReport {
   @@index([severity])
 }
 
+model FederatedIntel {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sourceInstanceId   String
+  sourceInstanceName String
+  remoteReportId     String
+  title              String
+  reportType         String
+  severity           Int      @default(3)
+  description        String?
+  starSystem         String?
+  hostileGroup       String?
+  receivedAt         DateTime @default(now())
+
+  @@unique([sourceInstanceId, remoteReportId])
+  @@index([sourceInstanceId])
+  @@index([receivedAt])
+  @@index([severity])
+}
+
 model RescueRequest {
   id                String       @id @default(cuid())
   orgId             String
@@ -266,8 +285,8 @@ model QrfDispatch {
 
 model Incident {
   id             String        @id @default(cuid())
-  orgId          String
   missionId      String?
+  orgId          String
   rescueId       String?
   reporterId     String
   reviewerId     String?
