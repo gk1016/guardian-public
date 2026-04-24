@@ -9,8 +9,8 @@ function LoginScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/command";
-  const [email, setEmail] = useState("reaper11@guardian.local");
-  const [password, setPassword] = useState("GuardianDemo!2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +45,7 @@ function LoginScreen() {
               <label className="mb-1.5 block text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Email</label>
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5">
                 <User size={15} className="text-[var(--color-text-faint)]" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-faint)]" placeholder="pilot@guardian.local" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-faint)]" placeholder="you@yourdomain.com" />
               </div>
             </div>
             <div>
@@ -64,9 +64,6 @@ function LoginScreen() {
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
-          <p className="mt-4 text-center text-[11px] text-[var(--color-text-tertiary)]">
-            Demo: reaper11@guardian.local / GuardianDemo!2026
-          </p>
         </div>
 
         <p className="mt-4 text-center text-[11px] text-[var(--color-text-faint)]">
