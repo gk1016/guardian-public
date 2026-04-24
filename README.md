@@ -4,18 +4,30 @@ A self-hosted operational platform for Star Citizen organizations. Mission plann
 
 ## Quick Deploy
 
-Requires [Docker Desktop](https://www.docker.com/get-started/) and [Git](https://git-scm.com/downloads). See [DEPLOY.md](DEPLOY.md) for full step-by-step instructions with screenshots and troubleshooting.
+Requires [Docker Desktop](https://www.docker.com/get-started/) and [Git](https://git-scm.com/downloads). See [DEPLOY.md](DEPLOY.md) for full step-by-step instructions and troubleshooting.
 
 ```bash
 git clone https://github.com/gk1016/guardian-public.git
 cd guardian-public
 cp .env.example .env
 # Edit .env — change AUTH_SECRET, POSTGRES_PASSWORD, and DATABASE_URL
-docker compose --profile tools run guardian-tools   # first run takes 5-15 min
+docker compose pull
+docker compose --profile tools run guardian-tools   # seeds the database
 docker compose up -d
 ```
 
 Open https://localhost, accept the self-signed cert, and log in with `reaper11@guardian.local` / `GuardianDemo!2026`.
+
+## Container Images
+
+Pre-built images are published to GitHub Container Registry:
+
+| Image | Description |
+|-------|-------------|
+| `ghcr.io/gk1016/guardian-flight` | Next.js web application |
+| `ghcr.io/gk1016/guardian-engine` | Rust compute engine |
+
+No build step required — `docker compose pull` downloads everything.
 
 ## What's Inside
 
@@ -86,6 +98,7 @@ Default password for all: `GuardianDemo!2026` (override with `GUARDIAN_DEMO_PASS
 - **Auth:** JWT (HS256, httpOnly cookies, 7-day sessions, bcrypt password hashing)
 - **Proxy:** Caddy 2 (Alpine)
 - **Containerization:** Docker Compose v2
+- **Registry:** GitHub Container Registry (ghcr.io)
 
 ## Local Development
 

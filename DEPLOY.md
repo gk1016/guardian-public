@@ -56,13 +56,14 @@ DATABASE_URL=postgresql://guardian:my-secure-db-password@guardian-postgres:5432/
 
 Everything else can stay at the defaults. See the comments in `.env.example` for what each variable does.
 
-### 4. Create the database and seed demo data
+### 4. Pull images and seed the database
 
 ```bash
+docker compose pull
 docker compose --profile tools run guardian-tools
 ```
 
-The first time you run this, Docker will download base images and build the application. **This will take 5-15 minutes** depending on your internet speed and machine — the Rust engine compiles from source. You'll see a lot of build output. Wait until you see:
+Docker will download the pre-built images from GitHub Container Registry. This should take 1-3 minutes depending on your internet speed. Wait until you see:
 
 ```
 Guardian seed complete.
@@ -131,6 +132,17 @@ Guardian runs five Docker containers:
 | guardian-tools    | One-shot container that creates database tables and seeds demo data — only runs when you explicitly start it |
 | caddy             | Reverse proxy that handles HTTPS and routes traffic to the frontend and engine |
 
+## Updating
+
+To pull the latest version:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Docker will download any updated images and restart the affected containers. Your data is preserved in Docker volumes.
+
 ## Stopping and Starting
 
 Stop everything:
@@ -160,11 +172,8 @@ Note: the volume name includes your project directory name. If you cloned into a
 
 ## Troubleshooting
 
-**Build fails or takes forever:**
-The Rust engine compiles from source, which is CPU-intensive. On a low-powered machine, the first build can take 20+ minutes. Subsequent builds are cached and much faster.
-
-**"guardian-tools" exits without "Guardian seed complete":**
-Check that the database started: `docker compose logs guardian-postgres`. If it shows errors, the most common cause is port 5432 already in use by another Postgres installation.
+**Images fail to pull:**
+The container images are hosted on GitHub Container Registry (ghcr.io). If you're behind a corporate firewall or proxy, make sure `ghcr.io` is not blocked.
 
 **Can't connect after starting:**
 Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All five should show "Up" (guardian-tools will show "Exited" — that's normal, it only runs once).

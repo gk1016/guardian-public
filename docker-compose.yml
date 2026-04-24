@@ -1,6 +1,6 @@
 services:
   guardian:
-    build: .
+    image: ghcr.io/gk1016/guardian-flight:latest
     container_name: guardian
     restart: unless-stopped
     expose:
@@ -20,9 +20,7 @@ services:
       retries: 3
 
   guardian-engine:
-    build:
-      context: ./guardian-engine
-      dockerfile: Dockerfile
+    image: ghcr.io/gk1016/guardian-engine:latest
     container_name: guardian-engine
     restart: unless-stopped
     expose:
@@ -86,16 +84,15 @@ services:
         done
 
   guardian-tools:
-    build:
-      context: .
-      target: builder
+    image: ghcr.io/gk1016/guardian-flight:latest
     profiles: ["tools"]
     env_file:
       - .env
     depends_on:
       guardian-postgres:
         condition: service_healthy
-    command: sh -lc "npx prisma db push && npm run db:seed"
+    entrypoint: ["sh", "-c"]
+    command: ["npx prisma db push && npm run db:seed"]
 
   guardian-postgres:
     image: postgres:16-bookworm
