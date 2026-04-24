@@ -23,6 +23,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Defense in depth: Next.js standalone bundles .env into the output.
+# Remove it so secrets never ship in image layers.
+RUN rm -f .env .env.local .env.production .env.production.local
+
 # Prisma seed support: schema, seed scripts, client, and bcryptjs
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
