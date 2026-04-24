@@ -49,233 +49,128 @@ type SessionInfo = {
   role: string;
 };
 
-function StatusIndicator({ value, max, label, color }: { value: number; max: number; label: string; color: string }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+/* ── Stoplight indicator ── */
+function Stoplight({ value, thresholds }: { value: number; thresholds?: [number, number] }) {
+  const [amber, green] = thresholds ?? [40, 70];
+  const color = value >= green ? "bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.6)]" :
+                value >= amber ? "bg-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.6)]" :
+                "bg-red-500 shadow-[0_0_8px_rgba(248,113,113,0.6)]";
+  return <span className={`inline-block h-3 w-3 rounded-full ${color}`} />;
+}
+
+function StoplightLabel({ value, thresholds }: { value: number; thresholds?: [number, number] }) {
+  const [amber, green] = thresholds ?? [40, 70];
+  if (value >= green) return <span className="text-emerald-400 font-semibold">GREEN</span>;
+  if (value >= amber) return <span className="text-amber-400 font-semibold">AMBER</span>;
+  return <span className="text-red-400 font-semibold">RED</span>;
+}
+
+/* ── Readiness Condition Banner ── */
+function ReadconBanner({ score }: { score: number }) {
+  let readcon: string, label: string, color: string, bgColor: string;
+  if (score >= 90) {
+    readcon = "READCON 1"; label = "FULL READINESS"; color = "text-emerald-300"; bgColor = "bg-emerald-500/10 border-emerald-500/30";
+  } else if (score >= 70) {
+    readcon = "READCON 2"; label = "SUBSTANTIAL READINESS"; color = "text-emerald-400"; bgColor = "bg-emerald-500/5 border-emerald-500/20";
+  } else if (score >= 50) {
+    readcon = "READCON 3"; label = "REDUCED READINESS"; color = "text-amber-400"; bgColor = "bg-amber-500/5 border-amber-500/20";
+  } else if (score >= 30) {
+    readcon = "READCON 4"; label = "MINIMAL READINESS"; color = "text-orange-400"; bgColor = "bg-orange-500/5 border-orange-500/20";
+  } else {
+    readcon = "READCON 5"; label = "NON-MISSION CAPABLE"; color = "text-red-400"; bgColor = "bg-red-500/5 border-red-500/20";
+  }
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-28 h-2 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-1000 ${color}`}
-          style={{ width: `${pct}%` }}
-        />
+    <div className={`flex items-center justify-between px-5 py-3 border-b ${bgColor}`}>
+      <div className="flex items-center gap-4">
+        <span className={`font-mono text-lg font-bold tracking-wide ${color}`}>{readcon}</span>
+        <span className="text-[10px] uppercase tracking-[0.16em] text-white/40 font-semibold">{label}</span>
       </div>
-      <span className="text-[11px] font-semibold tabular-nums text-white/70 w-10 text-right">{pct}%</span>
-      <span className="text-[11px] text-white/50">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] uppercase tracking-wider text-white/30">Composite</span>
+        <span className={`font-mono text-xl font-bold tabular-nums ${color}`}>{score}</span>
+      </div>
     </div>
   );
 }
 
-function MetricBlock({ icon, value, label, color, pulse }: { icon: React.ReactNode; value: string | number; label: string; color: string; pulse?: boolean }) {
+/* ── Status Matrix Row ── */
+function StatusRow({ label, value, detail, thresholds }: {
+  label: string;
+  value: number;
+  detail: string;
+  thresholds?: [number, number];
+}) {
   return (
-    <div className={`rounded-lg border-2 ${color} px-4 py-3 relative`}>
-      {pulse && (
-        <span className="absolute top-2 right-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-current animate-pulse" />
-        </span>
-      )}
-      <div className="flex items-center gap-2 mb-1.5">
+    <tr className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+      <td className="py-2.5 px-4 w-8">
+        <Stoplight value={value} thresholds={thresholds} />
+      </td>
+      <td className="py-2.5 px-2 text-[11px] uppercase tracking-wider text-white/70 font-semibold w-40">
+        {label}
+      </td>
+      <td className="py-2.5 px-2 font-mono text-sm font-bold tabular-nums text-white/90 w-16 text-right">
+        {value}%
+      </td>
+      <td className="py-2.5 px-2">
+        <StoplightLabel value={value} thresholds={thresholds} />
+      </td>
+      <td className="py-2.5 px-4 text-[11px] text-white/40">
+        {detail}
+      </td>
+    </tr>
+  );
+}
+
+/* ── Mission Phase Tracker ── */
+function PhaseBlock({ count, phase, icon, color }: {
+  count: number;
+  phase: string;
+  icon: React.ReactNode;
+  color: string;
+}) {
+  return (
+    <div className={`flex-1 border ${color} rounded px-4 py-3`}>
+      <div className="flex items-center gap-2 mb-1">
         {icon}
-        <span className="text-[10px] uppercase tracking-[0.14em] font-semibold opacity-80">{label}</span>
+        <span className="text-[9px] uppercase tracking-[0.16em] font-semibold opacity-70">{phase}</span>
       </div>
-      <p className="font-mono text-2xl font-bold tabular-nums tracking-wide">
-        {typeof value === "number" ? value.toString().padStart(2, "0") : value}
-      </p>
+      <p className="font-mono text-3xl font-bold tabular-nums">{count.toString().padStart(2, "0")}</p>
     </div>
   );
 }
 
-function EventLine({ event, idx }: { event: AlertEvent; idx: number }) {
+/* ── SIGACT Event Line ── */
+function SigactLine({ event, idx }: { event: AlertEvent; idx: number }) {
   const severityColor = {
-    critical: "text-red-300 bg-red-500/10",
-    warning: "text-amber-300 bg-amber-500/10",
-    info: "text-cyan-300 bg-cyan-500/10",
-  }[event.severity] || "text-white/60 bg-white/5";
+    critical: "text-red-300 border-l-red-500",
+    warning: "text-amber-300 border-l-amber-500",
+    info: "text-cyan-300 border-l-cyan-500",
+  }[event.severity] || "text-white/60 border-l-white/20";
 
-  const categoryIcon = {
-    compliance: <Shield size={11} />,
-    threat: <AlertTriangle size={11} />,
-    ops: <Crosshair size={11} />,
-    alert_rule: <Zap size={11} />,
-  }[event.category] || <Activity size={11} />;
+  const categoryTag = {
+    compliance: "CMPL",
+    threat: "THRT",
+    ops: "OPS",
+    alert_rule: "ALRT",
+  }[event.category] || "INFO";
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-1.5 text-[11px] ${severityColor} rounded mx-1 mb-0.5 animate-fade-in`}
-      style={{ animationDelay: `${idx * 50}ms` }}
+      className={`flex items-start gap-2 px-3 py-2 text-[11px] ${severityColor} border-l-2 mx-2 mb-0.5 animate-fade-in`}
+      style={{ animationDelay: `${idx * 40}ms` }}
     >
-      {categoryIcon}
-      <span className="truncate flex-1">{event.title}</span>
+      <span className="font-mono text-[9px] bg-white/5 px-1.5 py-0.5 rounded font-semibold shrink-0 mt-px">
+        {categoryTag}
+      </span>
+      <span className="flex-1 leading-snug">{event.title}</span>
       {event.callsign && (
-        <span className="font-mono text-[10px] opacity-60">{event.callsign}</span>
+        <span className="font-mono text-[10px] opacity-50 shrink-0">{event.callsign}</span>
       )}
     </div>
   );
 }
 
-/** Convert a score (0-100) on a given axis to SVG coordinates.
- *  Axes: 0=top(QRF), 1=right(Package), 2=bottom(Rescue), 3=left(Intel) */
-function scoreToPoint(axisIndex: number, score: number, cx: number, cy: number, radius: number): [number, number] {
-  const angles = [-90, 0, 90, 180];
-  const rad = (angles[axisIndex] * Math.PI) / 180;
-  const r = (score / 100) * radius;
-  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-}
-
-type TextAnchorValue = "start" | "middle" | "end";
-
-function ReadinessRadar({ readiness, score }: { readiness: OpsSummary["readiness"]; score: number }) {
-  const cx = 150, cy = 150, maxR = 120;
-  const scores = [
-    readiness.qrf_posture,
-    readiness.package_discipline,
-    readiness.rescue_response,
-    readiness.threat_awareness,
-  ];
-  const labels = ["QRF", "PKG", "RESCUE", "INTEL"];
-  const colors = ["#34d399", "#fbbf24", "#22d3ee", "#a78bfa"];
-
-  const polyPoints = scores.map((s, i) => scoreToPoint(i, s, cx, cy, maxR));
-  const polyStr = polyPoints.map(([x, y]) => `${x},${y}`).join(" ");
-
-  const rings = [25, 50, 75, 100];
-  const scoreColor = score >= 80 ? "#34d399" : score >= 50 ? "#fbbf24" : "#f87171";
-
-  const axisConfig: { x: number; y: number; anchor: TextAnchorValue; label: string; score: number; color: string }[] = [
-    { x: cx, y: 16, anchor: "middle", label: labels[0], score: scores[0], color: colors[0] },
-    { x: 290, y: cy + 4, anchor: "end", label: labels[1], score: scores[1], color: colors[1] },
-    { x: cx, y: 294, anchor: "middle", label: labels[2], score: scores[2], color: colors[2] },
-    { x: 10, y: cy + 4, anchor: "start", label: labels[3], score: scores[3], color: colors[3] },
-  ];
-
-  return (
-    <svg viewBox="0 0 300 300" className="w-72 h-72">
-      {/* Grid rings */}
-      {rings.map((pct) => (
-        <circle
-          key={pct}
-          cx={cx}
-          cy={cy}
-          r={(pct / 100) * maxR}
-          fill="none"
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth="1"
-        />
-      ))}
-
-      {/* Ring labels */}
-      {rings.map((pct) => (
-        <text
-          key={`lbl-${pct}`}
-          x={cx + 4}
-          y={cy - (pct / 100) * maxR + 3}
-          fill="rgba(255,255,255,0.2)"
-          fontSize="8"
-          fontFamily="monospace"
-        >
-          {pct}
-        </text>
-      ))}
-
-      {/* Axis lines */}
-      <line x1={cx} y1={cy - maxR} x2={cx} y2={cy + maxR} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-      <line x1={cx - maxR} y1={cy} x2={cx + maxR} y2={cy} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-
-      {/* Filled polygon */}
-      <polygon
-        points={polyStr}
-        fill="rgba(34,211,238,0.12)"
-        stroke="rgba(34,211,238,0.6)"
-        strokeWidth="2"
-        className="transition-all duration-1000"
-      />
-
-      {/* Score dots on each axis */}
-      {polyPoints.map(([x, y], i) => (
-        <g key={i}>
-          <circle cx={x} cy={y} r="5" fill={colors[i]} opacity="0.9" />
-          <circle cx={x} cy={y} r="5" fill="none" stroke={colors[i]} strokeWidth="1" opacity="0.4">
-            <animate attributeName="r" from="5" to="14" dur="2s" repeatCount="indefinite" />
-            <animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite" />
-          </circle>
-        </g>
-      ))}
-
-      {/* Axis labels + score values */}
-      {axisConfig.map((a, i) => (
-        <g key={`axis-${i}`}>
-          <text
-            x={a.x}
-            y={a.y}
-            textAnchor={a.anchor}
-            fill={a.color}
-            fontSize="10"
-            fontFamily="monospace"
-            fontWeight="600"
-            letterSpacing="0.1em"
-            opacity="0.8"
-          >
-            {a.label}
-          </text>
-          <text
-            x={a.x}
-            y={a.y + 12}
-            textAnchor={a.anchor}
-            fill={a.color}
-            fontSize="9"
-            fontFamily="monospace"
-            opacity="0.5"
-          >
-            {a.score}%
-          </text>
-        </g>
-      ))}
-
-      {/* Center score */}
-      <text
-        x={cx}
-        y={cy - 4}
-        textAnchor="middle"
-        fill={scoreColor}
-        fontSize="28"
-        fontFamily="monospace"
-        fontWeight="bold"
-      >
-        {score}
-      </text>
-      <text
-        x={cx}
-        y={cy + 12}
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.3)"
-        fontSize="8"
-        fontFamily="monospace"
-        letterSpacing="0.2em"
-      >
-        READINESS
-      </text>
-
-      {/* Sweep line */}
-      <line
-        x1={cx}
-        y1={cy}
-        x2={cx + maxR}
-        y2={cy}
-        stroke="rgba(34,211,238,0.3)"
-        strokeWidth="1"
-      >
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from={`0 ${cx} ${cy}`}
-          to={`360 ${cx} ${cy}`}
-          dur="8s"
-          repeatCount="indefinite"
-        />
-      </line>
-    </svg>
-  );
-}
-
+/* ── Main Board ── */
 export function TacticalBoard({ session }: { session: SessionInfo }) {
   const [summary, setSummary] = useState<OpsSummary | null>(null);
   const [events, setEvents] = useState<AlertEvent[]>([]);
@@ -285,7 +180,6 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Set clock on mount to avoid hydration mismatch
   useEffect(() => {
     setClock(new Date());
     const interval = setInterval(() => setClock(new Date()), 1000);
@@ -294,11 +188,9 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
 
   const connect = useCallback(() => {
     if (wsRef.current) wsRef.current.close();
-
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(`${proto}//${window.location.host}/ws`);
     wsRef.current = ws;
-
     ws.onopen = () => setConnected(true);
     ws.onclose = () => {
       setConnected(false);
@@ -310,7 +202,7 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
         if (data.type === "ops_summary") {
           setSummary(data as OpsSummary);
         } else if (data.type && data.title) {
-          setEvents((prev) => [data as AlertEvent, ...prev].slice(0, 50));
+          setEvents((prev) => [data as AlertEvent, ...prev].slice(0, 80));
         }
       } catch {}
     };
@@ -334,172 +226,163 @@ export function TacticalBoard({ session }: { session: SessionInfo }) {
     }
   };
 
-  const readinessColor = (score: number) => {
-    if (score >= 80) return "text-emerald-400";
-    if (score >= 50) return "text-amber-400";
-    return "text-red-400";
-  };
-
-  const readinessBg = (score: number) => {
-    if (score >= 80) return "bg-emerald-500";
-    if (score >= 50) return "bg-amber-500";
-    return "bg-red-500";
-  };
-
-  const readinessGlow = (score: number) => {
-    if (score >= 80) return "shadow-[0_0_20px_rgba(52,211,153,0.4)]";
-    if (score >= 50) return "shadow-[0_0_20px_rgba(251,191,36,0.4)]";
-    return "shadow-[0_0_20px_rgba(248,113,113,0.4)]";
-  };
+  const s = summary;
 
   return (
-    <div className="h-full flex flex-col" style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}>
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-2.5 border-b border-cyan-500/20 bg-[#0d1520]">
+    <div className="h-full flex flex-col bg-[#060a10]" style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace" }}>
+      {/* ── TOP BAR ── */}
+      <div className="flex items-center justify-between px-5 py-2 border-b border-white/10 bg-[#0d1520] shrink-0">
         <div className="flex items-center gap-4">
           <span className="text-xs uppercase tracking-[0.2em] text-cyan-400 font-bold">Guardian</span>
-          <span className="text-xs uppercase tracking-[0.16em] text-white/40">Tactical Overview</span>
+          <span className="text-[10px] uppercase tracking-[0.12em] text-white/30">Joint Operations Center</span>
         </div>
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
             {connected ? (
-              <><Wifi size={13} className="text-emerald-400" /><span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Live</span></>
+              <><Wifi size={12} className="text-emerald-400" /><span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Live</span></>
             ) : (
-              <><WifiOff size={13} className="text-red-400" /><span className="text-[10px] uppercase tracking-wider text-red-400 font-bold">Offline</span></>
+              <><WifiOff size={12} className="text-red-400" /><span className="text-[10px] uppercase tracking-wider text-red-400 font-bold">Offline</span></>
             )}
           </div>
-          <span className="text-xs tabular-nums text-white/50 font-mono" suppressHydrationWarning>
+          <span className="text-[11px] tabular-nums text-white/40 font-mono" suppressHydrationWarning>
             {clock ? clock.toISOString().replace("T", " ").slice(0, 19) + "Z" : "--"}
           </span>
-          <span className="text-xs text-cyan-400 font-semibold">{session.handle}</span>
-          <button onClick={toggleFullscreen} className="text-white/40 hover:text-white/80 transition-colors">
-            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+          <span className="text-[11px] text-cyan-400/80 font-semibold">{session.handle}</span>
+          <button onClick={toggleFullscreen} className="text-white/30 hover:text-white/60 transition-colors">
+            {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
           </button>
         </div>
       </div>
 
-      {/* Main grid */}
-      <div className="flex-1 grid grid-cols-12 gap-1 bg-[#060a10] p-1 overflow-hidden">
+      {/* ── MAIN CONTENT ── */}
+      <div className="flex-1 grid grid-cols-12 gap-px overflow-hidden">
 
-        {/* Left column */}
-        <div className="col-span-3 flex flex-col gap-1">
-          {/* Readiness score */}
-          <div className="bg-[#0d1520] border border-white/10 rounded-lg p-5 flex-shrink-0">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/60 font-semibold mb-3">Org Readiness</p>
-            {summary ? (
-              <>
-                <div className="flex items-end gap-2 mb-5">
-                  <span className={`font-mono text-6xl font-bold tabular-nums ${readinessColor(summary.readiness_score)} ${readinessGlow(summary.readiness_score)}`}>
-                    {summary.readiness_score}
-                  </span>
-                  <span className="text-sm text-white/30 mb-2">/ 100</span>
-                </div>
-                <div className="space-y-2.5">
-                  <StatusIndicator value={summary.readiness.qrf_posture} max={100} label="QRF Posture" color={readinessBg(summary.readiness.qrf_posture)} />
-                  <StatusIndicator value={summary.readiness.package_discipline} max={100} label="Pkg Discipline" color={readinessBg(summary.readiness.package_discipline)} />
-                  <StatusIndicator value={summary.readiness.rescue_response} max={100} label="Rescue Response" color={readinessBg(summary.readiness.rescue_response)} />
-                  <StatusIndicator value={summary.readiness.threat_awareness} max={100} label="Threat Aware" color={readinessBg(summary.readiness.threat_awareness)} />
-                </div>
-              </>
-            ) : (
-              <p className="text-white/30 text-sm">Awaiting data...</p>
-            )}
-          </div>
+        {/* ──────── LEFT: STATUS BOARD (8 cols) ──────── */}
+        <div className="col-span-8 flex flex-col overflow-y-auto">
 
-          {/* Metric blocks */}
-          <div className="bg-[#0d1520] border border-white/10 rounded-lg p-3 grid grid-cols-2 gap-2 flex-1">
-            <MetricBlock
-              icon={<Crosshair size={14} />}
-              value={summary?.active_missions ?? "--"}
-              label="Active Msn"
-              color="border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-              pulse={!!summary && summary.active_missions > 0}
-            />
-            <MetricBlock
-              icon={<Crosshair size={14} />}
-              value={summary?.planning_missions ?? "--"}
-              label="Planning"
-              color="border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
-            />
-            <MetricBlock
-              icon={<Shield size={14} />}
-              value={summary ? `${summary.qrf_ready}/${summary.qrf_total}` : "--"}
-              label="QRF Ready"
-              color="border-amber-500/40 bg-amber-500/10 text-amber-300"
-              pulse={!!summary && summary.qrf_ready > 0}
-            />
-            <MetricBlock
-              icon={<Radio size={14} />}
-              value={summary?.open_rescues ?? "--"}
-              label="Open Rescue"
-              color="border-red-500/40 bg-red-500/10 text-red-300"
-              pulse={!!summary && summary.open_rescues > 0}
-            />
-            <MetricBlock
-              icon={<Eye size={14} />}
-              value={summary?.active_intel ?? "--"}
-              label="Active Intel"
-              color="border-violet-500/40 bg-violet-500/10 text-violet-300"
-            />
-            <MetricBlock
-              icon={<AlertTriangle size={14} />}
-              value={summary?.threat_clusters ?? "--"}
-              label="Threats"
-              color="border-orange-500/40 bg-orange-500/10 text-orange-300"
-              pulse={!!summary && summary.threat_clusters > 0}
-            />
-          </div>
-        </div>
+          {/* READCON Banner */}
+          {s && <ReadconBanner score={s.readiness_score} />}
 
-        {/* Center */}
-        <div className="col-span-6 bg-[#0a1018] border border-white/10 rounded-lg flex flex-col">
-          {/* Status banner */}
-          <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${summary && summary.readiness_score >= 70 ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.6)]' : summary ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-white/20'}`} />
-              <span className="text-xs uppercase tracking-[0.14em] text-white/60 font-semibold">
-                {summary && summary.readiness_score >= 80 ? 'Condition Normal' :
-                 summary && summary.readiness_score >= 50 ? 'Elevated Readiness' :
-                 summary ? 'Reduced Readiness' : 'Initializing'}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-white/40">
-              <span className={summary && summary.compliance_violations > 0 ? 'text-amber-400 font-semibold' : ''}>
-                {summary?.compliance_violations ?? 0} violations
-              </span>
-              <span className={summary && summary.unread_alerts > 0 ? 'text-cyan-400 font-semibold' : ''}>
-                {summary?.unread_alerts ?? 0} unread
-              </span>
+          {/* Mission Phase Tracker */}
+          <div className="px-4 pt-4 pb-3">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 font-semibold mb-3 px-1">Current Operations</p>
+            <div className="flex gap-2">
+              <PhaseBlock
+                count={s?.active_missions ?? 0}
+                phase="Active"
+                icon={<Crosshair size={12} />}
+                color="border-emerald-500/30 bg-emerald-500/5 text-emerald-400"
+              />
+              <PhaseBlock
+                count={s?.planning_missions ?? 0}
+                phase="Planning"
+                icon={<Crosshair size={12} />}
+                color="border-cyan-500/30 bg-cyan-500/5 text-cyan-400"
+              />
+              <PhaseBlock
+                count={s?.open_rescues ?? 0}
+                phase="Open Rescues"
+                icon={<Radio size={12} />}
+                color="border-red-500/30 bg-red-500/5 text-red-400"
+              />
+              <PhaseBlock
+                count={s?.active_intel ?? 0}
+                phase="Intel Reports"
+                icon={<Eye size={12} />}
+                color="border-violet-500/30 bg-violet-500/5 text-violet-400"
+              />
             </div>
           </div>
 
-          {/* Center visualization */}
-          <div className="flex-1 flex items-center justify-center relative">
-            {summary ? (
-              <ReadinessRadar readiness={summary.readiness} score={summary.readiness_score} />
-            ) : (
-              <div className="text-white/30 text-sm">Awaiting engine data...</div>
-            )}
+          {/* Readiness Status Matrix */}
+          <div className="px-4 pb-3">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 font-semibold mb-2 px-1">Readiness Status Matrix</p>
+            <div className="border border-white/[0.06] rounded overflow-hidden">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                    <th className="py-2 px-4 text-[9px] uppercase tracking-widest text-white/30 font-semibold"></th>
+                    <th className="py-2 px-2 text-[9px] uppercase tracking-widest text-white/30 font-semibold">Function</th>
+                    <th className="py-2 px-2 text-[9px] uppercase tracking-widest text-white/30 font-semibold text-right">Score</th>
+                    <th className="py-2 px-2 text-[9px] uppercase tracking-widest text-white/30 font-semibold">Status</th>
+                    <th className="py-2 px-4 text-[9px] uppercase tracking-widest text-white/30 font-semibold">Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <StatusRow
+                    label="QRF Posture"
+                    value={s?.readiness.qrf_posture ?? 0}
+                    detail={s ? `${s.qrf_ready} of ${s.qrf_total} teams ready to deploy` : "--"}
+                  />
+                  <StatusRow
+                    label="Pkg Discipline"
+                    value={s?.readiness.package_discipline ?? 0}
+                    detail={s ? `${s.compliance_violations} active violations across missions` : "--"}
+                  />
+                  <StatusRow
+                    label="Rescue Response"
+                    value={s?.readiness.rescue_response ?? 0}
+                    detail={s ? `${s.open_rescues} open rescues requiring response` : "--"}
+                  />
+                  <StatusRow
+                    label="Threat Awareness"
+                    value={s?.readiness.threat_awareness ?? 0}
+                    detail={s ? `${s.active_intel} intel reports, ${s.threat_clusters} threat clusters` : "--"}
+                  />
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Bottom status */}
-          <div className="px-5 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40">
-            <span suppressHydrationWarning>Last tick: {summary?.timestamp ? new Date(summary.timestamp).toLocaleTimeString() : '--'}</span>
+          {/* Key Indicators */}
+          <div className="px-4 pb-4">
+            <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 font-semibold mb-2 px-1">Key Indicators</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="border border-white/[0.06] rounded px-4 py-3">
+                <p className="text-[9px] uppercase tracking-wider text-white/30 mb-1">QRF Availability</p>
+                <p className="font-mono text-lg font-bold tabular-nums text-white/80">
+                  {s ? `${s.qrf_ready}/${s.qrf_total}` : "--"}
+                  {s && s.qrf_total > 0 && (
+                    <span className="text-xs text-white/30 ml-2">
+                      ({Math.round((s.qrf_ready / s.qrf_total) * 100)}%)
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="border border-white/[0.06] rounded px-4 py-3">
+                <p className="text-[9px] uppercase tracking-wider text-white/30 mb-1">Unread Alerts</p>
+                <p className={`font-mono text-lg font-bold tabular-nums ${s && s.unread_alerts > 10 ? 'text-amber-400' : 'text-white/80'}`}>
+                  {s?.unread_alerts ?? "--"}
+                </p>
+              </div>
+              <div className="border border-white/[0.06] rounded px-4 py-3">
+                <p className="text-[9px] uppercase tracking-wider text-white/30 mb-1">Compliance</p>
+                <p className={`font-mono text-lg font-bold tabular-nums ${s && s.compliance_violations > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {s ? (s.compliance_violations === 0 ? "CLEAR" : `${s.compliance_violations} VIOL`) : "--"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom status bar */}
+          <div className="mt-auto px-5 py-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-white/25 shrink-0">
+            <span suppressHydrationWarning>Last update: {s?.timestamp ? new Date(s.timestamp).toLocaleTimeString() : '--'}</span>
             <span>30s refresh cycle</span>
+            <span>Engine: guardian-engine:3420</span>
           </div>
         </div>
 
-        {/* Right column */}
-        <div className="col-span-3 bg-[#0d1520] border border-white/10 rounded-lg flex flex-col">
-          <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-cyan-400/60 font-semibold">Event Feed</span>
-            <span className="text-[10px] tabular-nums text-white/30 font-mono">{events.length}</span>
+        {/* ──────── RIGHT: SIGACT FEED (4 cols) ──────── */}
+        <div className="col-span-4 bg-[#0b1018] border-l border-white/[0.06] flex flex-col">
+          <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between shrink-0">
+            <span className="text-[9px] uppercase tracking-[0.2em] text-white/30 font-semibold">SIGACT Log</span>
+            <span className="text-[10px] tabular-nums text-white/20 font-mono">{events.length} events</span>
           </div>
           <div className="flex-1 overflow-y-auto py-1">
             {events.length === 0 ? (
-              <p className="text-xs text-white/20 px-4 py-6">No events yet...</p>
+              <p className="text-[11px] text-white/15 px-4 py-8 text-center">No significant activity</p>
             ) : (
-              events.map((event, i) => <EventLine key={`${i}-${event.title}`} event={event} idx={i} />)
+              events.map((event, i) => <SigactLine key={`${i}-${event.title}`} event={event} idx={i} />)
             )}
           </div>
         </div>
