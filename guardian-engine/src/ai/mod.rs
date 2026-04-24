@@ -2,6 +2,7 @@ pub mod config;
 pub mod provider;
 pub mod analysis;
 pub mod prompts;
+pub mod command;
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
