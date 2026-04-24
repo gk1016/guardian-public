@@ -29,6 +29,8 @@ struct Inner {
     pub rate_limiter: Arc<RateLimiter>,
     /// Federation peer registry (shared with manager and outbound functions)
     pub peer_registry: PeerRegistry,
+    /// Discord bot task handle (for start/stop lifecycle)
+    pub discord_handle: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 impl AppState {
@@ -45,6 +47,7 @@ impl AppState {
                 ai: Arc::new(AiState::new()),
                 rate_limiter: Arc::new(RateLimiter::new()),
                 peer_registry: PeerRegistry::new(),
+                discord_handle: Arc::new(tokio::sync::Mutex::new(None)),
             }),
         }
     }
@@ -83,6 +86,10 @@ impl AppState {
 
     pub fn peers(&self) -> &PeerRegistry {
         &self.inner.peer_registry
+    }
+
+    pub fn discord_handle(&self) -> &tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>> {
+        &self.inner.discord_handle
     }
 }
 

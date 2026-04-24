@@ -66,6 +66,9 @@ data-encoding = "2"
 # ID generation (cuid-compatible)
 cuid2 = "0.1"
 
+# Discord bot
+serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "model", "cache", "rustls_backend"] }
+
 [profile.release]
 lto = true
 strip = true

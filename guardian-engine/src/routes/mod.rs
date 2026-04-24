@@ -7,6 +7,7 @@ pub mod missions;
 pub mod ops;
 pub mod comms;
 pub mod federation;
+pub mod discord;
 
 use axum::Router;
 use tower_http::trace::TraceLayer;
@@ -24,6 +25,7 @@ pub fn router(state: AppState) -> Router {
         .merge(ops::routes())
         .merge(comms::routes())
         .merge(federation::routes())
+        .merge(discord::routes())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

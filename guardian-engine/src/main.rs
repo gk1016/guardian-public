@@ -3,6 +3,7 @@ mod db;
 mod routes;
 mod compute;
 mod federation;
+mod discord;
 mod state;
 mod ai;
 mod auth;
@@ -46,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     // Build shared app state
     let app_state = state::AppState::new(pool, cfg.clone(), identity.fingerprint.clone());
 
-    // Initialize AI state — load provider from DB config
+    // Initialize AI state \u{2014} load provider from DB config
     if let Err(e) = app_state.ai().reload(app_state.pool()).await {
         tracing::warn!(error = %e, "failed to load AI config on startup (non-fatal)");
     }
@@ -58,6 +59,12 @@ async fn main() -> anyhow::Result<()> {
     // Start federation inbound message consumer
     let consumer_handle = federation::consumer::start(app_state.clone());
     info!("federation inbound consumer started");
+
+    // Start Discord bot if configured
+    match discord::start_or_restart(&app_state).await {
+        Ok(()) => info!("discord bot init complete"),
+        Err(e) => tracing::warn!(error = %e, "discord bot failed to start (non-fatal)"),
+    }
 
     // Start compute tick loop (30-second interval)
     let compute_state = app_state.clone();
@@ -92,7 +99,7 @@ async fn main() -> anyhow::Result<()> {
     info!("AI analysis tick loop started");
 
     // Build router
-    let app = routes::router(app_state);
+    let app = routes::router(app_state.clone());
 
     // Bind and serve
     let listener = tokio::net::TcpListener::bind(&cfg.listen_addr).await?;
@@ -102,6 +109,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Cleanup
+    discord::stop(&app_state).await;
     compute_handle.abort();
     ai_handle.abort();
     fed_handle.abort();

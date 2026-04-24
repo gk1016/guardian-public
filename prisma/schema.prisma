@@ -56,6 +56,7 @@ model Organization {
   aiConfigs   AiConfig[]
   aiAnalyses  AiAnalysis[]
   auditLogs   AuditLog[]
+  discordConfig DiscordConfig?
 }
 
 model OrgMember {
@@ -420,4 +421,19 @@ model AuditLog {
   @@index([orgId, createdAt])
   @@index([userId, createdAt])
   @@index([targetType, targetId])
+}
+
+model DiscordConfig {
+  id               String       @id @default(cuid())
+  orgId            String       @unique
+  botToken         String?
+  guildId          String?
+  enabled          Boolean      @default(false)
+  mainChannelId    String?
+  alertChannelId   String?
+  intelChannelId   String?
+  missionChannelId String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }

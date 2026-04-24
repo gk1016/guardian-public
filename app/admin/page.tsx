@@ -1,9 +1,10 @@
-import { Shield, UserCog, Bell, Cpu, LayoutDashboard } from "lucide-react";
+import { Shield, UserCog, Bell, Cpu, LayoutDashboard, MessageSquare } from "lucide-react";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { AdminMemberUpdateForm } from "@/components/admin-member-update-form";
 import { AdminUserCreateForm } from "@/components/admin-user-create-form";
 import { AlertRuleManager } from "@/components/alert-rule-manager";
 import { AiConfigManager } from "@/components/ai-config-manager";
+import { DiscordConfigManager } from "@/components/discord-config-manager";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
@@ -40,6 +41,10 @@ export default async function AdminPage() {
 
       <CollapsiblePanel label="Guardian AI" icon={<Cpu size={16} className="text-[var(--color-accent)]" />}>
         <AiConfigManager />
+      </CollapsiblePanel>
+
+      <CollapsiblePanel label="Discord Bot" icon={<MessageSquare size={16} className="text-[var(--color-accent)]" />}>
+        <DiscordConfigManager />
       </CollapsiblePanel>
 
       <CollapsiblePanel label="Alert Rules" icon={<Bell size={16} className="text-[var(--color-accent)]" />}>
