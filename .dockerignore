@@ -3,3 +3,7 @@
 node_modules
 npm-debug.log
 guardian-engine/target
+.env*
+!.env.example
+*.pem
+*.key
