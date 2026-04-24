@@ -15,16 +15,6 @@
         reverse_proxy guardian-engine:3420
     }
 
-    # All API routes → Rust engine
-    handle /api/* {
-        header {
-            X-Content-Type-Options "nosniff"
-            Referrer-Policy "strict-origin-when-cross-origin"
-            -Server
-        }
-        reverse_proxy guardian-engine:3420
-    }
-
     # Everything else → Next.js frontend (with full security headers)
     handle {
         header {
