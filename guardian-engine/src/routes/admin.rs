@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
-use tracing::{info, error, warn};
+use tracing::{info, error};
 
 use crate::auth::{require_admin, require_org, AuthSession};
 use crate::state::AppState;
@@ -100,9 +100,7 @@ async fn factory_reset(
     }
 
     // Stop Discord bot since its config is gone
-    if let Err(e) = crate::discord::stop(&state).await {
-        warn!("Failed to stop Discord bot after factory reset: {e}");
-    }
+    crate::discord::stop(&state).await;
 
     info!("Factory reset complete: {cleared} table groups cleared for org {}", org.org_id);
 
@@ -114,7 +112,7 @@ async fn factory_reset(
 }
 
 // ---------------------------------------------------------------------------
-// Existing admin handlers below — unchanged
+// Existing admin handlers below
 // ---------------------------------------------------------------------------
 
 #[derive(Serialize)]
@@ -240,7 +238,7 @@ async fn audit_export(
             action,
             tt.as_deref().unwrap_or(""),
             tid.as_deref().unwrap_or(""),
-            meta.as_ref().map(|m| m.to_string()).unwrap_or_default().replace(',', ";"  ),
+            meta.as_ref().map(|m| m.to_string()).unwrap_or_default().replace(',', ";"),
             ts,
         ));
     }
@@ -271,7 +269,6 @@ async fn create_user(
     let org = require_org(state.pool(), &session.user_id).await?;
     let pool = state.pool();
 
-    // Validate password
     if body.password.len() < 10 || body.password.len() > 128 {
         return Ok(Json(serde_json::json!({ "error": "Password must be 10-128 characters." })));
     }
@@ -326,7 +323,6 @@ async fn update_user(
     let org = require_org(state.pool(), &session.user_id).await?;
     let pool = state.pool();
 
-    // Verify target user is in same org
     let membership: Option<(String,)> = sqlx::query_as(
         r#"SELECT "id" FROM "OrgMember" WHERE "userId" = $1 AND "orgId" = $2"#,
     ).bind(&user_id).bind(&org.org_id).fetch_optional(pool).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -335,7 +331,6 @@ async fn update_user(
         return Ok(Json(serde_json::json!({ "error": "User not found in this organization." })));
     }
 
-    // Update user fields
     if body.display_name.is_some() || body.role.is_some() || body.status.is_some() || body.password.is_some() {
         let mut sets = vec![r#""updatedAt" = NOW()"#.to_string()];
         let mut idx = 1u32;
@@ -369,7 +364,6 @@ async fn update_user(
         })?;
     }
 
-    // Update membership fields
     if body.rank.is_some() || body.title.is_some() {
         if let Some(ref rank) = body.rank {
             sqlx::query(r#"UPDATE "OrgMember" SET "rank" = $1 WHERE "userId" = $2 AND "orgId" = $3"#)
