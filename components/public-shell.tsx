@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PublicNav } from "@/components/public-nav";
+import { Siren } from "lucide-react";
 
 type PublicShellProps = {
   eyebrow: string;
@@ -16,29 +17,25 @@ export function PublicShell({
 }: PublicShellProps) {
   return (
     <main className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_28%),radial-gradient(circle_at_80%_10%,_rgba(244,182,60,0.12),_transparent_26%),linear-gradient(180deg,_#08111a_0%,_#05080d_100%)]" />
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col px-6 pb-24 pt-6 lg:px-10">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.15),_transparent_35%),linear-gradient(180deg,_#0a0e14_0%,_#070b12_100%)]" />
+
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col px-6 pb-20 pt-6 lg:px-10">
         <PublicNav variant="subpage" />
 
-        <section className="grid gap-8 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-          <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-200">{eyebrow}</p>
-            <h1 className="mt-5 font-[family:var(--font-display)] text-5xl uppercase leading-[0.94] tracking-[0.08em] text-[var(--color-text-strong)] sm:text-6xl">
-              {title}
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">{description}</p>
+        <section className="pt-14">
+          <div className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-amber-300/20 bg-amber-300/8 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-amber-200">
+            <Siren size={12} />
+            {eyebrow}
           </div>
-
-          <aside className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Operating Idea</p>
-            <p className="mt-4 text-sm leading-8 text-slate-300">
-              Guardian is designed like a watch floor and briefing room. Public pages explain intent.
-              The protected side carries the actual workflow.
-            </p>
-          </aside>
+          <h1 className="mt-5 max-w-3xl font-[family:var(--font-display)] text-3xl uppercase leading-[0.95] tracking-[0.06em] text-[var(--color-text-strong)] sm:text-4xl lg:text-5xl">
+            {title}
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-text-secondary)]">
+            {description}
+          </p>
         </section>
 
-        <div className="mt-12">{children}</div>
+        <div className="mt-14">{children}</div>
       </div>
     </main>
   );

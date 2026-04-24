@@ -1,11 +1,28 @@
 import Link from "next/link";
+import { Users, Crosshair, Radio, BookOpen } from "lucide-react";
 import { PublicShell } from "@/components/public-shell";
 
 const traits = [
-  "Pilots who can execute a brief instead of improvising chaos",
-  "Rescue crews who treat survivor recovery like a mission, not content",
-  "Operators who can hold comm discipline under pressure",
-  "People who can learn from review without ego getting in the way",
+  {
+    icon: Crosshair,
+    title: "Mission Pilots",
+    body: "Pilots who can execute a brief instead of improvising chaos. You fly the package, hold the geometry, and stick to the ROE.",
+  },
+  {
+    icon: Users,
+    title: "Rescue Crews",
+    body: "Operators who treat survivor recovery like a mission, not content. CSAR is disciplined work — triage, escort, extraction, debrief.",
+  },
+  {
+    icon: Radio,
+    title: "Comm Discipline",
+    body: "People who can hold comm discipline under pressure. Clear, concise, on-frequency. If you need to narrate your gameplay, wrong org.",
+  },
+  {
+    icon: BookOpen,
+    title: "Review Mindset",
+    body: "Operators who can learn from after-action review without ego getting in the way. The debrief is where you get better.",
+  },
 ];
 
 export default function RecruitPage() {
@@ -15,28 +32,38 @@ export default function RecruitPage() {
       title="Looking for disciplined pilots, rescue crews, and watch-floor minds."
       description="Guardian Flight is built around anti-piracy, escort, and rescue work. The expectation is professional conduct, direct communication, and actual follow-through."
     >
-      <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <div className="grid gap-4">
-          {traits.map((trait) => (
-            <div key={trait} className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/60 px-5 py-4 text-sm leading-8 text-slate-200">
-              {trait}
-            </div>
-          ))}
-        </div>
-        <article className="rounded-3xl border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] p-6">
-          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Fit Check</p>
-          <p className="mt-4 text-base leading-8 text-slate-300">
-            If you want noise, ego, or vague “vibes,” this is the wrong org. If you want structure,
-            mission ownership, and a serious crew around you, this is the lane.
-          </p>
-          <Link
-            href="/login"
-            className="mt-6 inline-flex rounded-md border border-amber-300/30 bg-amber-300 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-amber-200"
+      <section className="grid gap-4 sm:grid-cols-2">
+        {traits.map((trait) => (
+          <article
+            key={trait.title}
+            className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-panel)] p-5"
           >
-            Request Access
-          </Link>
-        </article>
+            <trait.icon size={18} className="text-[var(--color-text-tertiary)]" />
+            <h3 className="mt-3 font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
+              {trait.title}
+            </h3>
+            <p className="mt-2 text-[13px] leading-[1.6] text-[var(--color-text-secondary)]">
+              {trait.body}
+            </p>
+          </article>
+        ))}
       </section>
+
+      <div className="mt-10 rounded-[var(--radius-lg)] border border-amber-300/15 bg-amber-300/5 p-6">
+        <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
+          Fit Check
+        </h2>
+        <p className="mt-2 text-[13px] leading-[1.6] text-[var(--color-text-secondary)]">
+          If you want noise, ego, or vague \u201cvibes,\u201d this is the wrong org. If you want structure,
+          mission ownership, and a serious crew around you, this is the lane.
+        </p>
+        <Link
+          href="/login"
+          className="mt-5 inline-flex items-center rounded-[var(--radius-md)] border border-amber-300/25 bg-amber-300/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-amber-200 transition hover:border-amber-300/40 hover:bg-amber-300/15 hover:text-amber-100"
+        >
+          Request Access
+        </Link>
+      </div>
     </PublicShell>
   );
 }
