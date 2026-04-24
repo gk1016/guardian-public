@@ -1,10 +1,11 @@
-import { Shield, UserCog, Bell, Cpu, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Shield, UserCog, Bell, Cpu, LayoutDashboard, MessageSquare, Trash2 } from "lucide-react";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { AdminMemberUpdateForm } from "@/components/admin-member-update-form";
 import { AdminUserCreateForm } from "@/components/admin-user-create-form";
 import { AlertRuleManager } from "@/components/alert-rule-manager";
 import { AiConfigManager } from "@/components/ai-config-manager";
 import { DiscordConfigManager } from "@/components/discord-config-manager";
+import { FactoryResetPanel } from "@/components/factory-reset-panel";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { OpsShell } from "@/components/ops-shell";
 import { requireSession } from "@/lib/auth";
@@ -84,6 +85,10 @@ export default async function AdminPage() {
           </article>
         ))}
       </section>
+
+      <CollapsiblePanel label="Factory Reset" icon={<Trash2 size={16} className="text-red-400" />}>
+        <FactoryResetPanel />
+      </CollapsiblePanel>
     </OpsShell>
   );
 }
