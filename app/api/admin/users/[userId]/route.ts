@@ -125,3 +125,68 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   return NextResponse.json({ ok: true, user: updated });
 }
+
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  const session = await getSessionFromCookies();
+  if (!session) {
+    return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  if (!canManageAdministration(session.role)) {
+    return NextResponse.json({ error: "Admin authority required." }, { status: 403 });
+  }
+
+  const { userId } = await params;
+
+  // Prevent self-deletion
+  if (userId === session.userId) {
+    return NextResponse.json({ error: "Cannot delete your own account." }, { status: 400 });
+  }
+
+  const org = await getOrgForUser(session.userId);
+  if (!org) {
+    return NextResponse.json({ error: "No organization found for operator." }, { status: 400 });
+  }
+
+  const membership = await prisma.orgMember.findFirst({
+    where: {
+      orgId: org.id,
+      userId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!membership) {
+    return NextResponse.json({ error: "Member not found in this organization." }, { status: 404 });
+  }
+
+  // Get user info for audit log before deletion
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { handle: true, email: true, role: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    // Delete membership first (FK constraint)
+    await tx.orgMember.delete({ where: { id: membership.id } });
+    // Delete the user
+    await tx.user.delete({ where: { id: userId } });
+  });
+
+  auditLog({
+    userId: session.userId,
+    orgId: org.id,
+    action: "delete",
+    targetType: "user",
+    targetId: userId,
+    metadata: {
+      handle: targetUser?.handle,
+      email: targetUser?.email,
+      role: targetUser?.role,
+    },
+  });
+
+  return NextResponse.json({ ok: true });
+}

@@ -3,11 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Radar, ArrowUpDown, Activity } from "lucide-react";
+import { RosterMemberAdmin } from "@/components/roster-member-admin";
 
 type RosterCrewItem = {
+  userId: string;
   handle: string;
   displayName: string | null;
+  email: string;
   orgRole: string;
+  status: string;
+  rank: string;
   membershipTitle: string | null;
   qrfStatus: string | null;
   suggestedPlatform: string | null;
@@ -43,7 +48,7 @@ const tierTone: Record<string, { label: string; color: string; bar: string }> = 
 
 type SortMode = "activity" | "alpha" | "availability";
 
-export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
+export function RosterGrid({ items, isAdmin = false }: { items: RosterCrewItem[]; isAdmin?: boolean }) {
   const [sortMode, setSortMode] = useState<SortMode>("activity");
 
   const sorted = [...items].sort((a, b) => {
@@ -135,6 +140,20 @@ export function RosterGrid({ items }: { items: RosterCrewItem[] }) {
               </div>
 
               {crew.notes ? <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{crew.notes}</p> : null}
+
+              {isAdmin ? (
+                <RosterMemberAdmin
+                  userId={crew.userId}
+                  handle={crew.handle}
+                  initialMember={{
+                    displayName: crew.displayName,
+                    role: crew.orgRole,
+                    status: crew.status,
+                    rank: crew.rank,
+                    title: crew.membershipTitle,
+                  }}
+                />
+              ) : null}
             </article>
           );
         })}
