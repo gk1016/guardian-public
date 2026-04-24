@@ -57,6 +57,8 @@ model Organization {
   aiAnalyses  AiAnalysis[]
   auditLogs   AuditLog[]
   discordConfig DiscordConfig?
+  recruitConfig RecruitConfig?
+  applications  Application[]
 }
 
 model OrgMember {
@@ -451,4 +453,34 @@ model AiModelOption {
 
   @@unique([provider, modelId])
   @@index([provider, sortOrder])
+}
+
+model RecruitConfig {
+  id          String   @id @default(cuid())
+  orgId       String   @unique
+  headline    String   @default("Join the crew.")
+  description String   @default("We're looking for new members. Submit an application below.")
+  values      Json     @default("[]")
+  ctaText     String   @default("Submit Application")
+  isEnabled   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model Application {
+  id        String   @id @default(cuid())
+  orgId     String
+  handle    String
+  name      String
+  email     String?
+  message   String   @default("")
+  status    String   @default("pending")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, status])
+  @@index([orgId, createdAt])
 }
