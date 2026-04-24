@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 const ENGINE_BASE = "/engine";
+const STORAGE_KEY = "guardian-ai-chat";
 
 type Message = {
   id: string;
@@ -22,6 +23,25 @@ type Message = {
   toolsUsed?: string[];
   timestamp: Date;
 };
+
+function loadMessages(): Message[] {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as Array<Omit<Message, "timestamp"> & { timestamp: string }>;
+    return parsed.map((m) => ({ ...m, timestamp: new Date(m.timestamp) }));
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  } catch {
+    // storage full or unavailable — silently ignore
+  }
+}
 
 function formatTime(d: Date): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -110,13 +130,18 @@ function renderInline(text: string): React.ReactNode[] {
 }
 
 export function AiCommandPanel() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => loadMessages());
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const [error, setError] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Persist messages to sessionStorage on every change
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
