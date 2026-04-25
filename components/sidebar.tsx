@@ -13,6 +13,7 @@ import {
   Bell,
   Users,
   Settings,
+  UserCog,
   LogOut,
   Menu,
   X,
@@ -68,6 +69,7 @@ const navSections = [
     title: "Org",
     items: [
       { href: "/roster", label: "Roster", icon: Users },
+      { href: "/settings", label: "Settings", icon: UserCog },
       { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },
     ],
   },

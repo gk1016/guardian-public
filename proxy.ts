@@ -103,6 +103,7 @@ export const config = {
     "/ops/:path*",
     "/tactical/:path*",
     "/federation/:path*",
+    "/settings",
     // Protected API routes (exclude auth + health + engine)
     "/api/missions/:path*",
     "/api/intel/:path*",
@@ -112,5 +113,6 @@ export const config = {
     "/api/incidents/:path*",
     "/api/admin/:path*",
     "/api/notifications/:path*",
+    "/api/user/:path*",
   ],
 };
