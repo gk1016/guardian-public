@@ -171,15 +171,15 @@ export async function POST(request: Request) {
   let upserted = 0;
   for (let i = 0; i < fetched.length; i++) {
     const m = fetched[i];
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO "AiModelOption" (id, provider, "modelId", "displayName", category, "isDefault", "sortOrder", "createdAt", "updatedAt")
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, false, $5, NOW(), NOW())
-       ON CONFLICT (provider, "modelId") DO UPDATE SET
-         "displayName" = EXCLUDED."displayName",
-         category = EXCLUDED.category,
-         "updatedAt" = NOW()`,
-      provider, m.modelId, m.displayName, m.category, (i + 1) * 10
-    );
+    const sortOrder = (i + 1) * 10;
+    await prisma.$executeRaw`
+      INSERT INTO "AiModelOption" (id, provider, "modelId", "displayName", category, "isDefault", "sortOrder", "createdAt", "updatedAt")
+      VALUES (gen_random_uuid()::text, ${provider}, ${m.modelId}, ${m.displayName}, ${m.category}, false, ${sortOrder}, NOW(), NOW())
+      ON CONFLICT (provider, "modelId") DO UPDATE SET
+        "displayName" = EXCLUDED."displayName",
+        category = EXCLUDED.category,
+        "updatedAt" = NOW()
+    `;
     upserted++;
   }
 
