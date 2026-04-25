@@ -9,7 +9,8 @@ import { log } from "@/lib/logger";
  * POST /api/m/chat
  * AI chat proxy for G2 glasses — commander role only.
  * Streams SSE responses from the configured AI provider.
- * Injects ops context into the system prompt.
+ * Normalizes all provider streams to OpenAI-compatible SSE format
+ * so the G2 client only needs one parser.
  */
 
 const chatSchema = z.object({
@@ -128,23 +129,38 @@ export async function POST(request: Request) {
       opsContext,
     ].join("\n");
 
-    // Build provider request
+    // Build provider-specific request
+    const isAnthropic = aiConfig.provider === "anthropic";
     const providerUrl = getProviderUrl(aiConfig.provider, aiConfig.baseUrl);
-    const providerHeaders = getProviderHeaders(
-      aiConfig.provider,
-      aiConfig.apiKey,
-    );
+    const providerHeaders = getProviderHeaders(aiConfig.provider, aiConfig.apiKey);
 
-    const providerBody = {
-      model: aiConfig.model,
-      max_tokens: aiConfig.maxTokens,
-      temperature: aiConfig.temperature,
-      stream: true,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: payload.data.message },
-      ],
-    };
+    let providerBody: Record<string, unknown>;
+
+    if (isAnthropic) {
+      // Anthropic Messages API: system is a top-level param, not in messages
+      providerBody = {
+        model: aiConfig.model,
+        max_tokens: aiConfig.maxTokens || 1024,
+        temperature: aiConfig.temperature ?? 0.7,
+        stream: true,
+        system: systemPrompt,
+        messages: [
+          { role: "user", content: payload.data.message },
+        ],
+      };
+    } else {
+      // OpenAI-compatible (OpenAI, Ollama, etc.)
+      providerBody = {
+        model: aiConfig.model,
+        max_tokens: aiConfig.maxTokens || 1024,
+        temperature: aiConfig.temperature ?? 0.7,
+        stream: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: payload.data.message },
+        ],
+      };
+    }
 
     const providerRes = await fetch(providerUrl, {
       method: "POST",
@@ -156,6 +172,7 @@ export async function POST(request: Request) {
       const errText = await providerRes.text().catch(() => "Unknown error");
       log.error("AI provider error", {
         status: providerRes.status,
+        provider: aiConfig.provider,
         error: errText.slice(0, 200),
       });
       return NextResponse.json(
@@ -164,7 +181,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Stream the response through as SSE
     const sessionId = payload.data.sessionId || crypto.randomUUID();
 
     const responseHeaders = new Headers({
@@ -174,7 +190,16 @@ export async function POST(request: Request) {
       "X-Session-Id": sessionId,
     });
 
-    // Pass through the provider's SSE stream directly
+    if (isAnthropic) {
+      // Transform Anthropic SSE stream → OpenAI-compatible SSE
+      const transformedStream = transformAnthropicStream(providerRes.body!);
+      return new Response(transformedStream, {
+        status: 200,
+        headers: responseHeaders,
+      });
+    }
+
+    // OpenAI/Ollama: pass through directly
     return new Response(providerRes.body, {
       status: 200,
       headers: responseHeaders,
@@ -190,10 +215,90 @@ export async function POST(request: Request) {
   }
 }
 
+/**
+ * Transform Anthropic Messages API SSE stream into OpenAI-compatible format.
+ *
+ * Anthropic sends:
+ *   event: content_block_delta
+ *   data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello"}}
+ *
+ *   event: message_stop
+ *   data: {"type":"message_stop"}
+ *
+ * We transform to:
+ *   data: {"choices":[{"delta":{"content":"Hello"}}]}
+ *   data: [DONE]
+ */
+function transformAnthropicStream(
+  sourceBody: ReadableStream<Uint8Array>,
+): ReadableStream<Uint8Array> {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = "";
+
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const reader = sourceBody.getReader();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // Emit final [DONE]
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+            break;
+          }
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (!data || data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+
+              if (parsed.type === "content_block_delta") {
+                const text = parsed.delta?.text;
+                if (text) {
+                  // Emit as OpenAI-compatible SSE
+                  const openaiChunk = JSON.stringify({
+                    choices: [{ delta: { content: text } }],
+                  });
+                  controller.enqueue(
+                    encoder.encode(`data: ${openaiChunk}\n\n`),
+                  );
+                }
+              } else if (parsed.type === "message_stop") {
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                controller.close();
+                return;
+              }
+              // Ignore message_start, content_block_start, content_block_stop, ping
+            } catch {
+              // Skip unparseable lines
+            }
+          }
+        }
+      } catch (err) {
+        controller.error(err);
+      }
+    },
+  });
+}
+
 function getProviderUrl(provider: string, baseUrl: string | null): string {
   if (baseUrl) {
-    // Ollama or custom endpoint
-    return baseUrl.replace(/\/$/, "") + "/v1/chat/completions";
+    const base = baseUrl.replace(/\/$/, "");
+    // If custom baseUrl is set for Anthropic, still use Messages API path
+    if (provider === "anthropic") {
+      return base + "/v1/messages";
+    }
+    return base + "/v1/chat/completions";
   }
 
   switch (provider) {
