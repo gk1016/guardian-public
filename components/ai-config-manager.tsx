@@ -114,7 +114,7 @@ function ModelComboBox({
       });
       const data = await res.json();
       if (res.ok) {
-        setRefreshResult({ ok: true, message: `${data.modelsFound} models loaded from ${data.source}` });
+        setRefreshResult({ ok: true, message: `${data.modelsFound} models synced${data.pruned ? `, ${data.pruned} stale removed` : ""}` });
         await fetchModels();
       } else {
         setRefreshResult({ ok: false, message: data.error || "Refresh failed" });
@@ -306,6 +306,8 @@ export function AiConfigManager() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [refreshingAll, setRefreshingAll] = useState(false);
+  const [refreshAllResult, setRefreshAllResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [error, setError] = useState("");
@@ -421,6 +423,33 @@ export function AiConfigManager() {
     }
   }
 
+  async function handleRefreshAll() {
+    setRefreshingAll(true);
+    setRefreshAllResult(null);
+    try {
+      const res = await fetch("/api/admin/ai-models/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: "all" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.results) {
+        const entries = Object.entries(data.results) as [string, { modelsFound: number; pruned: number; error?: string }][];
+        const parts = entries.map(([p, r]) =>
+          r.error ? `${p}: error` : `${p}: ${r.modelsFound}${r.pruned ? ` (-${r.pruned})` : ""}`
+        );
+        setRefreshAllResult({ ok: true, message: parts.join(", ") });
+      } else {
+        setRefreshAllResult({ ok: false, message: data.error || "Refresh failed" });
+      }
+    } catch {
+      setRefreshAllResult({ ok: false, message: "Failed to reach server" });
+    } finally {
+      setRefreshingAll(false);
+      setTimeout(() => setRefreshAllResult(null), 8000);
+    }
+  }
+
   async function handleAnalyze(type: string) {
     setAnalyzing(type);
     try {
@@ -463,6 +492,13 @@ export function AiConfigManager() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <button onClick={handleRefreshAll} disabled={refreshingAll}
+                className="rounded-[var(--radius-sm)] border border-purple-400/20 bg-purple-400/8 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-purple-200 transition hover:bg-purple-400/15 disabled:opacity-50">
+                <span className="flex items-center gap-1.5">
+                  <RefreshCw size={10} className={refreshingAll ? "animate-spin" : ""} />
+                  {refreshingAll ? "Syncing..." : "Refresh All Models"}
+                </span>
+              </button>
               {config.enabled && (
                 <button onClick={handleTest} disabled={testing}
                   className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-cyan-200 transition hover:bg-cyan-400/15 disabled:opacity-50">
@@ -479,6 +515,12 @@ export function AiConfigManager() {
             <div className={`mt-3 flex items-center gap-2 text-xs ${testResult.ok ? "text-emerald-300" : "text-red-300"}`}>
               {testResult.ok ? <CheckCircle size={14} /> : <XCircle size={14} />}
               {testResult.message}
+            </div>
+          )}
+          {refreshAllResult && (
+            <div className={`mt-3 flex items-center gap-2 text-xs ${refreshAllResult.ok ? "text-emerald-300" : "text-red-300"}`}>
+              {refreshAllResult.ok ? <CheckCircle size={14} /> : <XCircle size={14} />}
+              {refreshAllResult.message}
             </div>
           )}
         </div>
@@ -549,7 +591,7 @@ export function AiConfigManager() {
             </label>
             <label className="block">
               <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Tick Interval (seconds)</span>
-              <input type="number" min="60" max="3600" value={form.tickIntervalSecs} onChange={(e) => setForm({ ...form, tickIntervalSecs: e.target.value })}
+              <input type="number" min="60" max="86400" value={form.tickIntervalSecs} onChange={(e) => setForm({ ...form, tickIntervalSecs: e.target.value })}
                 className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-cyan-400/40 focus:outline-none" />
             </label>
             <label className="flex items-center gap-3 pt-5">
