@@ -122,6 +122,8 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
       TLS_DIRECTIVE: ${TLS_DIRECTIVE:-tls internal}
+      UPSTREAM_GUARDIAN: ${UPSTREAM_GUARDIAN:-guardian:3000}
+      UPSTREAM_ENGINE: ${UPSTREAM_ENGINE:-guardian-engine:3420}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
