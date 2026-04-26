@@ -15,6 +15,7 @@ pub mod ollama_scan;
 pub mod fleet;
 pub mod user;
 pub mod setup;
+pub mod mobile;
 
 use std::time::Duration;
 
@@ -94,4 +95,5 @@ fn engine_routes() -> Router<AppState> {
         .merge(fleet::routes())
         .merge(user::routes())
         .merge(setup::routes())
+        .merge(mobile::routes())
 }

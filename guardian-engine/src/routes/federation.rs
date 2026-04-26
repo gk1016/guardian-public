@@ -3,13 +3,16 @@
 use axum::{
     Router,
     routing::{get, post},
-    extract::{State, Path},
+    extract::{Query, State, Path},
     response::IntoResponse,
+    http::StatusCode,
     Json,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tracing::info;
 
+use crate::auth::middleware::AuthSession;
 use crate::state::AppState;
 use crate::federation::{chat, data_sync};
 
@@ -56,6 +59,39 @@ struct ShareResponse {
     peers_reached: usize,
 }
 
+// ── Federation intel types ──
+
+#[derive(Deserialize)]
+struct IntelQuery {
+    source: Option<String>,
+    severity: Option<i32>,
+    search: Option<String>,
+    limit: Option<i64>,
+}
+
+#[derive(sqlx::FromRow, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FederatedIntelRow {
+    id: String,
+    #[sqlx(rename = "sourceInstanceId")]
+    source_instance_id: String,
+    #[sqlx(rename = "sourceInstanceName")]
+    source_instance_name: String,
+    #[sqlx(rename = "remoteReportId")]
+    remote_report_id: String,
+    title: String,
+    #[sqlx(rename = "reportType")]
+    report_type: String,
+    severity: i32,
+    description: Option<String>,
+    #[sqlx(rename = "starSystem")]
+    star_system: Option<String>,
+    #[sqlx(rename = "hostileGroup")]
+    hostile_group: Option<String>,
+    #[sqlx(rename = "receivedAt")]
+    received_at: chrono::DateTime<chrono::Utc>,
+}
+
 // ── Handlers ──
 
 /// GET /api/federation/status — this instance's federation identity and state.
@@ -90,6 +126,65 @@ async fn get_peers(State(state): State<AppState>) -> impl IntoResponse {
         .collect();
 
     Json(entries)
+}
+
+/// GET /api/federation/intel — list intel received from federation peers.
+async fn get_intel(
+    State(state): State<AppState>,
+    _session: AuthSession,
+    Query(params): Query<IntelQuery>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let pool = state.pool();
+    let limit = params.limit.unwrap_or(50).min(200).max(1);
+
+    let mut sql = String::from(
+        r#"SELECT id::text, "sourceInstanceId", "sourceInstanceName", "remoteReportId",
+                  title, "reportType", severity, description, "starSystem",
+                  "hostileGroup", "receivedAt"
+           FROM "FederatedIntel" WHERE true"#,
+    );
+    let mut bind_idx = 1u32;
+
+    if params.source.is_some() {
+        sql.push_str(&format!(r#" AND "sourceInstanceName" ILIKE ${bind_idx}"#));
+        bind_idx += 1;
+    }
+    if params.severity.filter(|&s| s >= 1 && s <= 5).is_some() {
+        sql.push_str(&format!(r#" AND severity >= ${bind_idx}"#));
+        bind_idx += 1;
+    }
+    if params.search.is_some() {
+        sql.push_str(&format!(
+            r#" AND (title ILIKE ${bind_idx} OR description ILIKE ${bind_idx})"#,
+        ));
+        bind_idx += 1;
+    }
+
+    sql.push_str(&format!(r#" ORDER BY "receivedAt" DESC LIMIT ${bind_idx}"#));
+
+    let mut query = sqlx::query_as::<_, FederatedIntelRow>(&sql);
+
+    if let Some(ref source) = params.source {
+        query = query.bind(format!("%{source}%"));
+    }
+    if let Some(sev) = params.severity.filter(|&s| s >= 1 && s <= 5) {
+        query = query.bind(sev);
+    }
+    if let Some(ref search) = params.search {
+        query = query.bind(format!("%{search}%"));
+    }
+    query = query.bind(limit);
+
+    let items = query.fetch_all(pool).await.map_err(|e| {
+        tracing::error!("Failed to fetch federated intel: {e}");
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": "Database error." })),
+        )
+    })?;
+
+    let count = items.len();
+    Ok(Json(json!({ "ok": true, "items": items, "count": count })))
 }
 
 /// POST /api/federation/chat — send a chat message to peers.
@@ -166,6 +261,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/federation/status", get(get_status))
         .route("/api/federation/peers", get(get_peers))
+        .route("/api/federation/intel", get(get_intel))
         .route("/api/federation/chat", post(send_chat))
         .route("/api/federation/share/intel/{id}", post(share_intel))
         .route("/api/federation/share/mission/{id}", post(share_mission))
