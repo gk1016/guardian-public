@@ -3,6 +3,7 @@ pub mod ws;
 pub mod ai;
 pub mod auth;
 pub mod admin;
+pub mod admin_ai_models;
 pub mod missions;
 pub mod ops;
 pub mod comms;
@@ -11,6 +12,9 @@ pub mod discord;
 pub mod command;
 pub mod recruit;
 pub mod ollama_scan;
+pub mod fleet;
+pub mod user;
+pub mod setup;
 
 use std::time::Duration;
 
@@ -78,6 +82,7 @@ fn engine_routes() -> Router<AppState> {
         .merge(ai::routes())
         .merge(auth::routes())
         .merge(admin::routes())
+        .merge(admin_ai_models::routes())
         .merge(missions::routes())
         .merge(ops::routes())
         .merge(comms::routes())
@@ -86,4 +91,7 @@ fn engine_routes() -> Router<AppState> {
         .merge(command::routes())
         .merge(recruit::routes())
         .merge(ollama_scan::routes())
+        .merge(fleet::routes())
+        .merge(user::routes())
+        .merge(setup::routes())
 }
