@@ -53,6 +53,9 @@ async fn main() -> anyhow::Result<()> {
     let pool = db::connect(&cfg.database_url).await?;
     info!("database connected");
 
+    // Run database migrations (idempotent on existing schemas)
+    db::run_migrations(&pool).await?;
+
     // Build shared app state
     let app_state = state::AppState::new(pool, cfg.clone(), identity.fingerprint.clone());
 
@@ -128,8 +131,45 @@ async fn main() -> anyhow::Result<()> {
                 .with_graceful_shutdown(shutdown_signal())
                 .await?;
         }
+        config::TlsMode::Acme { contact_email, production } => {
+            // ACME mode: automatic cert provisioning via Let's Encrypt
+            let (acceptor, mut acme_state) = tls::build_acme(
+                &cfg.site_domain,
+                contact_email,
+                &cfg.cert_dir,
+                *production,
+            )?;
+            info!(mode = "acme", "edge TLS configured (ACME)");
+
+            // Spawn ACME event loop to drive cert acquisition/renewal
+            tokio::spawn(async move {
+                use futures_util::StreamExt;
+                while let Some(event) = acme_state.next().await {
+                    match event {
+                        Ok(ok) => info!("ACME event: {:?}", ok),
+                        Err(err) => tracing::error!("ACME error: {:?}", err),
+                    }
+                }
+            });
+
+            // Optional: HTTP redirect listener
+            let http_redirect_handle = spawn_http_redirect(
+                cfg.http_listen_addr,
+                &cfg.site_domain,
+            ).await;
+
+            // Run TLS accept loop (same as self-signed/manual)
+            let tls_listener = tokio::net::TcpListener::bind(&cfg.https_listen_addr).await?;
+            info!(addr = %cfg.https_listen_addr, "external HTTPS listener ready (ACME)");
+
+            serve_tls(tls_listener, acceptor, external_app).await;
+
+            if let Some(h) = http_redirect_handle {
+                h.abort();
+            }
+        }
         tls_mode => {
-            // Production: TLS-terminated HTTPS
+            // Self-signed or Manual: static cert
             let acceptor = tls::build_acceptor(
                 tls_mode,
                 &cfg.cert_dir,

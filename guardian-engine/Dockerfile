@@ -1,5 +1,5 @@
 # ---- Builder ----
-FROM rust:1.95 AS builder
+FROM rust:1.85 AS builder
 
 WORKDIR /app
 
@@ -8,8 +8,9 @@ COPY Cargo.toml Cargo.lock* ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 RUN cargo build --release 2>/dev/null || true
 
-# Copy real source and build
+# Copy real source and migrations, then build
 COPY src/ src/
+COPY migrations/ migrations/
 RUN touch src/main.rs && cargo build --release
 
 # ---- Runtime ----

@@ -1,10 +1,5 @@
-//! Edge TLS — self-signed certificate generation and rustls ServerConfig builder.
-//!
-//! Supports two modes:
-//! - SelfSigned: generates a cert on first boot, reused across restarts
-//! - Manual: loads cert.pem and key.pem from the configured cert directory
-//!
-//! ACME (Let's Encrypt) support planned for a future release.
+//! Edge TLS — self-signed certificate generation, manual cert loading,
+//! and ACME (Let's Encrypt) automatic certificate provisioning.
 
 use std::io::BufReader;
 use std::path::Path;
@@ -19,10 +14,57 @@ use tracing::info;
 
 use crate::config::TlsMode;
 
-/// Build a rustls TlsAcceptor for the edge HTTPS listener.
+/// Build a rustls TlsAcceptor for the edge HTTPS listener (self-signed or manual modes).
 pub fn build_acceptor(mode: &TlsMode, cert_dir: &Path, domain: &str) -> Result<TlsAcceptor> {
     let config = build_server_config(mode, cert_dir, domain)?;
     Ok(TlsAcceptor::from(Arc::new(config)))
+}
+
+/// Build ACME state and return a TlsAcceptor that auto-renews certificates.
+///
+/// The returned `AcmeState` must be polled (it implements `Stream`) to drive
+/// certificate acquisition and renewal. The `TlsAcceptor` uses a dynamic
+/// cert resolver that automatically picks up renewed certs.
+pub fn build_acme(
+    domain: &str,
+    contact_email: &str,
+    cache_dir: &Path,
+    production: bool,
+) -> Result<(
+    TlsAcceptor,
+    rustls_acme::AcmeState<std::io::Error, std::io::Error>,
+)> {
+    use rustls_acme::{AcmeConfig, AcmeState, caches::DirCache};
+
+    let bare_domain = domain.split(':').next().unwrap_or(domain);
+    let acme_cache_dir = cache_dir.join("acme");
+    std::fs::create_dir_all(&acme_cache_dir)
+        .context("creating ACME cache directory")?;
+
+    let directory_url = if production {
+        "https://acme-v02.api.letsencrypt.org/directory"
+    } else {
+        "https://acme-staging-v02.api.letsencrypt.org/directory"
+    };
+
+    info!(
+        domain = %bare_domain,
+        directory = %directory_url,
+        "configuring ACME certificate provisioning"
+    );
+
+    let config = AcmeConfig::new([bare_domain.to_string()])
+        .contact_push(format!("mailto:{}", contact_email))
+        .cache(DirCache::new(&acme_cache_dir))
+        .directory(directory_url.to_string());
+
+    let state = AcmeState::new(config);
+
+    // Get a ServerConfig with a dynamic cert resolver that auto-updates
+    let server_config = state.default_rustls_config();
+    let acceptor = TlsAcceptor::from(server_config);
+
+    Ok((acceptor, state))
 }
 
 /// Build a rustls ServerConfig for the edge HTTPS listener.
@@ -45,6 +87,9 @@ fn build_server_config(mode: &TlsMode, cert_dir: &Path, domain: &str) -> Result<
             let key_path = cert_dir.join("key.pem");
             info!("loading manual TLS certificate");
             load_from_pem_files(&cert_path, &key_path)
+        }
+        TlsMode::Acme { .. } => {
+            unreachable!("ACME mode uses build_acme(), not build_server_config()")
         }
         TlsMode::None => {
             unreachable!("build_acceptor should not be called with TlsMode::None")
