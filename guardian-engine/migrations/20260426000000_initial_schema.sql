@@ -406,22 +406,22 @@ CREATE TABLE IF NOT EXISTS "Incident" (
 
 DO $$ BEGIN
     ALTER TABLE "AiModelOption" ADD CONSTRAINT "AiModelOption_provider_modelId_key" UNIQUE (provider, "modelId");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "FederatedIntel" ADD CONSTRAINT "FederatedIntel_sourceInstanceId_remoteReportId_key" UNIQUE ("sourceInstanceId", "remoteReportId");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "RecruitConfig" ADD CONSTRAINT "RecruitConfig_orgId_key" UNIQUE ("orgId");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "ShipSpec" ADD CONSTRAINT "ShipSpec_fleetyardsSlug_key" UNIQUE ("fleetyardsSlug");
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 -- ============================================================
@@ -486,205 +486,205 @@ CREATE UNIQUE INDEX IF NOT EXISTS "User_handle_key" ON "User" (handle);
 
 DO $$ BEGIN
     ALTER TABLE "AiAnalysis" ADD CONSTRAINT "AiAnalysis_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "AiConfig" ADD CONSTRAINT "AiConfig_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "AlertRule" ADD CONSTRAINT "AlertRule_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Application" ADD CONSTRAINT "Application_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "DiscordConfig" ADD CONSTRAINT "DiscordConfig_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "DoctrineTemplate" ADD CONSTRAINT "DoctrineTemplate_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "FleetShip" ADD CONSTRAINT "FleetShip_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "FleetShip" ADD CONSTRAINT "FleetShip_shipSpecId_fkey" FOREIGN KEY ("shipSpecId") REFERENCES "ShipSpec"(id) ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "FleetShip" ADD CONSTRAINT "FleetShip_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Incident" ADD CONSTRAINT "Incident_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Incident" ADD CONSTRAINT "Incident_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Incident" ADD CONSTRAINT "Incident_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Incident" ADD CONSTRAINT "Incident_rescueId_fkey" FOREIGN KEY ("rescueId") REFERENCES "RescueRequest"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Incident" ADD CONSTRAINT "Incident_reviewerId_fkey" FOREIGN KEY ("reviewerId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "IntelReport" ADD CONSTRAINT "IntelReport_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "ManualEntry" ADD CONSTRAINT "ManualEntry_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "ManualEntry" ADD CONSTRAINT "ManualEntry_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "MissionIntelLink" ADD CONSTRAINT "MissionIntelLink_intelId_fkey" FOREIGN KEY ("intelId") REFERENCES "IntelReport"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "MissionIntelLink" ADD CONSTRAINT "MissionIntelLink_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "MissionLog" ADD CONSTRAINT "MissionLog_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "MissionLog" ADD CONSTRAINT "MissionLog_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "MissionParticipant" ADD CONSTRAINT "MissionParticipant_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Mission" ADD CONSTRAINT "Mission_doctrineTemplateId_fkey" FOREIGN KEY ("doctrineTemplateId") REFERENCES "DoctrineTemplate"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Mission" ADD CONSTRAINT "Mission_leadId_fkey" FOREIGN KEY ("leadId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Mission" ADD CONSTRAINT "Mission_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Notification" ADD CONSTRAINT "Notification_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "Notification" ADD CONSTRAINT "Notification_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "OrgMember" ADD CONSTRAINT "OrgMember_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "OrgMember" ADD CONSTRAINT "OrgMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfDispatch" ADD CONSTRAINT "QrfDispatch_dispatchedById_fkey" FOREIGN KEY ("dispatchedById") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfDispatch" ADD CONSTRAINT "QrfDispatch_missionId_fkey" FOREIGN KEY ("missionId") REFERENCES "Mission"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfDispatch" ADD CONSTRAINT "QrfDispatch_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfDispatch" ADD CONSTRAINT "QrfDispatch_qrfId_fkey" FOREIGN KEY ("qrfId") REFERENCES "QrfReadiness"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfDispatch" ADD CONSTRAINT "QrfDispatch_rescueId_fkey" FOREIGN KEY ("rescueId") REFERENCES "RescueRequest"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "QrfReadiness" ADD CONSTRAINT "QrfReadiness_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "RecruitConfig" ADD CONSTRAINT "RecruitConfig_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "RescueRequest" ADD CONSTRAINT "RescueRequest_operatorId_fkey" FOREIGN KEY ("operatorId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE SET NULL;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "RescueRequest" ADD CONSTRAINT "RescueRequest_orgId_fkey" FOREIGN KEY ("orgId") REFERENCES "Organization"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
 
 DO $$ BEGIN
     ALTER TABLE "RescueRequest" ADD CONSTRAINT "RescueRequest_requesterId_fkey" FOREIGN KEY ("requesterId") REFERENCES "User"(id) ON UPDATE CASCADE ON DELETE CASCADE;
-EXCEPTION WHEN duplicate_object THEN NULL;
+EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
 END $$;
