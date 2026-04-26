@@ -32,6 +32,7 @@ model User {
   notificationsCreated Notification[] @relation("notification_creator")
   manualEntries ManualEntry[] @relation("manual_author")
   auditLogs    AuditLog[]
+  fleetShips   FleetShip[]
 }
 
 model Organization {
@@ -59,6 +60,7 @@ model Organization {
   discordConfig DiscordConfig?
   recruitConfig RecruitConfig?
   applications  Application[]
+  fleetShips   FleetShip[]
 }
 
 model OrgMember {
@@ -483,4 +485,47 @@ model Application {
 
   @@index([orgId, status])
   @@index([orgId, createdAt])
+}
+
+
+model ShipSpec {
+  id              String   @id @default(cuid())
+  fleetyardsSlug  String   @unique
+  scIdentifier    String?
+  name            String
+  manufacturer    String
+  classification  String
+  focus           String?
+  sizeCategory    String?
+  crewMin         Int      @default(1)
+  crewMax         Int      @default(1)
+  cargo           Int      @default(0)
+  imageUrl        String?
+  inGame          Boolean  @default(false)
+  rawData         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  fleetShips      FleetShip[]
+
+  @@index([classification])
+  @@index([name])
+}
+
+model FleetShip {
+  id          String   @id @default(cuid())
+  userId      String
+  orgId       String
+  shipSpecId  String
+  shipName    String?
+  status      String   @default("active")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  shipSpec    ShipSpec      @relation(fields: [shipSpecId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+  @@index([userId])
+  @@index([orgId, status])
 }
