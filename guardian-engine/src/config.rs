@@ -8,6 +8,11 @@ pub enum TlsMode {
     SelfSigned,
     /// Load cert.pem and key.pem from cert_dir
     Manual,
+    /// Automatic certificate via ACME (Let's Encrypt)
+    Acme {
+        contact_email: String,
+        production: bool,
+    },
     /// No TLS — plain HTTP only (development)
     None,
 }
@@ -83,6 +88,15 @@ impl Config {
             .as_str()
         {
             "manual" | "custom" => TlsMode::Manual,
+            "acme" | "letsencrypt" | "le" => {
+                let contact_email = std::env::var("ACME_EMAIL")
+                    .unwrap_or_else(|_| "admin@example.com".into());
+                let production = std::env::var("ACME_PRODUCTION")
+                    .unwrap_or_else(|_| "false".into())
+                    .parse::<bool>()
+                    .unwrap_or(false);
+                TlsMode::Acme { contact_email, production }
+            }
             "none" | "off" | "disabled" => TlsMode::None,
             _ => TlsMode::SelfSigned,
         };

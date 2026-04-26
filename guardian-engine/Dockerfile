@@ -8,12 +8,13 @@ COPY Cargo.toml Cargo.lock* ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 RUN cargo build --release 2>/dev/null || true
 
-# Copy real source and build
+# Copy real source and migrations, then build
 COPY src/ src/
+COPY migrations/ migrations/
 RUN touch src/main.rs && cargo build --release
 
 # ---- Runtime ----
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
