@@ -55,7 +55,7 @@ pub fn build_acme(
 
     let config = AcmeConfig::new([bare_domain.to_string()])
         .contact_push(format!("mailto:{}", contact_email))
-        .cache(DirCache::new(&acme_cache_dir))
+        .cache(DirCache::new(acme_cache_dir))
         .directory(directory_url.to_string());
 
     let state = AcmeState::new(config);
