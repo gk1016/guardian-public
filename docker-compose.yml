@@ -20,6 +20,9 @@ services:
       retries: 3
 
   guardian-engine:
+    build:
+      context: ./guardian-engine
+      dockerfile: Dockerfile
     image: ghcr.io/gk1016/guardian-engine:latest
     container_name: guardian-engine
     restart: unless-stopped
