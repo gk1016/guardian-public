@@ -43,12 +43,12 @@ pub fn external_router(state: AppState) -> Router {
     let mut router = Router::new()
         // WebSocket at root path (clients connect to wss://host/ws)
         .merge(ws::routes())
+        // Health at root (includes /health and /api/health)
+        .merge(health::routes())
         // Engine routes served directly at /api/* (Phase 3+)
         .merge(engine_routes())
         // Backward-compat: /engine/api/* for components using ENGINE_BASE
-        .nest("/engine", engine_routes())
-        // Health at root for convenience
-        .merge(health::routes());
+        .nest("/engine", engine_routes());
 
     // Add proxy fallback if upstream is configured
     if state.config().upstream_frontend.is_some() {
@@ -71,9 +71,10 @@ pub fn internal_router(state: AppState) -> Router {
 }
 
 /// All engine route handlers grouped (no state attached yet).
+/// Note: health::routes() is NOT included here — it is merged separately
+/// at root level by external_router to avoid /health path collisions.
 fn engine_routes() -> Router<AppState> {
     Router::new()
-        .merge(health::routes())
         .merge(ai::routes())
         .merge(auth::routes())
         .merge(admin::routes())
