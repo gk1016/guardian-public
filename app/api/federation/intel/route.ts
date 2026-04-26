@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/auth";
+import { getSessionFromCookies } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,10 @@ export const dynamic = "force-dynamic";
  *   - limit: max results (default 50)
  */
 export async function GET(request: Request) {
-  await requireSession("/intel");
+  const session = await getSessionFromCookies();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const url = new URL(request.url);
   const source = url.searchParams.get("source");
