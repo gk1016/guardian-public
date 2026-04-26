@@ -164,7 +164,7 @@ function ChatPanel({ session, events }: { session: GuardianSession; events: FedE
     if (!text.trim()) return;
     setSending(true);
     try {
-      await fetch("/api/federation/chat", {
+      await fetch("/engine/api/federation/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -327,8 +327,8 @@ export function FederationPanel({ session }: { session: GuardianSession }) {
   const fetchData = useCallback(async () => {
     try {
       const [statusRes, peersRes] = await Promise.all([
-        fetch("/api/federation/status"),
-        fetch("/api/federation/peers"),
+        fetch("/engine/api/federation/status"),
+        fetch("/engine/api/federation/peers"),
       ]);
       if (statusRes.ok) setStatus(await statusRes.json());
       if (peersRes.ok) setPeers(await peersRes.json());
