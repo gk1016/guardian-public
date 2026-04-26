@@ -23,12 +23,19 @@ services:
     image: ghcr.io/gk1016/guardian-engine:latest
     container_name: guardian-engine
     restart: unless-stopped
+    ports:
+      - "${HTTPS_PORT:-443}:${HTTPS_PORT:-443}"
+      - "${HTTP_PORT:-80}:${HTTP_PORT:-80}"
+      - "0.0.0.0:3421:3421"
     expose:
       - "3420"
-    ports:
-      - "0.0.0.0:3421:3421"
     environment:
       ENGINE_PORT: "3420"
+      HTTPS_PORT: "${HTTPS_PORT:-443}"
+      HTTP_PORT: "${HTTP_PORT:-80}"
+      SITE_DOMAIN: "${SITE_ADDRESS:-localhost}"
+      TLS_MODE: "${TLS_MODE:-self-signed}"
+      UPSTREAM_FRONTEND: "guardian:3000"
       FEDERATION_PORT: "3421"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@guardian-postgres:5432/${POSTGRES_DB}"
       GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"
@@ -112,28 +119,7 @@ services:
       timeout: 5s
       retries: 10
 
-  caddy:
-    image: caddy:2
-    container_name: guardian-caddy
-    restart: unless-stopped
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
-      TLS_DIRECTIVE: ${TLS_DIRECTIVE:-tls internal}
-      UPSTREAM_GUARDIAN: ${UPSTREAM_GUARDIAN:-guardian:3000}
-      UPSTREAM_ENGINE: ${UPSTREAM_ENGINE:-guardian-engine:3420}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - ${TLS_CERT_DIR:-/dev/null}:/certs:ro
-    depends_on:
-      - guardian
-      - guardian-engine
-
 volumes:
   guardian-postgres-data:
   guardian-engine-certs:
   guardian-backups:
-  caddy_data:

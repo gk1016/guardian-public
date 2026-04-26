@@ -1,7 +1,10 @@
+# Nucbox-specific overrides.
+# Caddy removed — engine handles TLS directly.
+# No host network mode needed.
 services:
   guardian:
     ports:
-      - "0.0.0.0:3410:3000"
+      - "127.0.0.1:3000:3000"
   guardian-engine:
     ports:
-      - "0.0.0.0:3420:3420"
+      - "127.0.0.1:3420:3420"

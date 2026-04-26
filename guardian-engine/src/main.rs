@@ -8,8 +8,12 @@ mod state;
 mod ai;
 mod auth;
 mod helpers;
+mod tls;
+mod proxy;
+mod security;
 
 use tracing::info;
+use tokio_rustls::TlsAcceptor;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,7 +34,12 @@ async fn main() -> anyhow::Result<()> {
         .expect("failed to install rustls CryptoProvider");
 
     let cfg = config::Config::from_env()?;
-    info!(listen = %cfg.listen_addr, "guardian-engine starting");
+    info!(
+        internal = %cfg.listen_addr,
+        https = %cfg.https_listen_addr,
+        tls = ?cfg.tls_mode,
+        "guardian-engine starting"
+    );
 
     // Initialize federation TLS identity
     let identity = federation::tls::ensure_identity(&cfg.cert_dir, &cfg.instance_name)?;
@@ -47,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
     // Build shared app state
     let app_state = state::AppState::new(pool, cfg.clone(), identity.fingerprint.clone());
 
-    // Initialize AI state \u{2014} load provider from DB config
+    // Initialize AI state — load provider from DB config
     if let Err(e) = app_state.ai().reload(app_state.pool()).await {
         tracing::warn!(error = %e, "failed to load AI config on startup (non-fatal)");
     }
@@ -69,7 +78,6 @@ async fn main() -> anyhow::Result<()> {
     // Start compute tick loop (30-second interval)
     let compute_state = app_state.clone();
     let compute_handle = tokio::spawn(async move {
-        // Wait 5 seconds on startup before first tick (let things settle)
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
         loop {
@@ -81,16 +89,14 @@ async fn main() -> anyhow::Result<()> {
     });
     info!("compute tick loop started (30s interval)");
 
-    // Start AI analysis tick loop (configurable interval, default 5 minutes)
+    // Start AI analysis tick loop
     let ai_state = app_state.clone();
     let ai_handle = tokio::spawn(async move {
-        // Wait 15 seconds on startup before first AI tick
         tokio::time::sleep(std::time::Duration::from_secs(15)).await;
         loop {
-            // Read tick interval from current config (allows runtime changes)
             let interval_secs = match ai_state.ai().config().await {
                 Some(cfg) if cfg.enabled => cfg.tick_interval_secs as u64,
-                _ => 300, // default 5 min if not configured
+                _ => 300,
             };
             tokio::time::sleep(std::time::Duration::from_secs(interval_secs)).await;
             ai::tick(&ai_state).await;
@@ -98,15 +104,56 @@ async fn main() -> anyhow::Result<()> {
     });
     info!("AI analysis tick loop started");
 
-    // Build router
-    let app = routes::router(app_state.clone());
+    // --- Listeners ---
 
-    // Bind and serve
-    let listener = tokio::net::TcpListener::bind(&cfg.listen_addr).await?;
-    info!(addr = %cfg.listen_addr, "listening");
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    // Internal plain HTTP listener (health checks, inter-container comms)
+    let internal_app = routes::internal_router(app_state.clone());
+    let internal_listener = tokio::net::TcpListener::bind(&cfg.listen_addr).await?;
+    info!(addr = %cfg.listen_addr, "internal HTTP listener ready");
+
+    let internal_handle = tokio::spawn(async move {
+        axum::serve(internal_listener, internal_app).await.ok();
+    });
+
+    // External listener (HTTPS or plain HTTP depending on TLS mode)
+    let external_app = routes::external_router(app_state.clone());
+
+    match &cfg.tls_mode {
+        config::TlsMode::None => {
+            // Development mode: plain HTTP on the HTTPS port
+            info!("TLS disabled — serving plain HTTP (development mode)");
+            let listener = tokio::net::TcpListener::bind(&cfg.https_listen_addr).await?;
+            info!(addr = %cfg.https_listen_addr, "external HTTP listener ready (no TLS)");
+            axum::serve(listener, external_app)
+                .with_graceful_shutdown(shutdown_signal())
+                .await?;
+        }
+        tls_mode => {
+            // Production: TLS-terminated HTTPS
+            let acceptor = tls::build_acceptor(
+                tls_mode,
+                &cfg.cert_dir,
+                &cfg.site_domain,
+            )?;
+            info!(mode = ?tls_mode, "edge TLS configured");
+
+            // Optional: HTTP redirect listener
+            let http_redirect_handle = spawn_http_redirect(
+                cfg.http_listen_addr,
+                &cfg.site_domain,
+            ).await;
+
+            // Run TLS accept loop
+            let tls_listener = tokio::net::TcpListener::bind(&cfg.https_listen_addr).await?;
+            info!(addr = %cfg.https_listen_addr, "external HTTPS listener ready");
+
+            serve_tls(tls_listener, acceptor, external_app).await;
+
+            if let Some(h) = http_redirect_handle {
+                h.abort();
+            }
+        }
+    }
 
     // Cleanup
     discord::stop(&app_state).await;
@@ -114,8 +161,107 @@ async fn main() -> anyhow::Result<()> {
     ai_handle.abort();
     fed_handle.abort();
     consumer_handle.abort();
+    internal_handle.abort();
     info!("guardian-engine stopped");
     Ok(())
+}
+
+/// TLS accept loop using hyper directly for full WebSocket upgrade support.
+async fn serve_tls(
+    listener: tokio::net::TcpListener,
+    acceptor: TlsAcceptor,
+    app: axum::Router,
+) {
+    use hyper_util::rt::{TokioExecutor, TokioIo};
+    use hyper_util::server::conn::auto::Builder;
+    use tower::ServiceExt;
+
+    let shutdown = shutdown_signal();
+    tokio::pin!(shutdown);
+
+    loop {
+        tokio::select! {
+            result = listener.accept() => {
+                let (stream, peer) = match result {
+                    Ok(conn) => conn,
+                    Err(e) => {
+                        tracing::error!(error = %e, "TCP accept failed");
+                        continue;
+                    }
+                };
+
+                let acceptor = acceptor.clone();
+                let app = app.clone();
+
+                tokio::spawn(async move {
+                    let tls_stream = match acceptor.accept(stream).await {
+                        Ok(s) => s,
+                        Err(e) => {
+                            tracing::debug!(error = %e, peer = %peer, "TLS handshake failed");
+                            return;
+                        }
+                    };
+
+                    let io = TokioIo::new(tls_stream);
+                    let service = hyper::service::service_fn(move |req: hyper::Request<hyper::body::Incoming>| {
+                        let app = app.clone();
+                        async move {
+                            let (parts, body) = req.into_parts();
+                            let body = axum::body::Body::new(body);
+                            let req = hyper::Request::from_parts(parts, body);
+                            Ok::<_, std::convert::Infallible>(
+                                app.oneshot(req).await.unwrap_or_else(|e| match e {})
+                            )
+                        }
+                    });
+
+                    if let Err(e) = Builder::new(TokioExecutor::new())
+                        .serve_connection_with_upgrades(io, service)
+                        .await
+                    {
+                        tracing::debug!(error = %e, peer = %peer, "connection error");
+                    }
+                });
+            }
+            _ = &mut shutdown => {
+                info!("shutdown signal received, stopping TLS listener");
+                break;
+            }
+        }
+    }
+}
+
+/// Spawn an HTTP listener that redirects all requests to HTTPS.
+async fn spawn_http_redirect(
+    addr: std::net::SocketAddr,
+    site_domain: &str,
+) -> Option<tokio::task::JoinHandle<()>> {
+    let listener = match tokio::net::TcpListener::bind(addr).await {
+        Ok(l) => l,
+        Err(e) => {
+            tracing::warn!(addr = %addr, error = %e, "HTTP redirect listener failed to bind (non-fatal)");
+            return None;
+        }
+    };
+
+    info!(addr = %addr, "HTTP redirect listener ready");
+    let site = site_domain.to_string();
+
+    Some(tokio::spawn(async move {
+        let app = axum::Router::new().fallback(
+            move |req: axum::http::Request<axum::body::Body>| {
+                let site = site.clone();
+                async move {
+                    let path = req.uri().path_and_query()
+                        .map(|pq| pq.as_str())
+                        .unwrap_or("/");
+                    let location = format!("https://{}{}", site, path);
+                    axum::response::Redirect::permanent(&location)
+                }
+            },
+        );
+        axum::serve(listener, app).await.ok();
+    }))
 }
 
 async fn shutdown_signal() {

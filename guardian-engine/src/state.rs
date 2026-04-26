@@ -31,12 +31,22 @@ struct Inner {
     pub peer_registry: PeerRegistry,
     /// Discord bot task handle (for start/stop lifecycle)
     pub discord_handle: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
+    /// HTTP client for reverse proxying to upstream frontend
+    pub http_client: reqwest::Client,
 }
 
 impl AppState {
     pub fn new(pool: PgPool, config: Config, cert_fingerprint: String) -> Self {
         let (event_tx, _) = broadcast::channel(256);
         let (federation_tx, _) = broadcast::channel(256);
+
+        // Build a shared HTTP client for proxying
+        let http_client = reqwest::Client::builder()
+            .no_proxy()  // internal traffic, skip proxy env vars
+            .pool_max_idle_per_host(20)
+            .build()
+            .expect("failed to build HTTP client");
+
         Self {
             inner: Arc::new(Inner {
                 pool,
@@ -48,6 +58,7 @@ impl AppState {
                 rate_limiter: Arc::new(RateLimiter::new()),
                 peer_registry: PeerRegistry::new(),
                 discord_handle: Arc::new(tokio::sync::Mutex::new(None)),
+                http_client,
             }),
         }
     }
@@ -90,6 +101,11 @@ impl AppState {
 
     pub fn discord_handle(&self) -> &tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>> {
         &self.inner.discord_handle
+    }
+
+    /// HTTP client for reverse proxying to upstream frontend.
+    pub fn http_client(&self) -> &reqwest::Client {
+        &self.inner.http_client
     }
 }
 
