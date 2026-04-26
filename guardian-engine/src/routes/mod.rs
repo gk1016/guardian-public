@@ -10,6 +10,7 @@ pub mod federation;
 pub mod discord;
 pub mod command;
 pub mod recruit;
+pub mod ollama_scan;
 
 use axum::Router;
 use tower_http::trace::TraceLayer;
@@ -30,6 +31,7 @@ pub fn router(state: AppState) -> Router {
         .merge(discord::routes())
         .merge(command::routes())
         .merge(recruit::routes())
+        .merge(ollama_scan::routes())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
