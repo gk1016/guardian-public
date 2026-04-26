@@ -1,5 +1,5 @@
 {$SITE_ADDRESS:localhost} {
-    tls internal
+    {$TLS_DIRECTIVE:tls internal}
 
     @options method OPTIONS
     respond @options 204
