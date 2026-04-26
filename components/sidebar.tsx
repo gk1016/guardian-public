@@ -25,6 +25,7 @@ import {
   Monitor,
   Network,
   Sparkles,
+  Anchor,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { GuardianSession } from "@/lib/auth-core";
@@ -68,6 +69,7 @@ const navSections = [
   {
     title: "Org",
     items: [
+      { href: "/fleet", label: "Fleet", icon: Anchor },
       { href: "/roster", label: "Roster", icon: Users },
       { href: "/settings", label: "Settings", icon: UserCog },
       { href: "/admin", label: "Admin", icon: Settings, adminOnly: true },

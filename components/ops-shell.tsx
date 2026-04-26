@@ -13,6 +13,7 @@ type OpsShellProps = {
     | "/intel"
     | "/doctrine"
     | "/rescues"
+    | "/fleet"
     | "/roster"
     | "/qrf"
     | "/incidents"
