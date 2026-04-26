@@ -6,13 +6,13 @@
 
     # WebSocket — dedicated route, direct proxy, no prefix stripping
     handle /ws {
-        reverse_proxy guardian-engine:3420
+        reverse_proxy {$UPSTREAM_ENGINE:guardian-engine:3420}
     }
 
     # Engine internal routes (non-WS)
     handle /engine/* {
         uri strip_prefix /engine
-        reverse_proxy guardian-engine:3420
+        reverse_proxy {$UPSTREAM_ENGINE:guardian-engine:3420}
     }
 
     # Everything else → Next.js frontend (with full security headers)
@@ -30,6 +30,6 @@
             Access-Control-Max-Age "86400"
             -Server
         }
-        reverse_proxy guardian:3000
+        reverse_proxy {$UPSTREAM_GUARDIAN:guardian:3000}
     }
 }
