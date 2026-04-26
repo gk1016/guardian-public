@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ToggleLeft, ToggleRight, RefreshCw, Activity, CheckCircle, XCircle, Loader2, ChevronDown, Plus } from "lucide-react";
+import { ToggleLeft, ToggleRight, RefreshCw, Activity, CheckCircle, XCircle, Loader2, ChevronDown, Plus, Wifi } from "lucide-react";
 
 const ENGINE_BASE = "/engine";
 
@@ -298,6 +298,125 @@ function ModelComboBox({
   );
 }
 
+
+// --- Scan Ollama Dialog ---
+
+function ScanOllamaDialog({
+  onSelect,
+  onClose,
+}: {
+  onSelect: (url: string) => void;
+  onClose: () => void;
+}) {
+  const [subnet, setSubnet] = useState("192.168.68");
+  const [scanning, setScanning] = useState(false);
+  const [results, setResults] = useState<any[] | null>(null);
+  const [scanError, setScanError] = useState("");
+
+  async function handleScan() {
+    setScanning(true);
+    setScanError("");
+    setResults(null);
+    try {
+      const res = await fetch(`${ENGINE_BASE}/api/admin/scan-ollama`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subnet: subnet || undefined }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setResults(data.instances);
+      } else {
+        setScanError(data.error || "Scan failed");
+      }
+    } catch {
+      setScanError("Failed to reach engine");
+    } finally {
+      setScanning(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full max-w-lg rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+          <h3 className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-strong)]">
+            <Wifi size={14} className="text-amber-400" /> Scan for Ollama Instances
+          </h3>
+          <button onClick={onClose} className="text-lg leading-none text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]">&times;</button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Subnet</span>
+              <input value={subnet} onChange={(e) => setSubnet(e.target.value)} placeholder="192.168.1"
+                className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none"
+                onKeyDown={(e) => { if (e.key === "Enter") handleScan(); }} />
+            </div>
+            <div className="flex items-end">
+              <button onClick={handleScan} disabled={scanning}
+                className="rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/8 px-4 py-2 text-[11px] uppercase tracking-[0.1em] text-cyan-200 transition hover:bg-cyan-400/15 disabled:opacity-50">
+                {scanning ? <span className="flex items-center gap-1.5"><Loader2 size={12} className="animate-spin" /> Scanning...</span> : "Scan"}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-[var(--color-text-faint)]">
+            Scans {subnet}.0/24 for Ollama on port 11434. Comma-separate multiple subnets.
+          </p>
+
+          {scanError ? <div className="text-xs text-red-300">{scanError}</div> : null}
+
+          {scanning ? (
+            <div className="flex items-center gap-2 py-4 text-xs text-[var(--color-text-tertiary)]">
+              <Loader2 size={14} className="animate-spin" /> Probing network...
+            </div>
+          ) : null}
+
+          {results !== null && results.length === 0 && !scanning ? (
+            <div className="rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-3 py-2 text-xs text-amber-200">
+              No Ollama instances found. Check the subnet and ensure Ollama is running.
+            </div>
+          ) : null}
+
+          {results && results.length > 0 ? (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {results.map((inst: any) => (
+                <button key={inst.ip} type="button"
+                  onClick={() => { onSelect(inst.url); onClose(); }}
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input-bg)] p-3 text-left transition hover:border-cyan-400/30 hover:bg-cyan-400/5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-mono text-[var(--color-text-strong)]">{inst.ip}:{inst.port}</span>
+                    <span className="text-[10px] text-[var(--color-text-tertiary)]">{inst.modelCount} model{inst.modelCount !== 1 ? "s" : ""}</span>
+                  </div>
+                  {inst.running.length > 0 ? (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {inst.running.map((r: any) => (
+                        <span key={r.name} className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-2 py-0.5 text-[9px] text-amber-200">
+                          <span className="text-amber-400">&#9679;</span> {r.name}
+                          {r.contextLength ? <span className="text-[var(--color-text-faint)]">{Math.round(r.contextLength / 1024)}K ctx</span> : null}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {inst.models.filter((m: any) => !inst.running.some((r: any) => r.name === m.name)).map((m: any) => (
+                      <span key={m.name} className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-1.5 py-0.5 text-[9px] text-[var(--color-text-tertiary)]">
+                        {m.name} {m.parameterSize ? `(${m.parameterSize})` : ""}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Component ---
 
 export function AiConfigManager() {
@@ -312,6 +431,7 @@ export function AiConfigManager() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [showScanDialog, setShowScanDialog] = useState(false);
 
   const [form, setForm] = useState({
     provider: "anthropic",
@@ -571,7 +691,15 @@ export function AiConfigManager() {
 
             {providerInfo?.needsUrl && (
               <label className="block">
-                <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Base URL</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Base URL</span>
+                  {(form.provider === "ollama_local") && (
+                    <button type="button" onClick={() => setShowScanDialog(true)}
+                      className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] border border-amber-400/20 bg-amber-400/8 px-2 py-0.5 text-[9px] uppercase tracking-[0.1em] text-amber-200 transition hover:bg-amber-400/15">
+                      <Wifi size={10} /> Scan Network
+                    </button>
+                  )}
+                </div>
                 <input type="text" value={form.baseUrl} onChange={(e) => setForm({ ...form, baseUrl: e.target.value })}
                   className="mt-1 block w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-faint)] focus:border-cyan-400/40 focus:outline-none"
                   placeholder={DEFAULT_URLS[form.provider] || "https://..."} />
@@ -658,6 +786,12 @@ export function AiConfigManager() {
             </details>
           ))}
         </div>
+      )}
+      {showScanDialog && (
+        <ScanOllamaDialog
+          onSelect={(url) => setForm({ ...form, baseUrl: url })}
+          onClose={() => setShowScanDialog(false)}
+        />
       )}
     </div>
   );
