@@ -6,6 +6,8 @@ import { OpsShell } from "@/components/ops-shell";
 import { CollapsiblePanel } from "@/components/collapsible-panel";
 import { IntelCreateForm } from "@/components/intel-create-form";
 import { IntelUpdateForm } from "@/components/intel-update-form";
+import { IntelShareButton } from "@/components/intel-share-button";
+import { FederatedIntelFeed } from "@/components/federated-intel-feed";
 import { canManageOperations } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +66,8 @@ export default async function IntelPage() {
               </div>
             </div>
             {canFileIntel ? (
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-2">
+                <IntelShareButton intelId={item.id} />
                 <CollapsiblePanel label="Update Report" variant="inline">
                   <IntelUpdateForm
                     intelId={item.id}
@@ -78,6 +81,9 @@ export default async function IntelPage() {
           </article>
         ))}
       </section>
+
+      {/* Federated Intel — persistent view of intel received from peers */}
+      <FederatedIntelFeed />
     </OpsShell>
   );
 }
