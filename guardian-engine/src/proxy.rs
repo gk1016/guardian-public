@@ -9,7 +9,7 @@ use axum::{
     extract::State,
     http::{HeaderValue, Request, Response, StatusCode},
 };
-use tracing::debug;
+use tracing::{debug, warn};
 
 use crate::state::AppState;
 
@@ -29,6 +29,16 @@ pub async fn handler(
         .path_and_query()
         .map(|pq| pq.as_str())
         .unwrap_or("/");
+
+    // Phase 3 migration tracking: warn when /api/* leaks to proxy
+    if path_query.starts_with("/api/") {
+        warn!(
+            method = %method,
+            path = %path_query,
+            "API route leaked to proxy — not yet handled by engine"
+        );
+    }
+
     let url = format!("http://{}{}", upstream, path_query);
 
     debug!(method = %method, url = %url, "proxying to upstream");

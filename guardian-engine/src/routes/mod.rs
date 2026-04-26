@@ -23,12 +23,10 @@ use crate::proxy;
 use crate::security;
 use crate::state::AppState;
 
-/// Build the external (TLS) router — serves engine routes under /engine/*,
-/// WebSocket at /ws, and proxies everything else to the upstream frontend.
+/// Build the external (TLS) router — serves engine API routes at /api/*,
+/// backward-compat mirror at /engine/api/*, WebSocket at /ws, and proxies
+/// everything else to the upstream frontend.
 pub fn external_router(state: AppState) -> Router {
-    // All engine route handlers (served under /engine/* prefix for frontend compat)
-    let engine = engine_routes();
-
     // CORS configuration
     let cors = CorsLayer::new()
         .allow_origin(tower_http::cors::Any)
@@ -45,8 +43,10 @@ pub fn external_router(state: AppState) -> Router {
     let mut router = Router::new()
         // WebSocket at root path (clients connect to wss://host/ws)
         .merge(ws::routes())
-        // Engine routes under /engine/* prefix (frontend compatibility)
-        .nest("/engine", engine)
+        // Engine routes served directly at /api/* (Phase 3+)
+        .merge(engine_routes())
+        // Backward-compat: /engine/api/* for components using ENGINE_BASE
+        .nest("/engine", engine_routes())
         // Health at root for convenience
         .merge(health::routes());
 
