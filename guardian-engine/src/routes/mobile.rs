@@ -740,7 +740,7 @@ async fn chat(
         req = req.header(k.as_str(), v.as_str());
     }
 
-    let provider_res = req.send().await.map_err(|e| {
+    let mut provider_res = req.send().await.map_err(|e| {
         error!("AI provider request failed: {e}");
         (StatusCode::BAD_GATEWAY, Json(json!({ "error": "AI provider unreachable." })))
     })?;
