@@ -16,6 +16,9 @@ import { DoctrinePage } from "@/pages/doctrine";
 import { RosterPage } from "@/pages/roster";
 import { IntelPage } from "@/pages/intel";
 import { RescuesPage } from "@/pages/rescues";
+import { FleetPage } from "@/pages/fleet";
+import { QrfPage } from "@/pages/qrf";
+import { IncidentsPage } from "@/pages/incidents";
 
 /* ------------------------------------------------------------------ */
 /*  Stub for unmigrated pages                                          */
@@ -62,9 +65,9 @@ export const router = createBrowserRouter([
       { path: "doctrine", element: <DoctrinePage /> },
       { path: "rescues", element: <RescuesPage /> },
       { path: "roster", element: <RosterPage /> },
-      { path: "fleet", element: <Stub title="Fleet" /> },
-      { path: "qrf", element: <Stub title="QRF" /> },
-      { path: "incidents", element: <Stub title="Incidents" /> },
+      { path: "fleet", element: <FleetPage /> },
+      { path: "qrf", element: <QrfPage /> },
+      { path: "incidents", element: <IncidentsPage /> },
       { path: "notifications", element: <Stub title="Notifications" /> },
       { path: "sitrep", element: <Stub title="Situation Report" /> },
       { path: "manual", element: <Stub title="Manual" /> },
