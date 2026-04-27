@@ -22,6 +22,10 @@ import { IncidentsPage } from "@/pages/incidents";
 import { NotificationsPage } from "@/pages/notifications";
 import { ManualPage } from "@/pages/manual";
 import { SettingsPage } from "@/pages/settings";
+import { FederationPage } from "@/pages/federation";
+import { TacticalPage } from "@/pages/tactical";
+import { SitrepPage } from "@/pages/sitrep";
+import { AiPage } from "@/pages/ai";
 
 /* ------------------------------------------------------------------ */
 /*  Stub for unmigrated pages                                          */
@@ -74,10 +78,10 @@ export const router = createBrowserRouter([
       { path: "notifications", element: <NotificationsPage /> },
       { path: "manual", element: <ManualPage /> },
       { path: "settings", element: <SettingsPage /> },
-      { path: "sitrep", element: <Stub title="Situation Report" /> },
-      { path: "tactical", element: <Stub title="Tactical" /> },
-      { path: "federation", element: <Stub title="Federation" /> },
-      { path: "ai", element: <Stub title="AI" /> },
+      { path: "sitrep", element: <SitrepPage /> },
+      { path: "tactical", element: <TacticalPage /> },
+      { path: "federation", element: <FederationPage /> },
+      { path: "ai", element: <AiPage /> },
       { path: "admin", element: <Stub title="Admin" /> },
     ],
   },
