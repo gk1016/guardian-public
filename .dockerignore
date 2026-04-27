@@ -1,11 +1,8 @@
 .git
-.next
-node_modules
-npm-debug.log
 guardian-engine/target
+guardian-spa/node_modules
+guardian-spa/dist
 .env*
 !.env.example
 *.pem
 *.key
-guardian-spa/node_modules
-guardian-spa/dist
