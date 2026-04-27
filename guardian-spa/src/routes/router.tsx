@@ -26,6 +26,7 @@ import { FederationPage } from "@/pages/federation";
 import { TacticalPage } from "@/pages/tactical";
 import { SitrepPage } from "@/pages/sitrep";
 import { AiPage } from "@/pages/ai";
+import { AdminPage } from "@/pages/admin";
 
 /* ------------------------------------------------------------------ */
 /*  Stub for unmigrated pages                                          */
@@ -82,7 +83,7 @@ export const router = createBrowserRouter([
       { path: "tactical", element: <TacticalPage /> },
       { path: "federation", element: <FederationPage /> },
       { path: "ai", element: <AiPage /> },
-      { path: "admin", element: <Stub title="Admin" /> },
+      { path: "admin", element: <AdminPage /> },
     ],
   },
 ]);
