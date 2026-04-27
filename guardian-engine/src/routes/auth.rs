@@ -1,6 +1,6 @@
 use axum::{
     extract::State,
-    routing::post,
+    routing::{get, post},
     Json, Router,
 };
 use axum_extra::extract::CookieJar;
@@ -12,16 +12,39 @@ use tracing::{info, warn};
 use crate::auth::{jwt, password, totp};
 use crate::auth::middleware::AuthSession;
 use crate::helpers::audit::audit_log;
+use crate::helpers::org::get_org_for_user;
 use crate::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
+        .route("/api/auth/me", get(me))
         .route("/api/auth/login", post(login))
         .route("/api/auth/logout", post(logout))
         .route("/api/auth/totp/setup", post(totp_setup))
         .route("/api/auth/totp/verify", post(totp_verify))
         .route("/api/auth/totp/validate", post(totp_validate))
         .route("/api/auth/totp/disable", post(totp_disable))
+}
+
+// ── Session info (SPA bootstrap) ───────────────────────────────────────────
+
+async fn me(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Json<Value> {
+    let org = get_org_for_user(state.pool(), &session.user_id).await;
+
+    Json(json!({
+        "userId": session.user_id,
+        "email": session.email,
+        "handle": session.handle,
+        "role": session.role,
+        "displayName": session.display_name,
+        "status": session.status,
+        "orgId": session.org_id,
+        "orgTag": session.org_tag,
+        "orgName": org.map(|o| o.name),
+    }))
 }
 
 #[derive(Deserialize)]
