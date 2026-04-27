@@ -100,7 +100,7 @@ struct UexVehicle {
     name: Option<String>,
     name_full: Option<String>,
     slug: Option<String>,
-    scu: Option<i32>,
+    scu: Option<f64>,
     crew: Option<String>,
     is_bomber: Option<i32>,
     is_cargo: Option<i32>,
@@ -557,7 +557,7 @@ async fn sync_specs(
             }
             None => (1, 1),
         };
-        let cargo = vehicle.scu.unwrap_or(0);
+        let cargo = vehicle.scu.unwrap_or(0.0) as i32;
         let image_url = vehicle.url_photo.clone();
         let in_game = !uex_flag(vehicle.is_concept);
         let raw_data = serde_json::to_value(vehicle).unwrap_or(json!(null));
