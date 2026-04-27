@@ -43,3 +43,4 @@ next-env.d.ts
 
 # Rust
 /guardian-engine/target/
+guardian-spa/node_modules

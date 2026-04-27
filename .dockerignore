@@ -7,3 +7,5 @@ guardian-engine/target
 !.env.example
 *.pem
 *.key
+guardian-spa/node_modules
+guardian-spa/dist

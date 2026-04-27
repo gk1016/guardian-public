@@ -1,16 +1,24 @@
-# ---- Builder ----
-FROM rust:1.95 AS builder
+# ---- SPA Builder ----
+FROM node:22-bookworm-slim AS spa-builder
+WORKDIR /spa
+COPY guardian-spa/package.json guardian-spa/package-lock.json ./
+RUN npm ci
+COPY guardian-spa/ ./
+RUN npx vite build
+
+# ---- Rust Builder ----
+FROM rust:1.85 AS builder
 
 WORKDIR /app
 
 # Cache dependencies: copy manifests first
-COPY Cargo.toml Cargo.lock* ./
+COPY guardian-engine/Cargo.toml guardian-engine/Cargo.lock* ./
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
 RUN cargo build --release 2>/dev/null || true
 
 # Copy real source and migrations, then build
-COPY src/ src/
-COPY migrations/ migrations/
+COPY guardian-engine/src/ src/
+COPY guardian-engine/migrations/ migrations/
 RUN touch src/main.rs && cargo build --release
 
 # ---- Runtime ----
@@ -23,6 +31,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create data directory for cert storage
 RUN mkdir -p /data/guardian/certs
+
+# SPA static assets
+COPY --from=spa-builder /spa/dist /app/spa
 
 COPY --from=builder /app/target/release/guardian-engine /usr/local/bin/guardian-engine
 

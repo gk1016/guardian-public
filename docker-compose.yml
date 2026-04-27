@@ -1,28 +1,8 @@
 services:
-  guardian:
-    image: ghcr.io/gk1016/guardian-flight:latest
-    container_name: guardian
-    restart: unless-stopped
-    expose:
-      - "3000"
-    env_file:
-      - .env
-    environment:
-      HOSTNAME: "0.0.0.0"
-    depends_on:
-      guardian-postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000"]
-      interval: 30s
-      timeout: 5s
-      start_period: 60s
-      retries: 3
-
   guardian-engine:
     build:
-      context: ./guardian-engine
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: guardian-engine/Dockerfile
     image: ghcr.io/gk1016/guardian-engine:latest
     container_name: guardian-engine
     restart: unless-stopped
@@ -40,7 +20,6 @@ services:
       TLS_MODE: "${TLS_MODE:-self-signed}"
       ACME_EMAIL: "${ACME_EMAIL:-}"
       ACME_PRODUCTION: "${ACME_PRODUCTION:-false}"
-      UPSTREAM_FRONTEND: "guardian:3000"
       FEDERATION_PORT: "3421"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@guardian-postgres:5432/${POSTGRES_DB}"
       GUARDIAN_INSTANCE_NAME: "${GUARDIAN_INSTANCE_NAME:-guardian-primary}"

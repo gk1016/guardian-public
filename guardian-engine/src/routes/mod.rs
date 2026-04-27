@@ -56,9 +56,11 @@ pub fn external_router(state: AppState) -> Router {
         // Backward-compat: /engine/api/* for components using ENGINE_BASE
         .nest("/engine", engine_routes());
 
-    // Add proxy fallback if upstream is configured
+    // Serve requests: proxy to upstream if configured, otherwise serve SPA
     if state.config().upstream_frontend.is_some() {
         router = router.fallback(proxy::handler);
+    } else {
+        router = router.fallback(crate::spa::fallback);
     }
 
     router

@@ -10,6 +10,7 @@ mod auth;
 mod helpers;
 mod tls;
 mod proxy;
+mod spa;
 mod security;
 
 use tracing::info;
