@@ -41,16 +41,14 @@ export const router = createBrowserRouter([
   { path: "/recruit", element: <RecruitPage /> },
   { path: "/setup", element: <Stub title="Setup" /> },
 
-  /* Authenticated app */
+  /* Authenticated app — all operational routes */
   {
-    path: "/app",
     element: (
       <ProtectedRoute>
         <AppLayout />
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <CommandPage /> },
       { path: "command", element: <CommandPage /> },
       { path: "missions", element: <MissionsPage /> },
       { path: "missions/new", element: <Stub title="New Mission" /> },
@@ -72,66 +70,6 @@ export const router = createBrowserRouter([
       { path: "settings", element: <Stub title="Settings" /> },
       { path: "aar", element: <Stub title="After Action Reports" /> },
       { path: "ops", element: <Stub title="Operations" /> },
-      { path: "standards", element: <Stub title="Standards" /> },
-      { path: "about", element: <Stub title="About" /> },
     ],
   },
-
-  /* Legacy routes: redirect /command -> /app/command etc. */
-  {
-    path: "/command",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/missions",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/missions/:missionId",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/intel",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/doctrine",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/rescues",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/roster",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/fleet",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/qrf",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/notifications",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/admin",
-    element: <RedirectToApp />,
-  },
-  {
-    path: "/settings",
-    element: <RedirectToApp />,
-  },
 ]);
-
-/* Redirect bare /command, /missions etc. to /app/command, /app/missions */
-function RedirectToApp() {
-  const loc = window.location;
-  const newPath = "/app" + loc.pathname;
-  window.location.replace(newPath + loc.search + loc.hash);
-  return null;
-}
