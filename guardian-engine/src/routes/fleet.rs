@@ -87,34 +87,138 @@ struct SpecsQuery {
     classification: Option<String>,
 }
 
-// ── Fleetyards sync types ───────────────────────────────────────────────────
+// ── UEX Corp API sync types ──────────────────────────────────────────────────
 
-#[derive(Deserialize, serde::Serialize)]
-#[allow(dead_code)]
-struct FleetyardsModel {
-    slug: Option<String>,
-    name: Option<String>,
-    #[serde(rename = "scIdentifier")]
-    sc_identifier: Option<String>,
-    manufacturer: Option<FleetyardsManufacturer>,
-    classification: Option<String>,
-    focus: Option<String>,
-    size: Option<String>,
-    #[serde(rename = "minCrew")]
-    min_crew: Option<i32>,
-    #[serde(rename = "maxCrew")]
-    max_crew: Option<i32>,
-    cargo: Option<i32>,
-    #[serde(rename = "storeImageMedium")]
-    store_image_medium: Option<String>,
-    #[serde(rename = "productionStatus")]
-    production_status: Option<String>,
+#[derive(Deserialize)]
+struct UexResponse {
+    data: Vec<UexVehicle>,
 }
 
 #[derive(Deserialize, serde::Serialize)]
 #[allow(dead_code)]
-struct FleetyardsManufacturer {
+struct UexVehicle {
     name: Option<String>,
+    name_full: Option<String>,
+    slug: Option<String>,
+    scu: Option<i32>,
+    crew: Option<i32>,
+    is_bomber: Option<i32>,
+    is_cargo: Option<i32>,
+    is_concept: Option<i32>,
+    is_construction: Option<i32>,
+    is_datarunner: Option<i32>,
+    is_emp: Option<i32>,
+    is_exploration: Option<i32>,
+    is_ground_vehicle: Option<i32>,
+    is_industrial: Option<i32>,
+    is_interdiction: Option<i32>,
+    is_medical: Option<i32>,
+    is_military: Option<i32>,
+    is_mining: Option<i32>,
+    is_passenger: Option<i32>,
+    is_racing: Option<i32>,
+    is_refinery: Option<i32>,
+    is_refuel: Option<i32>,
+    is_repair: Option<i32>,
+    is_salvage: Option<i32>,
+    is_scanning: Option<i32>,
+    is_science: Option<i32>,
+    is_spaceship: Option<i32>,
+    is_stealth: Option<i32>,
+    url_photo: Option<String>,
+    pad_type: Option<String>,
+    company_name: Option<String>,
+}
+
+fn uex_flag(v: Option<i32>) -> bool {
+    v.unwrap_or(0) != 0
+}
+
+/// Derive (classification, focus) from UEX vehicle flags.
+fn classify_uex(v: &UexVehicle) -> (String, Option<String>) {
+    let mut cats: Vec<&str> = Vec::new();
+    let mut focus: Option<&str> = None;
+
+    if uex_flag(v.is_ground_vehicle) && !uex_flag(v.is_spaceship) {
+        cats.push("ground");
+    }
+    if uex_flag(v.is_racing) {
+        cats.push("competition");
+        focus = Some("Racing");
+    }
+    if uex_flag(v.is_mining) || uex_flag(v.is_salvage) || uex_flag(v.is_refinery)
+        || uex_flag(v.is_construction) || uex_flag(v.is_industrial)
+    {
+        cats.push("industrial");
+        if uex_flag(v.is_mining) {
+            focus = Some("Mining");
+        } else if uex_flag(v.is_salvage) {
+            focus = Some("Salvage");
+        } else if uex_flag(v.is_refinery) {
+            focus = Some("Refinery");
+        } else {
+            focus = Some("Industrial");
+        }
+    }
+    if uex_flag(v.is_medical) || uex_flag(v.is_refuel) || uex_flag(v.is_repair)
+        || uex_flag(v.is_datarunner) || uex_flag(v.is_scanning) || uex_flag(v.is_science)
+    {
+        cats.push("support");
+        if uex_flag(v.is_medical) {
+            focus = Some("Medical");
+        } else if uex_flag(v.is_refuel) {
+            focus = Some("Refueling");
+        } else if uex_flag(v.is_repair) {
+            focus = Some("Repair");
+        } else if uex_flag(v.is_datarunner) {
+            focus = Some("Data Running");
+        } else if uex_flag(v.is_scanning) {
+            focus = Some("Scanning");
+        } else {
+            focus = Some("Science");
+        }
+    }
+    if uex_flag(v.is_exploration) {
+        cats.push("exploration");
+        if focus.is_none() {
+            focus = Some("Exploration");
+        }
+    }
+    if uex_flag(v.is_cargo) || uex_flag(v.is_passenger) {
+        cats.push("transport");
+        if focus.is_none() {
+            focus = if uex_flag(v.is_passenger) { Some("Touring") } else { Some("Freight") };
+        }
+    }
+    if uex_flag(v.is_military) || uex_flag(v.is_bomber) || uex_flag(v.is_emp)
+        || uex_flag(v.is_interdiction) || uex_flag(v.is_stealth)
+    {
+        cats.push("combat");
+        if focus.is_none() {
+            focus = if uex_flag(v.is_bomber) {
+                Some("Bombing")
+            } else if uex_flag(v.is_emp) {
+                Some("EMP")
+            } else if uex_flag(v.is_interdiction) {
+                Some("Interdiction")
+            } else if uex_flag(v.is_stealth) {
+                Some("Stealth")
+            } else {
+                Some("Combat")
+            };
+        }
+    }
+
+    cats.dedup();
+    let classification = if cats.is_empty() {
+        "unknown".to_string()
+    } else if cats.len() == 1 {
+        cats[0].to_string()
+    } else {
+        "multi".to_string()
+    };
+
+    (classification, focus.map(String::from))
 }
 
 // ── Routes ──────────────────────────────────────────────────────────────────
@@ -406,53 +510,89 @@ async fn sync_specs(
         return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Admin authority required."}))));
     }
 
+    // Fetch all vehicles from UEX Corp API
     let resp = state.http_client()
-        .get("https://api.fleetyards.net/v1/models?per_page=240")
+        .get("https://uexcorp.space/api/2.0/vehicles")
         .send()
         .await
         .map_err(|e| {
-            tracing::error!(error = %e, "fleetyards API request failed");
-            (StatusCode::BAD_GATEWAY, Json(json!({"error": "Failed to fetch from fleetyards.net."})))
+            tracing::error!(error = %e, "UEX Corp API request failed");
+            (StatusCode::BAD_GATEWAY, Json(json!({"error": "Failed to fetch from UEX Corp API."})))
         })?;
 
     if !resp.status().is_success() {
-        return Err((StatusCode::BAD_GATEWAY, Json(json!({"error": format!("Fleetyards API returned {}", resp.status())}))));
+        return Err((StatusCode::BAD_GATEWAY, Json(json!({"error": format!("UEX API returned {}", resp.status())}))));
     }
 
-    let models: Vec<FleetyardsModel> = resp.json().await.map_err(|e| {
-        tracing::error!(error = %e, "failed to parse fleetyards response");
-        (StatusCode::BAD_GATEWAY, Json(json!({"error": "Failed to parse fleetyards data."})))
+    let uex_resp: UexResponse = resp.json().await.map_err(|e| {
+        tracing::error!(error = %e, "failed to parse UEX response");
+        (StatusCode::BAD_GATEWAY, Json(json!({"error": "Failed to parse UEX data."})))
     })?;
 
     let mut synced = 0u64;
+    let mut migrated = 0u64;
 
-    for model in &models {
-        let slug = match &model.slug {
+    for vehicle in &uex_resp.data {
+        let slug = match &vehicle.slug {
             Some(s) if !s.is_empty() => s.clone(),
             _ => continue,
         };
-        let name = model.name.clone().unwrap_or_default();
-        let manufacturer = model.manufacturer.as_ref().and_then(|m| m.name.clone()).unwrap_or_else(|| "Unknown".into());
-        let classification = model.classification.clone().unwrap_or_else(|| "unknown".into());
-        let raw_data = serde_json::to_value(model).unwrap_or(json!(null));
+        let name = vehicle.name.clone().unwrap_or_default();
+        if name.is_empty() { continue; }
+
+        let manufacturer = vehicle.company_name.clone().unwrap_or_else(|| "Unknown".into());
+        let (classification, focus) = classify_uex(vehicle);
+        let size_category = vehicle.pad_type.clone();
+        let crew = vehicle.crew.unwrap_or(1).max(1);
+        let cargo = vehicle.scu.unwrap_or(0);
+        let image_url = vehicle.url_photo.clone();
+        let in_game = !uex_flag(vehicle.is_concept);
+        let raw_data = serde_json::to_value(vehicle).unwrap_or(json!(null));
         let new_id = cuid2::create_id();
 
+        // Pre-migration: if a record exists with matching name but different slug,
+        // update its slug to the UEX slug so the ON CONFLICT upsert finds it.
+        // This preserves FleetShip foreign keys during the fleetyards->UEX transition.
+        let mig = sqlx::query(
+            r#"UPDATE "ShipSpec" SET "fleetyardsSlug" = $1, "updatedAt" = NOW()
+               WHERE name = $2 AND "fleetyardsSlug" != $1"#,
+        )
+        .bind(&slug)
+        .bind(&name)
+        .execute(state.pool())
+        .await;
+
+        if let Ok(r) = &mig {
+            migrated += r.rows_affected();
+        }
+
+        // Upsert by slug
         let result = sqlx::query(
-            r#"INSERT INTO "ShipSpec" (id, "fleetyardsSlug", "scIdentifier", name, manufacturer, classification, focus, "sizeCategory", "crewMin", "crewMax", cargo, "imageUrl", "inGame", "rawData", "createdAt", "updatedAt")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+            r#"INSERT INTO "ShipSpec" (id, "fleetyardsSlug", "scIdentifier", name, manufacturer,
+                classification, focus, "sizeCategory", "crewMin", "crewMax", cargo,
+                "imageUrl", "inGame", "rawData", "createdAt", "updatedAt")
+            VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
             ON CONFLICT ("fleetyardsSlug") DO UPDATE SET
-                "scIdentifier" = EXCLUDED."scIdentifier", name = EXCLUDED.name, manufacturer = EXCLUDED.manufacturer,
-                classification = EXCLUDED.classification, focus = EXCLUDED.focus, "sizeCategory" = EXCLUDED."sizeCategory",
-                "crewMin" = EXCLUDED."crewMin", "crewMax" = EXCLUDED."crewMax", cargo = EXCLUDED.cargo,
-                "imageUrl" = EXCLUDED."imageUrl", "inGame" = EXCLUDED."inGame", "rawData" = EXCLUDED."rawData",
+                name = EXCLUDED.name, manufacturer = EXCLUDED.manufacturer,
+                classification = EXCLUDED.classification, focus = EXCLUDED.focus,
+                "sizeCategory" = EXCLUDED."sizeCategory",
+                "crewMin" = EXCLUDED."crewMin", "crewMax" = EXCLUDED."crewMax",
+                cargo = EXCLUDED.cargo, "imageUrl" = EXCLUDED."imageUrl",
+                "inGame" = EXCLUDED."inGame", "rawData" = EXCLUDED."rawData",
                 "updatedAt" = NOW()"#,
         )
-        .bind(&new_id).bind(&slug).bind(&model.sc_identifier)
-        .bind(&name).bind(&manufacturer).bind(&classification)
-        .bind(&model.focus).bind(&model.size)
-        .bind(model.min_crew.unwrap_or(1)).bind(model.max_crew.unwrap_or(1))
-        .bind(model.cargo.unwrap_or(0)).bind(&model.store_image_medium)
-        .bind(model.production_status.as_ref().map(|s| s.to_lowercase() == "flight-ready").unwrap_or(false))
+        .bind(&new_id)
+        .bind(&slug)
+        .bind(&name)
+        .bind(&manufacturer)
+        .bind(&classification)
+        .bind(&focus)
+        .bind(&size_category)
+        .bind(crew)  // crewMin
+        .bind(crew)  // crewMax (UEX provides single crew field)
+        .bind(cargo)
+        .bind(&image_url)
+        .bind(in_game)
         .bind(&raw_data)
         .execute(state.pool())
         .await;
@@ -463,5 +603,26 @@ async fn sync_specs(
         }
     }
 
-    Ok(Json(json!({"ok": true, "synced": synced, "source": "fleetyards.net"})))
+    // Post-sync: re-point FleetShip records whose specs still have stale image URLs
+    // to a matching UEX spec (handles name changes like "Ares Inferno" -> "Ares Inferno Starfighter")
+    let relinked = sqlx::query(
+        r#"UPDATE "FleetShip" SET "shipSpecId" = new_spec.id, "updatedAt" = NOW()
+           FROM "ShipSpec" old_spec, "ShipSpec" new_spec
+           WHERE "FleetShip"."shipSpecId" = old_spec.id
+           AND new_spec.name LIKE old_spec.name || ' %'
+           AND new_spec."imageUrl" LIKE 'https://%uexcorp.space%'
+           AND (old_spec."imageUrl" IS NULL OR old_spec."imageUrl" NOT LIKE 'https://%uexcorp.space%')
+           AND new_spec.id != old_spec.id"#,
+    )
+    .execute(state.pool())
+    .await
+    .map(|r| r.rows_affected())
+    .unwrap_or(0);
+
+    if relinked > 0 {
+        tracing::info!(relinked, "re-linked FleetShip records to updated specs");
+    }
+
+    tracing::info!(synced, migrated, relinked, "UEX Corp spec sync complete");
+    Ok(Json(json!({"ok": true, "synced": synced, "migrated": migrated, "relinked": relinked, "source": "uexcorp.space"})))
 }
