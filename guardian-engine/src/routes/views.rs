@@ -625,7 +625,7 @@ struct RescueRow {
     #[sqlx(rename = "medicalRequired")]
     medical_required: bool,
     #[sqlx(rename = "offeredPayment")]
-    offered_payment: Option<f64>,
+    offered_payment: Option<i32>,
 }
 
 #[derive(sqlx::FromRow)]
