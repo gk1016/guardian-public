@@ -543,7 +543,7 @@ fn activity_tier(score: i32) -> &'static str {
 
 // ── SQL row types ───────────────────────────────────────────────────────────
 
-#[derive(sqlx::FromRow)]
+#[derive(Clone, sqlx::FromRow)]
 struct ParticipantRow {
     id: String,
     handle: String,
