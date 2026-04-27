@@ -19,6 +19,9 @@ import { RescuesPage } from "@/pages/rescues";
 import { FleetPage } from "@/pages/fleet";
 import { QrfPage } from "@/pages/qrf";
 import { IncidentsPage } from "@/pages/incidents";
+import { NotificationsPage } from "@/pages/notifications";
+import { ManualPage } from "@/pages/manual";
+import { SettingsPage } from "@/pages/settings";
 
 /* ------------------------------------------------------------------ */
 /*  Stub for unmigrated pages                                          */
@@ -68,14 +71,14 @@ export const router = createBrowserRouter([
       { path: "fleet", element: <FleetPage /> },
       { path: "qrf", element: <QrfPage /> },
       { path: "incidents", element: <IncidentsPage /> },
-      { path: "notifications", element: <Stub title="Notifications" /> },
+      { path: "notifications", element: <NotificationsPage /> },
+      { path: "manual", element: <ManualPage /> },
+      { path: "settings", element: <SettingsPage /> },
       { path: "sitrep", element: <Stub title="Situation Report" /> },
-      { path: "manual", element: <Stub title="Manual" /> },
       { path: "tactical", element: <Stub title="Tactical" /> },
       { path: "federation", element: <Stub title="Federation" /> },
       { path: "ai", element: <Stub title="AI" /> },
       { path: "admin", element: <Stub title="Admin" /> },
-      { path: "settings", element: <Stub title="Settings" /> },
     ],
   },
 ]);
