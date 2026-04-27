@@ -15,6 +15,15 @@ import {
 import { useSession } from "@/lib/auth";
 import { useMissionDetail } from "@/hooks/use-views";
 import { canManageMissions } from "@/lib/roles";
+import { MissionEditForm } from "@/components/mission-edit-form";
+import { MissionDoctrineForm } from "@/components/mission-doctrine-form";
+import { MissionIntelLinkForm } from "@/components/mission-intel-link-form";
+import { MissionLogForm } from "@/components/mission-log-form";
+import { MissionCloseoutForm } from "@/components/mission-closeout-form";
+import { MissionReopenForm } from "@/components/mission-reopen-form";
+import { MissionQuickActions } from "@/components/mission-quick-actions";
+import { ParticipantAssignForm } from "@/components/participant-assign-form";
+import { LinkedIntelManager } from "@/components/linked-intel-manager";
 import type {
   MissionDetail,
   Participant,
@@ -89,7 +98,7 @@ function Label({ children }: { children: React.ReactNode }) {
 /*  Sub-sections                                                       */
 /* ------------------------------------------------------------------ */
 
-function HeaderStats({ m }: { m: MissionDetail }) {
+function HeaderStats({ m, isManager, onSuccess }: { m: MissionDetail; isManager: boolean; onSuccess: () => void }) {
   return (
     <Card>
       <div className="mb-3 flex items-center gap-3">
@@ -126,6 +135,17 @@ function HeaderStats({ m }: { m: MissionDetail }) {
           </p>
         </div>
       </div>
+
+      {isManager && ["planning", "ready", "active"].includes(m.status) ? (
+        <MissionQuickActions
+          missionId={m.id}
+          currentStatus={m.status}
+          callsign={m.callsign}
+          participantCount={m.packageSummary.total}
+          readyCount={m.packageSummary.readyOrLaunched}
+          onSuccess={onSuccess}
+        />
+      ) : null}
     </Card>
   );
 }
@@ -373,10 +393,10 @@ function TimelineSection({ logs }: { logs: MissionLog[] }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Action Forms Placeholder                                           */
+/*  Action Sidebar — now wired to real forms                           */
 /* ------------------------------------------------------------------ */
 
-function ActionSidebar({ isManager }: { isManager: boolean }) {
+function ActionSidebar({ m, isManager, onSuccess }: { m: MissionDetail; isManager: boolean; onSuccess: () => void }) {
   if (!isManager) {
     return (
       <Card>
@@ -388,43 +408,130 @@ function ActionSidebar({ isManager }: { isManager: boolean }) {
     );
   }
 
+  const isOpen = ["planning", "ready", "active"].includes(m.status);
+  const isClosed = ["complete", "aborted", "cancelled"].includes(m.status);
+
   return (
     <div className="space-y-4">
-      {/* TODO: Mission edit form */}
-      <Card>
-        <SectionHeading icon={ClipboardList} label="Edit Mission" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Mission edit form</p>
-      </Card>
+      {/* Edit Mission */}
+      {isOpen ? (
+        <Card>
+          <SectionHeading icon={ClipboardList} label="Edit Mission" />
+          <MissionEditForm
+            missionId={m.id}
+            initialMission={{
+              callsign: m.callsign,
+              title: m.title,
+              missionType: m.missionType,
+              status: m.status,
+              priority: m.priority,
+              areaOfOperation: m.areaOfOperation || null,
+              missionBrief: m.missionBrief || null,
+            }}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
 
-      {/* TODO: Doctrine attach form */}
-      <Card>
-        <SectionHeading icon={BookCheck} label="Attach Doctrine" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Doctrine attachment form</p>
-      </Card>
+      {/* Doctrine */}
+      {isOpen ? (
+        <Card>
+          <SectionHeading icon={BookCheck} label="Attach Doctrine" />
+          <MissionDoctrineForm
+            missionId={m.id}
+            selectedDoctrineTemplateId={m.doctrineTemplate?.id ?? null}
+            availableDoctrineTemplates={m.availableDoctrineTemplates.map((dt) => ({
+              id: dt.id,
+              code: dt.code,
+              title: dt.title,
+              category: dt.category,
+              summary: dt.summary,
+            }))}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
 
-      {/* TODO: Intel link form */}
-      <Card>
-        <SectionHeading icon={Radar} label="Link Intel" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Intel link form</p>
-      </Card>
+      {/* Link Intel */}
+      {isOpen ? (
+        <Card>
+          <SectionHeading icon={Radar} label="Link Intel" />
+          <MissionIntelLinkForm
+            missionId={m.id}
+            availableIntel={m.availableIntel.map((i) => ({
+              id: i.id,
+              title: i.title,
+              severity: Number(i.severity) || 0,
+            }))}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
 
-      {/* TODO: Participant assign form */}
-      <Card>
-        <SectionHeading icon={Users} label="Assign Participant" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Participant assignment form</p>
-      </Card>
+      {/* Linked Intel Manager — unlink controls */}
+      {isOpen && m.linkedIntel.length > 0 ? (
+        <Card>
+          <SectionHeading icon={Radar} label="Manage Linked Intel" />
+          <LinkedIntelManager
+            missionId={m.id}
+            intelLinks={m.linkedIntel.map((i) => ({
+              id: i.id,
+              intelId: i.id,
+              title: i.title,
+              severity: Number(i.severity) || 0,
+              reportType: i.reportType,
+              locationName: i.locationName || null,
+              hostileGroup: i.hostileGroup || null,
+            }))}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
 
-      {/* TODO: Log entry form */}
+      {/* Assign Participant */}
+      {isOpen ? (
+        <Card>
+          <SectionHeading icon={Users} label="Assign Participant" />
+          <ParticipantAssignForm
+            missionId={m.id}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
+
+      {/* Log Entry */}
       <Card>
         <SectionHeading icon={NotebookText} label="Add Log Entry" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Log entry form</p>
+        <MissionLogForm
+          missionId={m.id}
+          onSuccess={onSuccess}
+        />
       </Card>
 
-      {/* TODO: Closeout form */}
-      <Card>
-        <SectionHeading icon={FileCheck2} label="Closeout Mission" />
-        <p className="text-xs text-[var(--color-text-tertiary)]">TODO: Closeout form</p>
-      </Card>
+      {/* Closeout — only for open missions */}
+      {isOpen ? (
+        <Card>
+          <SectionHeading icon={FileCheck2} label="Closeout Mission" />
+          <MissionCloseoutForm
+            missionId={m.id}
+            initialFinalStatus="complete"
+            initialCloseoutSummary={m.closeoutSummary ?? ""}
+            initialAarSummary={m.aarSummary ?? ""}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
+
+      {/* Reopen — only for closed/aborted missions */}
+      {isClosed ? (
+        <Card>
+          <SectionHeading icon={RotateCcw} label="Reopen Mission" />
+          <MissionReopenForm
+            missionId={m.id}
+            onSuccess={onSuccess}
+          />
+        </Card>
+      ) : null}
     </div>
   );
 }
@@ -436,8 +543,10 @@ function ActionSidebar({ isManager }: { isManager: boolean }) {
 export function MissionDetailPage() {
   const { missionId } = useParams<{ missionId: string }>();
   const session = useSession();
-  const { data, isLoading, error } = useMissionDetail(missionId ?? "");
+  const { data, isLoading, error, refetch } = useMissionDetail(missionId ?? "");
   const isManager = canManageMissions(session.role);
+
+  const onSuccess = () => { refetch(); };
 
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error.message} />;
@@ -479,7 +588,7 @@ export function MissionDetailPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column — 2/3 */}
         <div className="lg:col-span-2 space-y-4">
-          <HeaderStats m={m} />
+          <HeaderStats m={m} isManager={isManager} onSuccess={onSuccess} />
           <MissionMeta m={m} />
           <MissionBrief brief={m.missionBrief} />
           <DisciplineSection disc={m.packageDiscipline} />
@@ -492,7 +601,7 @@ export function MissionDetailPage() {
 
         {/* Right column — 1/3 */}
         <div>
-          <ActionSidebar isManager={isManager} />
+          <ActionSidebar m={m} isManager={isManager} onSuccess={onSuccess} />
         </div>
       </div>
     </div>
