@@ -11,6 +11,7 @@ import { OpsPage } from "@/pages/ops";
 import { AarPage } from "@/pages/aar";
 import { CommandPage } from "@/pages/command";
 import { MissionsPage } from "@/pages/missions";
+import { MissionsNewPage } from "@/pages/missions-new";
 import { MissionDetailPage } from "@/pages/mission-detail";
 import { DoctrinePage } from "@/pages/doctrine";
 import { RosterPage } from "@/pages/roster";
@@ -27,20 +28,6 @@ import { TacticalPage } from "@/pages/tactical";
 import { SitrepPage } from "@/pages/sitrep";
 import { AiPage } from "@/pages/ai";
 import { AdminPage } from "@/pages/admin";
-
-/* ------------------------------------------------------------------ */
-/*  Stub for unmigrated pages                                          */
-/* ------------------------------------------------------------------ */
-
-function Stub({ title }: { title: string }) {
-  return (
-    <div className="flex items-center justify-center py-20">
-      <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">
-        {title} &mdash; coming soon
-      </p>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Router                                                             */
@@ -67,7 +54,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "command", element: <CommandPage /> },
       { path: "missions", element: <MissionsPage /> },
-      { path: "missions/new", element: <Stub title="New Mission" /> },
+      { path: "missions/new", element: <MissionsNewPage /> },
       { path: "missions/:missionId", element: <MissionDetailPage /> },
       { path: "intel", element: <IntelPage /> },
       { path: "doctrine", element: <DoctrinePage /> },
