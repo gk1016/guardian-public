@@ -6,6 +6,9 @@ import { HomePage } from "@/pages/home";
 import { AboutPage } from "@/pages/about";
 import { StandardsPage } from "@/pages/standards";
 import { RecruitPage } from "@/pages/recruit";
+import { SetupPage } from "@/pages/setup";
+import { OpsPage } from "@/pages/ops";
+import { AarPage } from "@/pages/aar";
 import { CommandPage } from "@/pages/command";
 import { MissionsPage } from "@/pages/missions";
 import { MissionDetailPage } from "@/pages/mission-detail";
@@ -39,7 +42,9 @@ export const router = createBrowserRouter([
   { path: "/about", element: <AboutPage /> },
   { path: "/standards", element: <StandardsPage /> },
   { path: "/recruit", element: <RecruitPage /> },
-  { path: "/setup", element: <Stub title="Setup" /> },
+  { path: "/setup", element: <SetupPage /> },
+  { path: "/ops", element: <OpsPage /> },
+  { path: "/aar", element: <AarPage /> },
 
   /* Authenticated app — all operational routes */
   {
@@ -68,8 +73,6 @@ export const router = createBrowserRouter([
       { path: "ai", element: <Stub title="AI" /> },
       { path: "admin", element: <Stub title="Admin" /> },
       { path: "settings", element: <Stub title="Settings" /> },
-      { path: "aar", element: <Stub title="After Action Reports" /> },
-      { path: "ops", element: <Stub title="Operations" /> },
     ],
   },
 ]);
