@@ -20,7 +20,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/views/command", get(command_overview))
         .route("/api/views/missions", get(missions_list))
-        .route("/api/views/missions/:id", get(mission_detail))
+        .route("/api/views/missions/{id}", get(mission_detail))
         .route("/api/views/doctrine", get(doctrine_list))
         .route("/api/views/roster", get(roster_list))
         .route("/api/views/intel", get(intel_list))
@@ -1145,7 +1145,7 @@ async fn missions_list(
     })))
 }
 
-// ── Handler: GET /api/views/missions/:id ────────────────────────────────────
+// ── Handler: GET /api/views/missions/{id} ────────────────────────────────────
 
 async fn mission_detail(
     State(state): State<AppState>,
