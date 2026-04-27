@@ -101,7 +101,7 @@ struct UexVehicle {
     name_full: Option<String>,
     slug: Option<String>,
     scu: Option<i32>,
-    crew: Option<i32>,
+    crew: Option<String>,
     is_bomber: Option<i32>,
     is_cargo: Option<i32>,
     is_concept: Option<i32>,
@@ -543,7 +543,20 @@ async fn sync_specs(
         let manufacturer = vehicle.company_name.clone().unwrap_or_else(|| "Unknown".into());
         let (classification, focus) = classify_uex(vehicle);
         let size_category = vehicle.pad_type.clone();
-        let crew = vehicle.crew.unwrap_or(1).max(1);
+        // crew field is a string like "1" or "1,5" (min,max)
+        let (crew_min, crew_max) = match vehicle.crew.as_deref() {
+            Some(s) if s.contains(',') => {
+                let parts: Vec<&str> = s.split(',').collect();
+                let min = parts[0].trim().parse::<i32>().unwrap_or(1).max(1);
+                let max = parts.get(1).and_then(|p| p.trim().parse::<i32>().ok()).unwrap_or(min).max(min);
+                (min, max)
+            }
+            Some(s) => {
+                let c = s.trim().parse::<i32>().unwrap_or(1).max(1);
+                (c, c)
+            }
+            None => (1, 1),
+        };
         let cargo = vehicle.scu.unwrap_or(0);
         let image_url = vehicle.url_photo.clone();
         let in_game = !uex_flag(vehicle.is_concept);
@@ -588,8 +601,8 @@ async fn sync_specs(
         .bind(&classification)
         .bind(&focus)
         .bind(&size_category)
-        .bind(crew)  // crewMin
-        .bind(crew)  // crewMax (UEX provides single crew field)
+        .bind(crew_min)  // crewMin
+        .bind(crew_max)  // crewMax
         .bind(cargo)
         .bind(&image_url)
         .bind(in_game)
