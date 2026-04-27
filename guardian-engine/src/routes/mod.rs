@@ -16,6 +16,7 @@ pub mod fleet;
 pub mod user;
 pub mod setup;
 pub mod mobile;
+pub mod views;
 
 use std::time::Duration;
 
@@ -96,4 +97,5 @@ fn engine_routes() -> Router<AppState> {
         .merge(user::routes())
         .merge(setup::routes())
         .merge(mobile::routes())
+        .merge(views::routes())
 }
