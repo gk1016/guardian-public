@@ -25,6 +25,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/roster", get(roster_list))
         .route("/api/views/intel", get(intel_list))
         .route("/api/views/rescues", get(rescues_list))
+        .route("/api/views/settings", get(settings_profile))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -807,6 +808,20 @@ struct LogActivityRow {
     count: i64,
     #[sqlx(rename = "lastActive")]
     last_active: chrono::NaiveDateTime,
+}
+
+#[derive(sqlx::FromRow)]
+struct SettingsProfileRow {
+    handle: String,
+    email: String,
+    #[sqlx(rename = "displayName")]
+    display_name: Option<String>,
+    role: String,
+    status: String,
+    #[sqlx(rename = "totpEnabled")]
+    totp_enabled: bool,
+    #[sqlx(rename = "createdAt")]
+    created_at: chrono::NaiveDateTime,
 }
 
 // ── Handler: GET /api/views/command ─────────────────────────────────────────
@@ -1748,5 +1763,38 @@ async fn rescues_list(
             "medicalRequired": r.medical_required,
             "offeredPayment": r.offered_payment,
         })).collect::<Vec<_>>(),
+    })))
+}
+
+// ── Handler: GET /api/views/settings ────────────────────────────────────────
+
+async fn settings_profile(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let row = sqlx::query_as::<_, SettingsProfileRow>(
+        r#"SELECT handle, email, "displayName", role, status, "totpEnabled", "createdAt"
+           FROM "User"
+           WHERE id = $1"#
+    )
+    .bind(&session.user_id)
+    .fetch_optional(state.pool())
+    .await
+    .map_err(|e| {
+        tracing::error!(error = %e, "settings profile query failed");
+        internal("Failed to load profile")
+    })?
+    .ok_or_else(|| internal("User not found"))?;
+
+    let member_since = row.created_at.format("%B %-d, %Y").to_string();
+
+    Ok(Json(json!({
+        "handle": row.handle,
+        "email": row.email,
+        "displayName": row.display_name,
+        "role": row.role,
+        "status": row.status,
+        "totpEnabled": row.totp_enabled,
+        "memberSince": member_since,
     })))
 }

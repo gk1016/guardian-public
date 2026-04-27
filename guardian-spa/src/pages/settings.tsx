@@ -15,7 +15,7 @@ interface ProfileView {
 export function SettingsPage() {
   const { data, isLoading } = useQuery<ProfileView>({
     queryKey: ["views", "settings"],
-    queryFn: () => api("/api/views/settings"),
+    queryFn: () => api.get<ProfileView>("/api/views/settings"),
   });
 
   if (isLoading || !data) {
