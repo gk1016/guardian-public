@@ -2,9 +2,12 @@
  * App layout — wraps all authenticated routes with the sidebar, header,
  * engine context, and alert toasts.
  */
+import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router";
 import { useSession } from "@/lib/auth";
 import { EngineProvider } from "@/lib/engine-context";
+import { Sidebar } from "@/components/sidebar";
+import { AlertToastContainer } from "@/components/alert-toast";
 
 // Section metadata derived from path
 const SECTION_MAP: Record<string, { section: string; title: string }> = {
@@ -34,20 +37,42 @@ const SECTION_MAP: Record<string, { section: string; title: string }> = {
 export function AppLayout() {
   const session = useSession();
   const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("guardian-sidebar-collapsed");
+      if (saved === "true") setSidebarCollapsed(true);
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("guardian-sidebar-collapsed", String(sidebarCollapsed));
+    } catch {
+      // localStorage unavailable
+    }
+  }, [sidebarCollapsed]);
 
   // Match path to section (handle /missions/123 -> /missions)
   const basePath = "/" + (location.pathname.split("/")[1] || "command");
   const meta = SECTION_MAP[basePath] ?? { section: "Operations", title: "Guardian" };
+  const orgName = session.orgName ?? session.orgTag ?? "Guardian";
 
   return (
     <EngineProvider>
       <div className="flex min-h-screen">
-        {/* Sidebar will be imported here once components are migrated */}
+        <Sidebar
+          desktopCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+        />
         <main className="min-h-screen flex-1 bg-[var(--color-bg)]">
           <div className="mx-auto max-w-[1400px] px-4 py-4">
-            <header className="mb-4 border-b border-[var(--color-border)] pb-3">
+            <header className="mb-4 border-b border-[var(--color-border)] pb-3 pl-10 md:pl-0">
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-tertiary)]">
-                {session.orgName ?? session.orgTag ?? "Guardian"} / {meta.section}
+                {orgName} / {meta.section}
               </p>
               <h1 className="mt-1 font-[family:var(--font-display)] text-2xl uppercase tracking-[0.08em] text-[var(--color-text-strong)]">
                 {meta.title}
@@ -58,6 +83,7 @@ export function AppLayout() {
             </div>
           </div>
         </main>
+        <AlertToastContainer />
       </div>
     </EngineProvider>
   );
