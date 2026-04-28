@@ -17,6 +17,7 @@ pub mod user;
 pub mod setup;
 pub mod mobile;
 pub mod views;
+pub mod doctrine;
 
 use std::time::Duration;
 
@@ -100,4 +101,5 @@ fn engine_routes() -> Router<AppState> {
         .merge(setup::routes())
         .merge(mobile::routes())
         .merge(views::routes())
+        .merge(doctrine::routes())
 }
