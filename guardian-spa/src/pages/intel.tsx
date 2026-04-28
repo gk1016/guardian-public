@@ -25,19 +25,27 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
-const severityTone: Record<string, string> = {
-  critical: "red",
-  high: "amber",
-  medium: "yellow",
-  low: "slate",
-};
+function severityLabel(severity: number): string {
+  if (severity >= 9) return "critical";
+  if (severity >= 7) return "high";
+  if (severity >= 4) return "medium";
+  return "low";
+}
+
+function severityColor(severity: number): string {
+  if (severity >= 9) return "red";
+  if (severity >= 7) return "amber";
+  if (severity >= 4) return "yellow";
+  return "slate";
+}
 
 /* ------------------------------------------------------------------ */
 /*  Intel Card                                                         */
 /* ------------------------------------------------------------------ */
 
 function IntelCard({ item }: { item: IntelItem }) {
-  const tone = severityTone[item.severity] ?? "slate";
+  const tone = severityColor(item.severity);
+  const label = severityLabel(item.severity);
 
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated">
@@ -46,14 +54,14 @@ function IntelCard({ item }: { item: IntelItem }) {
         <Radar className="h-3.5 w-3.5 text-[var(--color-text-tertiary)]" />
         <span className="text-sm font-medium text-[var(--color-text-strong)]">{item.title}</span>
         <span className={`ml-auto rounded-full border border-${tone}-400/30 bg-${tone}-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-${tone}-300`}>
-          {item.severity}
+          {label} ({item.severity})
         </span>
       </div>
 
-      {/* Report type */}
+      {/* Report type + confidence */}
       <div className="mb-2 flex items-center gap-2">
         <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-          {item.reportType}
+          {item.reportType.replaceAll("_", " ")}
         </span>
         {item.confidence && (
           <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
@@ -63,23 +71,19 @@ function IntelCard({ item }: { item: IntelItem }) {
       </div>
 
       {/* Description */}
-      {item.description && (
-        <p className="mb-2 text-xs text-[var(--color-text-secondary)]">{item.description}</p>
-      )}
+      <p className="mb-2 text-xs text-[var(--color-text-secondary)]">
+        {item.description || "No description logged."}
+      </p>
 
       {/* Location + hostile */}
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-        {item.locationName && (
-          <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-            {item.locationName}
-          </span>
-        )}
-        {item.hostileGroup && (
-          <span className="flex items-center gap-1 text-[10px] text-red-300/80">
-            <ShieldAlert className="h-2.5 w-2.5" />
-            {item.hostileGroup}
-          </span>
-        )}
+        <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
+          {item.locationName || "Unknown location"}
+        </span>
+        <span className="flex items-center gap-1 text-[10px] text-red-300/80">
+          <ShieldAlert className="h-2.5 w-2.5" />
+          {item.hostileGroup || "Unconfirmed hostile group"}
+        </span>
       </div>
 
       {/* Tags */}
@@ -96,12 +100,12 @@ function IntelCard({ item }: { item: IntelItem }) {
         </div>
       )}
 
-      {/* Linked missions */}
-      {item.linkedMissions.length > 0 && (
-        <div className="mt-3 border-t border-[var(--color-border)] pt-2">
-          <p className="mb-1 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-            Linked Missions
-          </p>
+      {/* Linked sorties */}
+      <div className="mt-3 border-t border-[var(--color-border)] pt-2">
+        <p className="mb-1 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
+          Linked sorties
+        </p>
+        {item.linkedMissions.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {item.linkedMissions.map((lm) => (
               <Link
@@ -113,8 +117,12 @@ function IntelCard({ item }: { item: IntelItem }) {
               </Link>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-2 py-0.5 text-[10px] text-[var(--color-text-faint)]">
+            Unlinked
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -136,7 +144,7 @@ export function IntelPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-          Intel
+          Threat Picture
         </h1>
         {isOpsManager && (
           <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">

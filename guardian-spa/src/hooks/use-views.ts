@@ -71,7 +71,7 @@ export interface IntelSummary {
   id: string;
   title: string;
   description: string;
-  severity: string;
+  severity: number;
   reportType: string;
   locationName: string;
   hostileGroup: string;
@@ -148,7 +148,7 @@ export interface MissionLog {
 export interface LinkedIntel {
   id: string;
   title: string;
-  severity: string;
+  severity: number;
   reportType: string;
   locationName: string;
   hostileGroup: string;
