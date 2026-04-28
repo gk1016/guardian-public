@@ -622,12 +622,26 @@ struct RescueRow {
     threat_summary: Option<String>,
     #[sqlx(rename = "rescueNotes")]
     rescue_notes: Option<String>,
+    #[sqlx(rename = "survivorCondition")]
+    survivor_condition: Option<String>,
+    #[sqlx(rename = "outcomeSummary")]
+    outcome_summary: Option<String>,
     #[sqlx(rename = "escortRequired")]
     escort_required: bool,
     #[sqlx(rename = "medicalRequired")]
     medical_required: bool,
     #[sqlx(rename = "offeredPayment")]
     offered_payment: Option<i32>,
+    #[sqlx(rename = "requesterHandle")]
+    requester_handle: Option<String>,
+    #[sqlx(rename = "requesterDisplay")]
+    requester_display: Option<String>,
+    #[sqlx(rename = "operatorId")]
+    operator_id: Option<String>,
+    #[sqlx(rename = "operatorHandle")]
+    operator_handle: Option<String>,
+    #[sqlx(rename = "operatorDisplay")]
+    operator_display: Option<String>,
 }
 
 #[derive(sqlx::FromRow)]
@@ -1734,13 +1748,21 @@ async fn rescues_list(
         .await
         .ok_or_else(|| internal("No organization found"))?;
 
+    // Fetch rescues with requester + operator JOINs
     let rescues = sqlx::query_as::<_, RescueRow>(
-        r#"SELECT id, "survivorHandle", "locationName", status, urgency,
-                  "threatSummary", "rescueNotes", "escortRequired",
-                  "medicalRequired", "offeredPayment"
-           FROM "RescueRequest"
-           WHERE "orgId" = $1
-           ORDER BY urgency ASC, "updatedAt" DESC"#
+        r#"SELECT r.id, r."survivorHandle", r."locationName", r.status, r.urgency,
+                  r."threatSummary", r."rescueNotes", r."survivorCondition",
+                  r."outcomeSummary", r."escortRequired", r."medicalRequired",
+                  r."offeredPayment", r."operatorId",
+                  req.handle AS "requesterHandle",
+                  req."displayName" AS "requesterDisplay",
+                  op.handle AS "operatorHandle",
+                  op."displayName" AS "operatorDisplay"
+           FROM "RescueRequest" r
+           LEFT JOIN "User" req ON r."requesterId" = req.id
+           LEFT JOIN "User" op ON r."operatorId" = op.id
+           WHERE r."orgId" = $1
+           ORDER BY r.urgency ASC, r."updatedAt" DESC"#
     )
     .bind(&org.id)
     .fetch_all(state.pool())
@@ -1750,20 +1772,108 @@ async fn rescues_list(
         internal("Failed to load rescues")
     })?;
 
+    let rescue_ids: Vec<&str> = rescues.iter().map(|r| r.id.as_str()).collect();
+
+    // Fetch dispatches for all rescues (via QrfDispatch.rescueId) with QRF join
+    let dispatches = if rescue_ids.is_empty() {
+        vec![]
+    } else {
+        sqlx::query_as::<_, RescueDispatchRow>(
+            r#"SELECT d.id, d."rescueId", d.status, d.notes,
+                      d."dispatchedAt",
+                      q.callsign AS "qrfCallsign",
+                      q.platform
+               FROM "QrfDispatch" d
+               LEFT JOIN "QrfReadiness" q ON d."qrfId" = q.id
+               WHERE d."rescueId" = ANY($1)
+               ORDER BY d."dispatchedAt" DESC"#
+        )
+        .bind(&rescue_ids)
+        .fetch_all(state.pool())
+        .await
+        .map_err(|e| {
+            tracing::error!(error = %e, "rescue dispatches query failed");
+            internal("Failed to load rescue dispatches")
+        })?
+    };
+
+    // Fetch operator options (org members)
+    let operators = sqlx::query_as::<_, RescueOperatorRow>(
+        r#"SELECT u.id, u.handle, u."displayName", u.role
+           FROM "OrgMember" m
+           JOIN "User" u ON m."userId" = u.id
+           WHERE m."orgId" = $1
+           ORDER BY m.rank ASC, m."joinedAt" ASC"#
+    )
+    .bind(&org.id)
+    .fetch_all(state.pool())
+    .await
+    .map_err(|e| {
+        tracing::error!(error = %e, "rescue operators query failed");
+        internal("Failed to load operator options")
+    })?;
+
+    // Fetch comms channel IDs for rescue refs
+    let channels = sqlx::query_as::<_, RescueChannelRow>(
+        r#"SELECT id, "refId" FROM "ChatChannel" WHERE "refType" = 'rescue' AND "refId" = ANY($1)"#
+    )
+    .bind(&rescue_ids)
+    .fetch_all(state.pool())
+    .await
+    .unwrap_or_default();
+
+    use std::collections::HashMap;
+    let channel_map: HashMap<&str, &str> = channels.iter()
+        .map(|c| (c.ref_id.as_str(), c.id.as_str()))
+        .collect();
+
+    fn fmt_dt(dt: &chrono::NaiveDateTime) -> String {
+        dt.format("%b %-d, %-I:%M %p").to_string()
+    }
+
     Ok(Json(json!({
         "orgName": org.name,
-        "items": rescues.iter().map(|r| json!({
-            "id": r.id,
-            "survivorHandle": r.survivor_handle,
-            "locationName": r.location_name,
-            "status": r.status,
-            "urgency": r.urgency,
-            "threatSummary": r.threat_summary,
-            "rescueNotes": r.rescue_notes,
-            "escortRequired": r.escort_required,
-            "medicalRequired": r.medical_required,
-            "offeredPayment": r.offered_payment,
+        "operatorOptions": operators.iter().map(|o| json!({
+            "id": o.id,
+            "label": o.display_name.as_deref().unwrap_or(&o.handle),
+            "detail": format!("{} / {}", o.handle, o.role),
         })).collect::<Vec<_>>(),
+        "items": rescues.iter().map(|r| {
+            let r_dispatches: Vec<_> = dispatches.iter()
+                .filter(|d| d.rescue_id.as_deref() == Some(r.id.as_str()))
+                .map(|d| json!({
+                    "id": d.id,
+                    "qrfCallsign": d.qrf_callsign.as_deref().unwrap_or("Unknown"),
+                    "status": d.status,
+                    "platform": d.platform,
+                    "dispatchedAtLabel": fmt_dt(&d.dispatched_at),
+                    "notes": d.notes,
+                }))
+                .collect();
+            json!({
+                "id": r.id,
+                "survivorHandle": r.survivor_handle,
+                "locationName": r.location_name,
+                "status": r.status,
+                "urgency": r.urgency,
+                "threatSummary": r.threat_summary,
+                "rescueNotes": r.rescue_notes,
+                "survivorCondition": r.survivor_condition,
+                "outcomeSummary": r.outcome_summary,
+                "escortRequired": r.escort_required,
+                "medicalRequired": r.medical_required,
+                "offeredPayment": r.offered_payment,
+                "requesterDisplay": r.requester_display.as_deref()
+                    .or(r.requester_handle.as_deref())
+                    .unwrap_or("Unknown"),
+                "operatorId": r.operator_id.as_deref().unwrap_or(""),
+                "operatorDisplay": r.operator_display.as_deref()
+                    .or(r.operator_handle.as_deref())
+                    .unwrap_or("Unassigned"),
+                "channelId": channel_map.get(r.id.as_str()),
+                "dispatches": r_dispatches,
+            })
+        }).collect::<Vec<_>>(),
     })))
 }
 
@@ -2008,4 +2118,36 @@ async fn qrf_list(
             "detail": format!("{} / {}", r.status, r.location_name.as_deref().unwrap_or("location pending")),
         })).collect::<Vec<_>>(),
     })))
+}
+
+// ── SQL row types for Rescue view ──────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct RescueDispatchRow {
+    id: String,
+    #[sqlx(rename = "rescueId")]
+    rescue_id: Option<String>,
+    status: String,
+    notes: Option<String>,
+    #[sqlx(rename = "dispatchedAt")]
+    dispatched_at: chrono::NaiveDateTime,
+    #[sqlx(rename = "qrfCallsign")]
+    qrf_callsign: Option<String>,
+    platform: Option<String>,
+}
+
+#[derive(sqlx::FromRow)]
+struct RescueOperatorRow {
+    id: String,
+    handle: String,
+    #[sqlx(rename = "displayName")]
+    display_name: Option<String>,
+    role: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct RescueChannelRow {
+    id: String,
+    #[sqlx(rename = "refId")]
+    ref_id: String,
 }
