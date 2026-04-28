@@ -22,7 +22,7 @@ RUN cargo build --release 2>/dev/null || true
 COPY guardian-engine/src/ src/
 COPY guardian-engine/comms/src/ comms/src/
 COPY guardian-engine/migrations/ migrations/
-RUN touch src/main.rs && cargo build --release
+RUN touch src/main.rs comms/src/lib.rs && cargo build --release
 
 # ---- Runtime ----
 FROM debian:trixie-slim AS runtime
