@@ -236,18 +236,32 @@ export interface DoctrineView {
 /*  /api/views/roster                                                  */
 /* ------------------------------------------------------------------ */
 
+export interface RosterCommitment {
+  missionId: string;
+  callsign: string;
+  missionStatus: string;
+  assignmentStatus: string;
+  role: string;
+}
+
 export interface RosterMember {
-  userId: string;
-  email: string;
   handle: string;
   displayName: string;
-  role: string;
-  userStatus: string;
-  title: string;
+  orgRole: string;
+  membershipTitle: string;
+  qrfStatus: string | null;
+  suggestedPlatform: string | null;
+  sourceLabel: string;
+  notes: string | null;
+  commitments: RosterCommitment[];
+  availabilityLabel: string;
+  userId: string;
+  email: string;
   rank: string;
+  status: string;
   activityScore: number;
   activityTier: string;
-  lastSeenLabel: string;
+  lastActiveLabel: string | null;
   missionCount: number;
   logCount: number;
 }
