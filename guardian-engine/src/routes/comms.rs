@@ -23,7 +23,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/alert-rules", post(create_alert_rule))
         .route("/api/alert-rules/{ruleId}", patch(update_alert_rule).delete(delete_alert_rule))
         // Doctrine
-        .route("/api/doctrine", post(create_doctrine))
         // Manual entries
         .route("/api/manual", get(list_manual).post(create_manual_article))
         .route("/api/manual/upload", post(create_manual_upload))
@@ -300,54 +299,6 @@ async fn delete_alert_rule(
     audit_log(state.pool(), &session.user_id, Some(&org.id), "delete", "alert_rule", Some(&rule_id), None).await;
 
     Ok(Json(json!({"ok": true})))
-}
-
-// ============ DOCTRINE ============
-
-#[derive(Deserialize)]
-struct CreateDoctrineRequest {
-    code: String,
-    title: String,
-    category: String,
-    summary: String,
-    body: String,
-    escalation: Option<String>,
-    #[serde(rename = "isDefault")]
-    is_default: Option<bool>,
-}
-
-async fn create_doctrine(
-    State(state): State<AppState>,
-    AuthSession(session): AuthSession,
-    Json(body): Json<CreateDoctrineRequest>,
-) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    if !session.can_manage_missions() {
-        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Command authority required."}))));
-    }
-    let org = require_org(state.pool(), &session.user_id).await?;
-
-    let code = body.code.to_lowercase().replace(' ', "_");
-    let exists: Option<String> = sqlx::query_scalar(
-        r#"SELECT id FROM "DoctrineTemplate" WHERE "orgId" = $1 AND code = $2"#
-    ).bind(&org.id).bind(&code).fetch_optional(state.pool()).await.unwrap_or(None);
-    if exists.is_some() {
-        return Err((StatusCode::CONFLICT, Json(json!({"error": "Doctrine code already exists."}))));
-    }
-
-    let id = cuid2::create_id();
-    sqlx::query(
-        r#"INSERT INTO "DoctrineTemplate" (id, "orgId", code, title, category, summary, body, escalation, "isDefault", "createdAt", "updatedAt")
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())"#
-    ).bind(&id).bind(&org.id).bind(&code).bind(&body.title).bind(&body.category)
-    .bind(&body.summary).bind(&body.body).bind(body.escalation.as_deref())
-    .bind(body.is_default.unwrap_or(false))
-    .execute(state.pool()).await
-    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create doctrine."}))))?;
-
-    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "doctrine", Some(&id),
-        Some(json!({"code": code, "title": body.title}))).await;
-
-    Ok(Json(json!({"ok": true, "doctrine": {"id": id, "code": code, "title": body.title, "category": body.category}})))
 }
 
 // ============ MANUAL ENTRIES ============
