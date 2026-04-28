@@ -877,12 +877,19 @@ async fn command_overview(
         .fetch_all(state.pool()),
         // Top 3 rescues
         sqlx::query_as::<_, RescueRow>(
-            r#"SELECT id, "survivorHandle", "locationName", status, urgency,
-                      "threatSummary", "rescueNotes", "escortRequired",
-                      "medicalRequired", "offeredPayment"
-               FROM "RescueRequest"
-               WHERE "orgId" = $1
-               ORDER BY urgency ASC, "updatedAt" DESC
+            r#"SELECT r.id, r."survivorHandle", r."locationName", r.status, r.urgency,
+                      r."threatSummary", r."rescueNotes", r."survivorCondition",
+                      r."outcomeSummary", r."escortRequired", r."medicalRequired",
+                      r."offeredPayment", r."operatorId",
+                      req.handle AS "requesterHandle",
+                      req."displayName" AS "requesterDisplay",
+                      op.handle AS "operatorHandle",
+                      op."displayName" AS "operatorDisplay"
+               FROM "RescueRequest" r
+               LEFT JOIN "User" req ON r."requesterId" = req.id
+               LEFT JOIN "User" op ON r."operatorId" = op.id
+               WHERE r."orgId" = $1
+               ORDER BY r.urgency ASC, r."updatedAt" DESC
                LIMIT 3"#
         )
         .bind(&org.id)
