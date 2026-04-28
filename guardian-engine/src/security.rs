@@ -20,7 +20,7 @@ pub async fn headers(req: Request<Body>, next: Next) -> Response<Body> {
             "default-src 'self'; \
              script-src 'self' 'unsafe-inline'; \
              style-src 'self' 'unsafe-inline'; \
-             img-src 'self' data: blob: https://assets.uexcorp.space https://cdn.uexcorp.space; \
+             img-src 'self' data: blob:; \
              font-src 'self'; \
              connect-src 'self' wss: ws:; \
              frame-ancestors 'none'; \

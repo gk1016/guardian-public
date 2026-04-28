@@ -1,6 +1,7 @@
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{StatusCode, header, HeaderValue},
+    response::{IntoResponse, Response},
     routing::{delete, get, post},
     Json, Router,
 };
@@ -13,6 +14,9 @@ use crate::auth::middleware::AuthSession;
 use crate::helpers::audit::audit_log;
 use crate::helpers::org::get_org_for_user;
 use crate::state::AppState;
+
+/// Directory where downloaded ship images are stored (Docker volume).
+const SHIP_IMAGE_DIR: &str = "/data/ship-images";
 
 // ── Row types ───────────────────────────────────────────────────────────────
 
@@ -230,6 +234,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/fleet/specs", get(search_specs))
         .route("/api/fleet/readiness", get(readiness))
         .route("/api/admin/fleet/sync-specs", post(sync_specs))
+        .route("/assets/ships/{filename}", get(serve_ship_image))
 }
 
 // ── GET /api/fleet/ships ────────────────────────────────────────────────────
@@ -500,6 +505,34 @@ async fn readiness(
     })))
 }
 
+// ── GET /assets/ships/{filename} ─────────────────────────────────────────────
+
+async fn serve_ship_image(Path(filename): Path<String>) -> Response {
+    if filename.contains("..") || filename.contains('/') || filename.contains('\\') {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    let path = std::path::PathBuf::from(SHIP_IMAGE_DIR).join(&filename);
+    match tokio::fs::read(&path).await {
+        Ok(bytes) => {
+            let mime = if filename.ends_with(".png") {
+                "image/png"
+            } else if filename.ends_with(".webp") {
+                "image/webp"
+            } else {
+                "image/jpeg"
+            };
+            let mut resp = Response::new(axum::body::Body::from(bytes));
+            resp.headers_mut().insert(header::CONTENT_TYPE, HeaderValue::from_static(mime));
+            resp.headers_mut().insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=86400"),
+            );
+            resp
+        }
+        Err(_) => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
 // ── POST /api/admin/fleet/sync-specs ────────────────────────────────────────
 
 async fn sync_specs(
@@ -509,6 +542,9 @@ async fn sync_specs(
     if !session.can_manage_administration() {
         return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Admin authority required."}))));
     }
+
+    // Ensure ship image directory exists
+    tokio::fs::create_dir_all(SHIP_IMAGE_DIR).await.ok();
 
     // Fetch all vehicles from UEX Corp API
     let resp = state.http_client()
@@ -558,7 +594,8 @@ async fn sync_specs(
             None => (1, 1),
         };
         let cargo = vehicle.scu.unwrap_or(0.0) as i32;
-        let image_url = vehicle.url_photo.clone();
+        // Local path for self-hosted image
+        let image_url = Some(format!("/assets/ships/{}.jpg", slug));
         let in_game = !uex_flag(vehicle.is_concept);
         let raw_data = serde_json::to_value(vehicle).unwrap_or(json!(null));
         let new_id = cuid2::create_id();
@@ -611,7 +648,27 @@ async fn sync_specs(
         .await;
 
         match result {
-            Ok(_) => synced += 1,
+            Ok(_) => {
+                synced += 1;
+                // Download ship image from UEX CDN to local storage
+                if let Some(photo_url) = &vehicle.url_photo {
+                    let img_path = format!("{}/{}.jpg", SHIP_IMAGE_DIR, slug);
+                    match state.http_client().get(photo_url).send().await {
+                        Ok(resp) if resp.status().is_success() => {
+                            match resp.bytes().await {
+                                Ok(bytes) => {
+                                    if let Err(e) = tokio::fs::write(&img_path, &bytes).await {
+                                        tracing::warn!(slug = %slug, error = %e, "failed to write ship image");
+                                    }
+                                }
+                                Err(e) => tracing::warn!(slug = %slug, error = %e, "failed to read image bytes"),
+                            }
+                        }
+                        Ok(resp) => tracing::warn!(slug = %slug, status = %resp.status(), "image download non-200"),
+                        Err(e) => tracing::warn!(slug = %slug, error = %e, "image download failed"),
+                    }
+                }
+            }
             Err(e) => tracing::warn!(slug = %slug, error = %e, "failed to upsert spec"),
         }
     }
@@ -623,8 +680,8 @@ async fn sync_specs(
            FROM "ShipSpec" old_spec, "ShipSpec" new_spec
            WHERE "FleetShip"."shipSpecId" = old_spec.id
            AND new_spec.name LIKE old_spec.name || ' %'
-           AND new_spec."imageUrl" LIKE 'https://%uexcorp.space%'
-           AND (old_spec."imageUrl" IS NULL OR old_spec."imageUrl" NOT LIKE 'https://%uexcorp.space%')
+           AND new_spec."imageUrl" LIKE '/assets/ships/%'
+           AND (old_spec."imageUrl" IS NULL OR old_spec."imageUrl" NOT LIKE '/assets/ships/%')
            AND new_spec.id != old_spec.id"#,
     )
     .execute(state.pool())

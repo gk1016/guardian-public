@@ -28,6 +28,7 @@ services:
       AUTH_SECRET: "${AUTH_SECRET}"
     volumes:
       - guardian-engine-certs:/data/guardian/certs
+      - guardian-ship-images:/data/ship-images
     depends_on:
       guardian-postgres:
         condition: service_healthy
@@ -95,4 +96,5 @@ services:
 volumes:
   guardian-postgres-data:
   guardian-engine-certs:
+  guardian-ship-images:
   guardian-backups:
