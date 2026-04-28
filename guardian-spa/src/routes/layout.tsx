@@ -32,6 +32,7 @@ const SECTION_MAP: Record<string, { section: string; title: string }> = {
   "/ops": { section: "Operations", title: "Ops Center" },
   "/standards": { section: "Reference", title: "Standards" },
   "/about": { section: "System", title: "About" },
+  "/comms": { section: "Communications", title: "Comms" },
 };
 
 export function AppLayout() {

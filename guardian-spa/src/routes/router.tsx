@@ -28,6 +28,7 @@ import { TacticalPage } from "@/pages/tactical";
 import { SitrepPage } from "@/pages/sitrep";
 import { AiPage } from "@/pages/ai";
 import { AdminPage } from "@/pages/admin";
+import { CommsPage } from "@/pages/comms";
 
 /* ------------------------------------------------------------------ */
 /*  Router                                                             */
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
       { path: "federation", element: <FederationPage /> },
       { path: "ai", element: <AiPage /> },
       { path: "admin", element: <AdminPage /> },
+      { path: "comms", element: <CommsPage /> },
     ],
   },
 ]);
