@@ -1709,9 +1709,9 @@ async fn intel_list(
                     .iter()
                     .map(|l| {
                         json!({
-                            "id": l.mission_id,
+                            "missionId": l.mission_id,
                             "callsign": l.callsign,
-                            "status": l.mission_status,
+                            "missionStatus": l.mission_status,
                         })
                     })
                     .collect::<Vec<_>>()
