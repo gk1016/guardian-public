@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { Rocket, ShieldAlert, Radio } from "lucide-react";
+import { ChevronDown, ChevronUp, Rocket, ShieldAlert, Radio } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/auth";
 import { canManageOperations } from "@/lib/roles";
@@ -48,6 +48,7 @@ export function QrfPage() {
   const queryClient = useQueryClient();
   const canManage = canManageOperations(session.role);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = useQuery<QrfView>({
     queryKey: ["views", "qrf"],
@@ -72,29 +73,42 @@ export function QrfPage() {
   return (
     <>
       {data?.error ? (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+        <div className="rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {data.error}
         </div>
       ) : null}
 
       {canManage ? (
-        <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
-          <div className="flex items-center gap-3">
-            <Rocket size={18} className="text-cyan-300" />
-            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
-              Add QRF Asset
-            </p>
-          </div>
-          <p className="mt-3 text-sm leading-7 text-slate-300">
-            This creates a real readiness entry that can be tasked against sorties or rescue calls.
-          </p>
-          <div className="mt-6">
-            <QrfCreateForm onSuccess={refetch} />
-          </div>
+        <section className={`rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] panel-elevated transition-all ${createOpen ? "p-6" : "px-5 py-3"}`}>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(!createOpen)}
+            className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <Rocket size={16} className="text-[var(--color-cyan)]" />
+              <p className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)]">
+                Add QRF Asset
+              </p>
+            </div>
+            {createOpen ? (
+              <ChevronUp size={14} className="text-[var(--color-text-faint)]" />
+            ) : (
+              <ChevronDown size={14} className="text-[var(--color-text-faint)]" />
+            )}
+          </button>
+          {createOpen ? (
+            <div className="mt-4">
+              <p className="mb-4 text-xs leading-6 text-[var(--color-text-secondary)]">
+                This creates a real readiness entry that can be tasked against sorties or rescue calls.
+              </p>
+              <QrfCreateForm onSuccess={refetch} />
+            </div>
+          ) : null}
         </section>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="grid gap-3 xl:grid-cols-2">
         {(data?.items ?? []).map((item) => (
           <CollapsibleCard
             key={item.id}
@@ -102,41 +116,41 @@ export function QrfPage() {
             onToggle={() => toggle(item.id)}
             header={(isOpen) => (
               <div className="flex items-center gap-3">
-                <p className={`font-[family:var(--font-display)] uppercase tracking-[0.14em] text-white ${
-                  isOpen ? "text-3xl" : "text-xl"
+                <p className={`font-[family:var(--font-display)] uppercase tracking-[0.12em] text-[var(--color-text-strong)] ${
+                  isOpen ? "text-2xl" : "text-sm"
                 }`}>
                   {item.callsign}
                 </p>
-                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em] text-cyan-100">
+                <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-cyan-300">
                   {item.status}
                 </span>
                 {!isOpen ? (
-                  <span className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
                     {item.platform ?? "Platform pending"} / {item.locationName ?? "Location pending"}
                   </span>
                 ) : null}
               </div>
             )}
           >
-            <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">
               {item.platform ?? "Platform pending"} / {item.locationName ?? "Location pending"}
             </p>
-            <p className="mt-4 text-sm leading-7 text-slate-300">
+            <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">
               Crew {item.availableCrew} / {item.notes ?? "No readiness notes logged."}
             </p>
 
             {item.channelId ? (
-              <Link to={`/comms?channel=${item.channelId}`} className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-cyan-300 transition hover:text-cyan-100">
+              <Link to={`/comms?channel=${item.channelId}`} className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--color-cyan)] transition hover:brightness-125">
                 <Radio size={13} />
                 Open comms channel
               </Link>
             ) : null}
 
             {canManage ? (
-              <div className="mt-6 grid gap-6">
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Update posture</p>
-                  <div className="mt-4">
+              <div className="mt-5 grid gap-5">
+                <section className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">Update posture</p>
+                  <div className="mt-3">
                     <QrfStatusForm
                       qrfId={item.id}
                       initialAsset={{
@@ -151,9 +165,9 @@ export function QrfPage() {
                   </div>
                 </section>
 
-                <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dispatch asset</p>
-                  <div className="mt-4">
+                <section className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">Dispatch asset</p>
+                  <div className="mt-3">
                     <QrfDispatchForm
                       qrfId={item.id}
                       missionOptions={data?.missionOptions ?? []}
@@ -165,38 +179,38 @@ export function QrfPage() {
               </div>
             ) : null}
 
-            <section className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-              <div className="flex items-center gap-3">
-                <ShieldAlert size={16} className="text-amber-300" />
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Dispatch history</p>
+            <section className="mt-5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-medium)] p-4">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={14} className="text-amber-300" />
+                <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">Dispatch history</p>
               </div>
-              <div className="mt-4 space-y-4">
+              <div className="mt-3 space-y-3">
                 {item.dispatches.map((dispatch) => (
-                  <div key={dispatch.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div key={dispatch.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       {dispatch.targetHref ? (
-                        <Link to={dispatch.targetHref} className="text-sm font-semibold uppercase tracking-[0.16em] text-white transition hover:text-cyan-100">
+                        <Link to={dispatch.targetHref} className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-strong)] transition hover:text-[var(--color-cyan)]">
                           {dispatch.targetLabel}
                         </Link>
                       ) : (
-                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
                           {dispatch.targetLabel}
                         </p>
                       )}
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.16em] text-slate-200">
+                      <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
                         {dispatch.status}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-400">
+                    <p className="mt-2 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
                       Tasked {dispatch.dispatchedAtLabel}
                       {dispatch.arrivedAtLabel ? ` / Arrived ${dispatch.arrivedAtLabel}` : ""}
                       {dispatch.rtbAtLabel ? ` / RTB ${dispatch.rtbAtLabel}` : ""}
                     </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">
+                    <p className="mt-2 text-xs leading-6 text-[var(--color-text-secondary)]">
                       {dispatch.notes ?? "No dispatch notes logged."}
                     </p>
                     {canManage ? (
-                      <div className="mt-4">
+                      <div className="mt-3">
                         <QrfDispatchStatusForm
                           dispatchId={dispatch.id}
                           initialStatus={dispatch.status}
@@ -208,7 +222,7 @@ export function QrfPage() {
                 ))}
 
                 {item.dispatches.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-300">
+                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-3 text-xs text-[var(--color-text-secondary)]">
                     No dispatches logged for this asset yet.
                   </div>
                 ) : null}

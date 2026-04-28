@@ -57,95 +57,42 @@ export function RescueCreateForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   }
 
+  const inputClass = "rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-3 py-2.5 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-cyan)]";
+  const textareaClass = "w-full rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-3 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-cyan)]";
+
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <input
-          value={form.survivorHandle}
-          onChange={(event) => updateField("survivorHandle", event.target.value)}
-          placeholder="Survivor handle"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
-        />
-        <input
-          value={form.locationName}
-          onChange={(event) => updateField("locationName", event.target.value)}
-          placeholder="Location"
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
-        />
-        <select
-          value={form.urgency}
-          onChange={(event) => updateField("urgency", event.target.value)}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-white outline-none transition focus:border-cyan-300/40"
-        >
+    <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <input value={form.survivorHandle} onChange={(e) => updateField("survivorHandle", e.target.value)} placeholder="Survivor handle" className={inputClass} />
+        <input value={form.locationName} onChange={(e) => updateField("locationName", e.target.value)} placeholder="Location" className={inputClass} />
+        <select value={form.urgency} onChange={(e) => updateField("urgency", e.target.value)} className={`${inputClass} uppercase tracking-[0.14em]`}>
           <option value="flash">Flash</option>
           <option value="urgent">Urgent</option>
           <option value="priority">Priority</option>
           <option value="routine">Routine</option>
         </select>
-        <input
-          value={form.offeredPayment}
-          onChange={(event) => updateField("offeredPayment", event.target.value)}
-          placeholder="Offered payment"
-          type="number"
-          min={0}
-          className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/40"
-        />
+        <input value={form.offeredPayment} onChange={(e) => updateField("offeredPayment", e.target.value)} placeholder="Offered payment" type="number" min={0} className={inputClass} />
       </div>
-
-      <textarea
-        value={form.threatSummary}
-        onChange={(event) => updateField("threatSummary", event.target.value)}
-        rows={2}
-        placeholder="Threat summary"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
-      />
-      <textarea
-        value={form.survivorCondition}
-        onChange={(event) => updateField("survivorCondition", event.target.value)}
-        rows={2}
-        placeholder="Survivor condition"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
-      />
-      <textarea
-        value={form.rescueNotes}
-        onChange={(event) => updateField("rescueNotes", event.target.value)}
-        rows={3}
-        placeholder="Rescue notes"
-        className="w-full rounded-3xl border border-white/10 bg-slate-950/70 px-4 py-4 text-sm text-white outline-none transition focus:border-cyan-300/40"
-      />
-
-      <div className="flex flex-wrap items-center gap-6 text-sm text-slate-300">
+      <textarea value={form.threatSummary} onChange={(e) => updateField("threatSummary", e.target.value)} rows={2} placeholder="Threat summary" className={textareaClass} />
+      <textarea value={form.survivorCondition} onChange={(e) => updateField("survivorCondition", e.target.value)} rows={2} placeholder="Survivor condition" className={textareaClass} />
+      <textarea value={form.rescueNotes} onChange={(e) => updateField("rescueNotes", e.target.value)} rows={2} placeholder="Rescue notes" className={textareaClass} />
+      <div className="flex flex-wrap items-center gap-5 text-xs text-[var(--color-text-secondary)]">
         <label className="inline-flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.escortRequired}
-            onChange={(event) => updateField("escortRequired", event.target.checked)}
-          />
+          <input type="checkbox" checked={form.escortRequired} onChange={(e) => updateField("escortRequired", e.target.checked)} />
           Escort required
         </label>
         <label className="inline-flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={form.medicalRequired}
-            onChange={(event) => updateField("medicalRequired", event.target.checked)}
-          />
+          <input type="checkbox" checked={form.medicalRequired} onChange={(e) => updateField("medicalRequired", e.target.checked)} />
           Medical required
         </label>
       </div>
-
-      <button
-        type="button"
-        disabled={loading}
-        onClick={handleSubmit}
-        className="inline-flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {loading ? <LoaderCircle size={14} className="animate-spin" /> : <Plus size={14} />}
+      <button type="button" disabled={loading} onClick={handleSubmit} className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200 transition hover:bg-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-70">
+        {loading ? <LoaderCircle size={12} className="animate-spin" /> : <Plus size={12} />}
         Open rescue
       </button>
-
       {error ? (
-        <div className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-          <AlertTriangle size={16} />
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+          <AlertTriangle size={14} />
           <span>{error}</span>
         </div>
       ) : null}

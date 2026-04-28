@@ -39,10 +39,13 @@ export function QrfStatusForm({ qrfId, initialAsset, onSuccess }: QrfStatusFormP
     finally { setLoading(false); }
   }
 
+  const inputClass = "rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-3 py-2.5 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-cyan)]";
+  const textareaClass = "w-full rounded-[var(--radius-md)] border border-[var(--color-border-bright)] bg-[var(--color-input-bg)] px-3 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-cyan)]";
+
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <select value={form.status} onChange={(e) => updateField("status", e.target.value)} className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm uppercase tracking-[0.16em] text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40">
+    <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <select value={form.status} onChange={(e) => updateField("status", e.target.value)} className={`${inputClass} uppercase tracking-[0.14em]`}>
           <option value="redcon1">REDCON 1</option>
           <option value="redcon2">REDCON 2</option>
           <option value="redcon3">REDCON 3</option>
@@ -51,16 +54,21 @@ export function QrfStatusForm({ qrfId, initialAsset, onSuccess }: QrfStatusFormP
           <option value="launched">Launched</option>
           <option value="rtb">RTB</option>
         </select>
-        <input value={form.availableCrew} onChange={(e) => updateField("availableCrew", e.target.value)} type="number" min={1} placeholder="Crew" className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40" />
-        <input value={form.platform} onChange={(e) => updateField("platform", e.target.value)} placeholder="Platform" className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40" />
-        <input value={form.locationName} onChange={(e) => updateField("locationName", e.target.value)} placeholder="Location" className="rounded-2xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-3 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40" />
+        <input value={form.availableCrew} onChange={(e) => updateField("availableCrew", e.target.value)} type="number" min={1} placeholder="Crew" className={inputClass} />
+        <input value={form.platform} onChange={(e) => updateField("platform", e.target.value)} placeholder="Platform" className={inputClass} />
+        <input value={form.locationName} onChange={(e) => updateField("locationName", e.target.value)} placeholder="Location" className={inputClass} />
       </div>
-      <textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={3} placeholder="Readiness notes" className="w-full rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/70 px-4 py-4 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-cyan-300/40" />
-      <button type="button" disabled={loading} onClick={handleSubmit} className="inline-flex items-center gap-2 rounded-md border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-70">
-        {loading ? <LoaderCircle size={14} className="animate-spin" /> : <Save size={14} />}
+      <textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={2} placeholder="Readiness notes" className={textareaClass} />
+      <button type="button" disabled={loading} onClick={handleSubmit} className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-200 transition hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-70">
+        {loading ? <LoaderCircle size={12} className="animate-spin" /> : <Save size={12} />}
         Update posture
       </button>
-      {error ? <div className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100"><AlertTriangle size={16} /><span>{error}</span></div> : null}
+      {error ? (
+        <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+          <AlertTriangle size={14} />
+          <span>{error}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

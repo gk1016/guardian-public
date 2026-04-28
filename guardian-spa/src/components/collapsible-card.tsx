@@ -21,8 +21,8 @@ export function CollapsibleCard({
   return (
     <article
       id={id}
-      className={`rounded-3xl border border-white/10 bg-slate-950/60 transition-all ${
-        expanded ? "p-8" : "px-6 py-4"
+      className={`rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] panel-elevated transition-all ${
+        expanded ? "p-6" : "px-5 py-3"
       }`}
     >
       <button
@@ -32,12 +32,12 @@ export function CollapsibleCard({
       >
         <div className="min-w-0 flex-1">{header(expanded)}</div>
         {expanded ? (
-          <ChevronUp size={16} className="shrink-0 text-slate-500" />
+          <ChevronUp size={14} className="shrink-0 text-[var(--color-text-faint)]" />
         ) : (
-          <ChevronDown size={16} className="shrink-0 text-slate-500" />
+          <ChevronDown size={14} className="shrink-0 text-[var(--color-text-faint)]" />
         )}
       </button>
-      {expanded ? <div className="mt-6">{children}</div> : null}
+      {expanded ? <div className="mt-5">{children}</div> : null}
     </article>
   );
 }
