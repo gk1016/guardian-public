@@ -92,9 +92,8 @@ export interface QrfSummary {
 export interface Notification {
   id: string;
   title: string;
-  message: string;
-  read: boolean;
-  createdAtLabel: string;
+  severity: string;
+  href: string | null;
 }
 
 /* ------------------------------------------------------------------ */

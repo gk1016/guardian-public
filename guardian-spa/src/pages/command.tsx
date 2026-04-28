@@ -1,7 +1,21 @@
 import { Link } from "react-router";
-import { AlertTriangle, Crosshair, Siren } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Bell,
+  BookCheck,
+  Clock3,
+  Crosshair,
+  Siren,
+} from "lucide-react";
 import { useCommandOverview } from "@/hooks/use-views";
-import type { MissionSummary, QrfSummary, IntelSummary, RescueSummary } from "@/hooks/use-views";
+import type {
+  MissionSummary,
+  QrfSummary,
+  IntelSummary,
+  RescueSummary,
+  Notification,
+} from "@/hooks/use-views";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers                                                     */
@@ -23,6 +37,20 @@ function ErrorState({ message }: { message: string }) {
   );
 }
 
+function severityLabel(n: number): string {
+  if (n >= 9) return "critical";
+  if (n >= 7) return "high";
+  if (n >= 4) return "medium";
+  return "low";
+}
+
+function severityColor(n: number): string {
+  if (n >= 9) return "red";
+  if (n >= 7) return "amber";
+  if (n >= 4) return "yellow";
+  return "slate";
+}
+
 const statusTone: Record<string, string> = {
   planning: "slate",
   ready: "amber",
@@ -42,145 +70,108 @@ function statusBorderClass(status: string) {
 /* ------------------------------------------------------------------ */
 
 function MissionCard({ m }: { m: MissionSummary }) {
-  const pkg = m.packageSummary;
   const disc = m.packageDiscipline;
 
   return (
-    <Link
-      to={`/missions/${m.id}`}
-      className="block rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-5 panel-elevated transition-colors hover:border-[var(--color-border-hover)]"
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <Crosshair className="h-3.5 w-3.5 text-[var(--color-text-tertiary)]" />
-        <span className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-          {m.callsign}
-        </span>
-        <span className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${statusBorderClass(m.status)}`}>
+    <article className="rounded-2xl border border-white/10 bg-white/4 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.14em] text-white">
+            {m.callsign}
+          </p>
+          <p className="mt-1 text-sm uppercase tracking-[0.16em] text-slate-400">
+            {m.missionType}
+          </p>
+        </div>
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs uppercase tracking-[0.18em] text-amber-200">
           {m.status}
         </span>
       </div>
-
-      <p className="mb-1 text-xs text-[var(--color-text-secondary)]">{m.title}</p>
-      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-        {m.missionType} &middot; {m.priority} &middot; {m.areaOfOperation}
+      <p className="mt-4 text-sm leading-7 text-slate-300">{m.title}</p>
+      <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-400">
+        {m.packageSummary.readyOrLaunched}/{m.participantCount} ready or launched / AO {m.areaOfOperation ?? "pending"}
       </p>
-
-      {/* Package readiness */}
-      <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-          Readiness
-        </span>
-        <span className="text-xs text-[var(--color-text-secondary)]">{pkg.readinessLabel}</span>
-        {/* TODO: ReadinessGauge component */}
-      </div>
-
-      {/* Discipline warnings */}
-      {disc.warnings.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1">
-          {disc.warnings.map((w, i) => (
-            <span
-              key={i}
-              className="flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-300"
-            >
-              <AlertTriangle className="h-2.5 w-2.5" />
-              {w}
-            </span>
-          ))}
+      {disc.warnings.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-red-200">
+            <AlertTriangle size={14} />
+            Package alert
+          </div>
+          <p className="mt-2 leading-7">{disc.warnings[0]}</p>
         </div>
-      )}
-    </Link>
+      ) : null}
+    </article>
   );
 }
 
 function QrfCard({ q }: { q: QrfSummary }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated">
-      <div className="mb-1 flex items-center gap-2">
-        <span className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/4 px-4 py-3">
+      <div>
+        <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.14em] text-white">
           {q.callsign}
-        </span>
-        <span className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${statusBorderClass(q.status)}`}>
-          {q.status}
-        </span>
+        </p>
+        <p className="text-sm text-slate-400">
+          {q.platform ?? "Platform pending"} / Crew {q.availableCrew}
+        </p>
       </div>
-      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-        {q.platform} &middot; {q.locationName}
-      </p>
-      <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-        Crew: {q.availableCrew}
-      </p>
-      {q.notes && (
-        <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{q.notes}</p>
-      )}
+      <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-cyan-100">
+        {q.status}
+      </span>
     </div>
   );
 }
 
 function IntelCard({ item }: { item: IntelSummary }) {
-  const severityTone: Record<string, string> = {
-    critical: "red",
-    high: "amber",
-    medium: "yellow",
-    low: "slate",
-  };
-  const tone = severityTone[item.severity] ?? "slate";
-
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated">
-      <div className="mb-1 flex items-center gap-2">
-        <Crosshair className="h-3 w-3 text-[var(--color-text-tertiary)]" />
-        <span className="text-xs font-medium text-[var(--color-text-strong)]">{item.title}</span>
-        <span className={`ml-auto rounded-full border border-${tone}-400/30 bg-${tone}-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-${tone}-300`}>
-          {item.severity}
-        </span>
+    <li className="rounded-xl border border-red-500/15 bg-red-500/8 px-4 py-3 text-sm leading-7 text-slate-200">
+      <div className="font-semibold text-white">{item.title}</div>
+      <div className="mt-1 text-slate-300">
+        {item.locationName ?? "Unknown location"} / {item.hostileGroup ?? "Unconfirmed hostile"}
       </div>
-      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-        {item.reportType} &middot; {item.locationName}
-      </p>
-      {item.hostileGroup && (
-        <p className="mt-1 text-xs text-red-300/80">{item.hostileGroup}</p>
-      )}
-    </div>
+    </li>
   );
 }
 
 function RescueCard({ r }: { r: RescueSummary }) {
-  const urgencyTone: Record<string, string> = {
-    critical: "red",
-    high: "amber",
-    medium: "yellow",
-    low: "slate",
-  };
-  const tone = urgencyTone[r.urgency] ?? "slate";
-
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated">
-      <div className="mb-1 flex items-center gap-2">
-        <Siren className="h-3.5 w-3.5 text-red-400" />
-        <span className="text-xs font-medium text-[var(--color-text-strong)]">{r.survivorHandle}</span>
-        <span className={`ml-auto rounded-full border border-${tone}-400/30 bg-${tone}-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-${tone}-300`}>
+    <article className="rounded-xl border border-white/10 bg-slate-950/60 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-[family:var(--font-display)] text-xl uppercase tracking-[0.12em] text-white">
+          {r.survivorHandle}
+        </p>
+        <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs uppercase tracking-[0.16em] text-amber-100">
           {r.urgency}
         </span>
       </div>
-      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-        {r.locationName} &middot; {r.status}
+      <p className="mt-3 text-sm text-slate-300">{r.locationName ?? "Location pending"}</p>
+      <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-400">
+        {r.status} / {r.escortRequired ? "Escort required" : "Escort discretionary"}
       </p>
-      {r.threatSummary && (
-        <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{r.threatSummary}</p>
-      )}
-      <div className="mt-2 flex gap-2">
-        {r.escortRequired && (
-          <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-300">
-            Escort
-          </span>
-        )}
-        {r.medicalRequired && (
-          <span className="rounded-full border border-red-400/30 bg-red-400/10 px-2 py-0.5 text-[10px] text-red-300">
-            Medical
-          </span>
-        )}
+    </article>
+  );
+}
+
+function NotificationCard({ n }: { n: Notification }) {
+  return (
+    <article className="rounded-xl border border-white/10 bg-slate-950/60 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white">
+          {n.title}
+        </p>
+        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-300">
+          {n.severity}
+        </span>
       </div>
-    </div>
+      {n.href ? (
+        <Link
+          to={n.href}
+          className="mt-3 inline-flex text-xs uppercase tracking-[0.16em] text-cyan-100 transition hover:text-white"
+        >
+          Open source
+        </Link>
+      ) : null}
+    </article>
   );
 }
 
@@ -197,128 +188,223 @@ export function CommandPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-[family:var(--font-display)] text-lg uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-          Command Overview
-        </h1>
-        {/* TODO: LiveCounters component */}
-      </div>
-
       {/* Stat counters */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: "Active Missions", value: data.activeMissionCount },
-          { label: "Open Rescues", value: data.openRescueCount },
-          { label: "Active Intel", value: data.activeIntelCount },
-          { label: "QRF Ready", value: data.qrfReadyCount },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-[var(--radius-lg)] border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-4 panel-elevated text-center"
-          >
-            <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
-              {s.label}
-            </p>
-            <p className="mt-1 font-[family:var(--font-display)] text-2xl text-[var(--color-text-strong)]">
-              {s.value}
-            </p>
-          </div>
-        ))}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-emerald-100">Active Missions</p>
+          <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+            {String(data.activeMissionCount).padStart(2, "0")}
+          </p>
+        </div>
+        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-100">QRF Posture</p>
+          <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+            {String(data.qrfReadyCount).padStart(2, "0")}
+          </p>
+        </div>
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-amber-100">Open Rescue</p>
+          <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+            {String(data.openRescueCount).padStart(2, "0")}
+          </p>
+        </div>
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-red-100">Unread Alerts</p>
+          <p className="mt-2 font-[family:var(--font-display)] text-3xl uppercase tracking-[0.12em] text-white">
+            {String(data.unreadNotificationCount).padStart(2, "0")}
+          </p>
+        </div>
       </div>
 
       {/* Main grid: missions left, qrf+intel right */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Mission board — 2 cols wide */}
-        <div className="lg:col-span-2 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-              Mission Board
-            </h2>
-            <Link
-              to="/missions"
-              className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
-            >
-              View all
-            </Link>
+      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        {/* Mission Board */}
+        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div>
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.18em] text-white">
+                Mission Board
+              </p>
+              <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+                Current stack and status gates
+              </p>
+            </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.missions.slice(0, 4).map((m) => (
+          <div className="mt-5 space-y-4">
+            {data.missions.map((m) => (
               <MissionCard key={m.id} m={m} />
             ))}
-            {data.missions.length === 0 && (
-              <p className="col-span-2 py-8 text-center text-xs text-[var(--color-text-tertiary)]">
+            {data.missions.length === 0 ? (
+              <p className="py-8 text-center text-xs text-slate-400">
                 No active missions
               </p>
-            )}
+            ) : null}
           </div>
-          {/* TODO: CommandTimeline component */}
         </div>
 
         {/* Right column: QRF + Intel */}
-        <div className="space-y-6">
+        <div className="grid gap-6">
           {/* QRF Board */}
-          <div className="space-y-3">
-            <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-              QRF Board
-            </h2>
-            <div className="space-y-3">
-              {data.qrf.slice(0, 4).map((q) => (
+          <section className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <Siren className="text-cyan-300" size={20} />
+              <div>
+                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.18em] text-white">
+                  QRF Board
+                </p>
+                <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+                  Availability and launch posture
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 space-y-3">
+              {data.qrf.map((q) => (
                 <QrfCard key={q.id} q={q} />
               ))}
-              {data.qrf.length === 0 && (
-                <p className="py-6 text-center text-xs text-[var(--color-text-tertiary)]">
+              {data.qrf.length === 0 ? (
+                <p className="py-6 text-center text-xs text-slate-400">
                   No QRF elements
                 </p>
-              )}
+              ) : null}
             </div>
-          </div>
+          </section>
 
           {/* Threat Summary */}
-          <div className="space-y-3">
-            <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-              Threat Summary
-            </h2>
-            <div className="space-y-3">
-              {data.intel.slice(0, 4).map((item) => (
+          <section className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <Crosshair className="text-red-300" size={20} />
+              <div>
+                <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.18em] text-white">
+                  Threat Summary
+                </p>
+                <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+                  Intelligence queue
+                </p>
+              </div>
+            </div>
+            <ul className="mt-5 space-y-3">
+              {data.intel.map((item) => (
                 <IntelCard key={item.id} item={item} />
               ))}
-              {data.intel.length === 0 && (
-                <p className="py-6 text-center text-xs text-[var(--color-text-tertiary)]">
+              {data.intel.length === 0 ? (
+                <p className="py-6 text-center text-xs text-slate-400">
                   No active intel
                 </p>
-              )}
+              ) : null}
+            </ul>
+          </section>
+        </div>
+      </section>
+
+      {/* Three info panels */}
+      <section className="grid gap-6 md:grid-cols-3">
+        <article className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+          <div className="flex items-center gap-3">
+            <Activity size={18} className="text-amber-300" />
+            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+              Live Modules
+            </p>
+          </div>
+          <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-300">
+            <li>
+              <Link to="/missions" className="transition hover:text-white">Mission board</Link>
+            </li>
+            <li>
+              <Link to="/qrf" className="transition hover:text-white">QRF dispatch</Link>
+            </li>
+            <li>
+              <Link to="/intel" className="transition hover:text-white">Threat picture</Link>
+            </li>
+            <li>
+              <Link to="/rescues" className="transition hover:text-white">Rescue board</Link>
+            </li>
+            <li>
+              <Link to="/incidents" className="transition hover:text-white">Incident review</Link>
+            </li>
+            <li>
+              <Link to="/doctrine" className="transition hover:text-white">ROE and doctrine</Link>
+            </li>
+          </ul>
+        </article>
+
+        <article className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+          <div className="flex items-center gap-3">
+            <Clock3 size={18} className="text-cyan-300" />
+            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+              Dispatch Notes
+            </p>
+          </div>
+          <p className="mt-5 text-sm leading-7 text-slate-300">
+            QRF dispatch, CSAR intake, incident review, and the public ops pages are now online alongside mission control. The shape is here; now the job is hardening and refinement.
+          </p>
+        </article>
+
+        <article className="rounded-2xl border border-white/10 bg-slate-950/60 p-6">
+          <div className="flex items-center gap-3">
+            <BookCheck size={18} className="text-lime-300" />
+            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+              Doctrine
+            </p>
+          </div>
+          <p className="mt-5 text-sm leading-7 text-slate-300">
+            Doctrine templates now exist as reusable org assets. ROE and execution guidance can be attached directly to sorties instead of dying in mission briefs or chat fragments.
+          </p>
+        </article>
+      </section>
+
+      {/* Ops Alerts / Notifications */}
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Bell size={18} className="text-red-300" />
+            <div>
+              <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+                Ops Alerts
+              </p>
+              <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Persisted notification feed</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Rescue queue — full width, 3-column grid */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
-            Rescue Queue
-          </h2>
           <Link
-            to="/rescues"
-            className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+            to="/notifications"
+            className="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition hover:bg-white/10"
           >
-            View all
+            Open alerts
           </Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.rescues.slice(0, 6).map((r) => (
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {data.notifications.map((n) => (
+            <NotificationCard key={n.id} n={n} />
+          ))}
+          {data.notifications.length === 0 ? (
+            <p className="col-span-3 py-6 text-center text-xs text-slate-400">
+              No alerts
+            </p>
+          ) : null}
+        </div>
+      </section>
+
+      {/* Rescue Queue */}
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div className="flex items-center gap-3">
+          <Siren size={18} className="text-amber-300" />
+          <div>
+            <p className="font-[family:var(--font-display)] text-2xl uppercase tracking-[0.16em] text-white">
+              Rescue Queue
+            </p>
+            <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Current active requests</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+          {data.rescues.map((r) => (
             <RescueCard key={r.id} r={r} />
           ))}
-          {data.rescues.length === 0 && (
-            <p className="col-span-3 py-8 text-center text-xs text-[var(--color-text-tertiary)]">
+          {data.rescues.length === 0 ? (
+            <p className="col-span-3 py-6 text-center text-xs text-slate-400">
               No open rescues
             </p>
-          )}
+          ) : null}
         </div>
-      </div>
-
-      {/* TODO: MissionQuickActions component */}
+      </section>
     </div>
   );
 }
