@@ -26,6 +26,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/intel", get(intel_list))
         .route("/api/views/rescues", get(rescues_list))
         .route("/api/views/settings", get(settings_profile))
+        .route("/api/views/qrf", get(qrf_list))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -1796,5 +1797,215 @@ async fn settings_profile(
         "status": row.status,
         "totpEnabled": row.totp_enabled,
         "memberSince": member_since,
+    })))
+}
+
+// ── SQL row types for QRF view ─────────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct QrfDispatchViewRow {
+    id: String,
+    #[sqlx(rename = "qrfId")]
+    qrf_id: String,
+    status: String,
+    notes: Option<String>,
+    #[sqlx(rename = "dispatchedAt")]
+    dispatched_at: chrono::NaiveDateTime,
+    #[sqlx(rename = "arrivedAt")]
+    arrived_at: Option<chrono::NaiveDateTime>,
+    #[sqlx(rename = "rtbAt")]
+    rtb_at: Option<chrono::NaiveDateTime>,
+    #[sqlx(rename = "missionId")]
+    mission_id: Option<String>,
+    #[sqlx(rename = "missionCallsign")]
+    mission_callsign: Option<String>,
+    #[sqlx(rename = "missionStatus")]
+    mission_status: Option<String>,
+    #[sqlx(rename = "rescueId")]
+    rescue_id: Option<String>,
+    #[sqlx(rename = "survivorHandle")]
+    survivor_handle: Option<String>,
+    #[sqlx(rename = "rescueStatus")]
+    rescue_status: Option<String>,
+}
+
+#[derive(sqlx::FromRow)]
+struct MissionOptionRow {
+    id: String,
+    callsign: String,
+    title: String,
+    status: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct RescueOptionRow {
+    id: String,
+    #[sqlx(rename = "survivorHandle")]
+    survivor_handle: String,
+    #[sqlx(rename = "locationName")]
+    location_name: Option<String>,
+    status: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct QrfChannelRow {
+    #[sqlx(rename = "refId")]
+    ref_id: String,
+    id: String,
+}
+
+// ── Handler: GET /api/views/qrf ────────────────────────────────────────────
+
+async fn qrf_list(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let org = get_org_for_user(state.pool(), &session.user_id)
+        .await
+        .ok_or_else(|| internal("No organization found"))?;
+
+    let pool = state.pool();
+
+    let (qrf_items, mission_opts, rescue_opts) = tokio::try_join!(
+        sqlx::query_as::<_, QrfRow>(
+            r#"SELECT id, callsign, status, platform, "locationName",
+                      "availableCrew", notes
+               FROM "QrfReadiness"
+               WHERE "orgId" = $1
+               ORDER BY status ASC, "updatedAt" DESC"#
+        )
+        .bind(&org.id)
+        .fetch_all(pool),
+        sqlx::query_as::<_, MissionOptionRow>(
+            r#"SELECT id, callsign, title, status
+               FROM "Mission"
+               WHERE "orgId" = $1 AND status IN ('planning', 'ready', 'active')
+               ORDER BY priority DESC, "updatedAt" DESC"#
+        )
+        .bind(&org.id)
+        .fetch_all(pool),
+        sqlx::query_as::<_, RescueOptionRow>(
+            r#"SELECT id, "survivorHandle", "locationName", status
+               FROM "RescueRequest"
+               WHERE "orgId" = $1 AND status IN ('open', 'dispatching', 'en_route', 'on_scene')
+               ORDER BY urgency ASC, "updatedAt" DESC"#
+        )
+        .bind(&org.id)
+        .fetch_all(pool),
+    )
+    .map_err(|e| {
+        tracing::error!(error = %e, "qrf view query failed");
+        internal("Failed to load QRF data")
+    })?;
+
+    // Fetch dispatches for all QRF items
+    let qrf_ids: Vec<&str> = qrf_items.iter().map(|q| q.id.as_str()).collect();
+    let dispatches = if !qrf_ids.is_empty() {
+        sqlx::query_as::<_, QrfDispatchViewRow>(
+            r#"SELECT d.id, d."qrfId", d.status, d.notes,
+                      d."dispatchedAt", d."arrivedAt", d."rtbAt",
+                      m.id as "missionId", m.callsign as "missionCallsign",
+                      m.status as "missionStatus",
+                      r.id as "rescueId", r."survivorHandle",
+                      r.status as "rescueStatus"
+               FROM "QrfDispatch" d
+               LEFT JOIN "Mission" m ON d."missionId" = m.id
+               LEFT JOIN "RescueRequest" r ON d."rescueId" = r.id
+               WHERE d."qrfId" = ANY($1)
+               ORDER BY d."dispatchedAt" DESC"#
+        )
+        .bind(&qrf_ids)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default()
+    } else {
+        vec![]
+    };
+
+    // Fetch comms channel IDs linked to QRF items
+    let channel_map: std::collections::HashMap<String, String> = if !qrf_ids.is_empty() {
+        sqlx::query_as::<_, QrfChannelRow>(
+            r#"SELECT "refId", id FROM "ChatChannel"
+               WHERE "refType" = 'qrf' AND "refId" = ANY($1)"#
+        )
+        .bind(&qrf_ids)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r| (r.ref_id, r.id))
+        .collect()
+    } else {
+        std::collections::HashMap::new()
+    };
+
+    // Group dispatches by qrfId
+    let mut dispatches_map: std::collections::HashMap<String, Vec<&QrfDispatchViewRow>> =
+        std::collections::HashMap::new();
+    for d in &dispatches {
+        dispatches_map.entry(d.qrf_id.clone()).or_default().push(d);
+    }
+
+    let items: Vec<Value> = qrf_items
+        .iter()
+        .map(|q| {
+            let qrf_dispatches = dispatches_map.get(&q.id).map(|ds| {
+                ds.iter().take(6).map(|d| {
+                    let target_label = if let Some(ref cs) = d.mission_callsign {
+                        format!("{} / {}", cs, d.mission_status.as_deref().unwrap_or("unknown"))
+                    } else if let Some(ref sh) = d.survivor_handle {
+                        format!("{} / {}", sh, d.rescue_status.as_deref().unwrap_or("unknown"))
+                    } else {
+                        "Unlinked target".to_string()
+                    };
+
+                    let target_href = if let Some(ref mid) = d.mission_id {
+                        Some(format!("/missions/{}", mid))
+                    } else if let Some(ref rid) = d.rescue_id {
+                        Some(format!("/rescues#{}", rid))
+                    } else {
+                        None
+                    };
+
+                    json!({
+                        "id": d.id,
+                        "status": d.status,
+                        "notes": d.notes,
+                        "targetLabel": target_label,
+                        "targetHref": target_href,
+                        "dispatchedAtLabel": format_datetime(&d.dispatched_at),
+                        "arrivedAtLabel": d.arrived_at.as_ref().map(format_datetime),
+                        "rtbAtLabel": d.rtb_at.as_ref().map(format_datetime),
+                    })
+                }).collect::<Vec<_>>()
+            }).unwrap_or_default();
+
+            json!({
+                "id": q.id,
+                "callsign": q.callsign,
+                "status": q.status,
+                "platform": q.platform,
+                "locationName": q.location_name,
+                "availableCrew": q.available_crew,
+                "notes": q.notes,
+                "dispatches": qrf_dispatches,
+                "channelId": channel_map.get(&q.id),
+            })
+        })
+        .collect();
+
+    Ok(Json(json!({
+        "orgName": org.name,
+        "items": items,
+        "missionOptions": mission_opts.iter().map(|m| json!({
+            "id": m.id,
+            "label": format!("{} / {}", m.callsign, m.title),
+            "detail": m.status,
+        })).collect::<Vec<_>>(),
+        "rescueOptions": rescue_opts.iter().map(|r| json!({
+            "id": r.id,
+            "label": r.survivor_handle,
+            "detail": format!("{} / {}", r.status, r.location_name.as_deref().unwrap_or("location pending")),
+        })).collect::<Vec<_>>(),
     })))
 }
