@@ -13,11 +13,14 @@ WORKDIR /app
 
 # Cache dependencies: copy manifests first
 COPY guardian-engine/Cargo.toml guardian-engine/Cargo.lock* ./
+COPY guardian-engine/comms/Cargo.toml comms/Cargo.toml
 RUN mkdir src && echo 'fn main() {}' > src/main.rs
+RUN mkdir -p comms/src && echo '' > comms/src/lib.rs
 RUN cargo build --release 2>/dev/null || true
 
 # Copy real source and migrations, then build
 COPY guardian-engine/src/ src/
+COPY guardian-engine/comms/src/ comms/src/
 COPY guardian-engine/migrations/ migrations/
 RUN touch src/main.rs && cargo build --release
 

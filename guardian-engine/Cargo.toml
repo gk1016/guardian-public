@@ -1,3 +1,6 @@
+[workspace]
+members = ["comms"]
+
 [package]
 name = "guardian-engine"
 version = "0.3.0"
@@ -77,6 +80,9 @@ cuid2 = "0.1"
 
 # Discord bot
 serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "model", "cache", "rustls_backend"] }
+
+# Tactical comms crate
+guardian-comms = { path = "comms" }
 
 [profile.release]
 lto = true

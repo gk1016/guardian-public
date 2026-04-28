@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::federation::peer::PeerRegistry;
 use crate::federation::types::FederationEvent;
 use crate::ai::AiState;
+use guardian_comms::CommsEngine;
 
 /// Shared application state passed to all route handlers and background tasks.
 #[derive(Clone)]
@@ -33,6 +34,8 @@ struct Inner {
     pub discord_handle: Arc<tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>>,
     /// HTTP client for reverse proxying to upstream frontend
     pub http_client: reqwest::Client,
+    /// Tactical comms engine (channels, messages, WS rooms)
+    pub comms: CommsEngine,
 }
 
 impl AppState {
@@ -47,6 +50,9 @@ impl AppState {
             .build()
             .expect("failed to build HTTP client");
 
+        // Comms engine shares the DB pool
+        let comms = CommsEngine::new(pool.clone());
+
         Self {
             inner: Arc::new(Inner {
                 pool,
@@ -59,6 +65,7 @@ impl AppState {
                 peer_registry: PeerRegistry::new(),
                 discord_handle: Arc::new(tokio::sync::Mutex::new(None)),
                 http_client,
+                comms,
             }),
         }
     }
@@ -106,6 +113,11 @@ impl AppState {
     /// HTTP client for reverse proxying to upstream frontend.
     pub fn http_client(&self) -> &reqwest::Client {
         &self.inner.http_client
+    }
+
+    /// Tactical comms engine.
+    pub fn comms(&self) -> &CommsEngine {
+        &self.inner.comms
     }
 }
 

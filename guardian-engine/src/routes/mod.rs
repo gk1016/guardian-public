@@ -23,6 +23,7 @@ use std::time::Duration;
 
 use axum::{middleware, Router};
 use axum::http::{header, Method};
+use axum_extra::extract::CookieJar;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 
@@ -47,6 +48,16 @@ pub fn external_router(state: AppState) -> Router {
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         .max_age(Duration::from_secs(86400));
 
+    // Build comms crate router with auth bridge middleware
+    let comms_inner = state.comms().router(); // Router<()>
+    let auth_secret = state.config().auth_secret.clone();
+    let comms_with_auth = comms_inner.layer(axum::middleware::from_fn(
+        move |req: axum::http::Request<axum::body::Body>, next: axum::middleware::Next| {
+            let secret = auth_secret.clone();
+            comms_auth_bridge(secret, req, next)
+        },
+    ));
+
     let mut router = Router::new()
         // WebSocket at root path (clients connect to wss://host/ws)
         .merge(ws::routes())
@@ -54,6 +65,8 @@ pub fn external_router(state: AppState) -> Router {
         .merge(health::routes())
         // Engine routes served directly at /api/* (Phase 3+)
         .merge(engine_routes())
+        // Tactical comms crate routes (/api/comms/*, /ws/comms)
+        .merge(comms_with_auth)
         // Backward-compat: /engine/api/* for components using ENGINE_BASE
         .nest("/engine", engine_routes());
 
@@ -80,8 +93,6 @@ pub fn internal_router(state: AppState) -> Router {
 }
 
 /// All engine route handlers grouped (no state attached yet).
-/// Note: health::routes() is NOT included here — it is merged separately
-/// at root level by external_router to avoid /health path collisions.
 fn engine_routes() -> Router<AppState> {
     Router::new()
         .merge(ai::routes())
@@ -102,4 +113,33 @@ fn engine_routes() -> Router<AppState> {
         .merge(mobile::routes())
         .merge(views::routes())
         .merge(doctrine::routes())
+}
+
+/// Auth bridge middleware for comms crate routes.
+///
+/// Reads the guardian_session cookie, verifies the JWT, and injects
+/// x-comms-* headers so the comms crate can extract user identity
+/// without being coupled to the engine's auth system.
+async fn comms_auth_bridge(
+    auth_secret: String,
+    mut req: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let jar = CookieJar::from_headers(req.headers());
+    if let Some(cookie) = jar.get("guardian_session") {
+        if let Ok(claims) = crate::auth::jwt::verify_session(cookie.value(), &auth_secret) {
+            if let Ok(v) = claims.sub.parse() {
+                req.headers_mut().insert("x-comms-user-id", v);
+            }
+            if let Ok(v) = claims.handle.parse() {
+                req.headers_mut().insert("x-comms-handle", v);
+            }
+            if let Some(ref org_id) = claims.org_id {
+                if let Ok(v) = org_id.parse() {
+                    req.headers_mut().insert("x-comms-org-id", v);
+                }
+            }
+        }
+    }
+    next.run(req).await
 }
