@@ -48,8 +48,9 @@ pub fn external_router(state: AppState) -> Router {
         .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         .max_age(Duration::from_secs(86400));
 
-    // Build comms crate router with auth bridge middleware
-    let comms_inner = state.comms().router(); // Router<()>
+    // Build comms crate router with auth bridge middleware.
+    // This returns Router<()> — merged after with_state() below.
+    let comms_inner = state.comms().router();
     let auth_secret = state.config().auth_secret.clone();
     let comms_with_auth = comms_inner.layer(axum::middleware::from_fn(
         move |req: axum::http::Request<axum::body::Body>, next: axum::middleware::Next| {
@@ -58,30 +59,28 @@ pub fn external_router(state: AppState) -> Router {
         },
     ));
 
-    let mut router = Router::new()
-        // WebSocket at root path (clients connect to wss://host/ws)
+    // Build the engine router (all routes that need AppState)
+    let mut engine_router = Router::new()
         .merge(ws::routes())
-        // Health at root (includes /health and /api/health)
         .merge(health::routes())
-        // Engine routes served directly at /api/* (Phase 3+)
         .merge(engine_routes())
-        // Tactical comms crate routes (/api/comms/*, /ws/comms)
-        .merge(comms_with_auth)
-        // Backward-compat: /engine/api/* for components using ENGINE_BASE
         .nest("/engine", engine_routes());
 
     // Serve requests: proxy to upstream if configured, otherwise serve SPA
     if state.config().upstream_frontend.is_some() {
-        router = router.fallback(proxy::handler);
+        engine_router = engine_router.fallback(proxy::handler);
     } else {
-        router = router.fallback(crate::spa::fallback);
+        engine_router = engine_router.fallback(crate::spa::fallback);
     }
 
-    router
+    // Provide state (Router<AppState> -> Router<()>), then merge comms
+    // (also Router<()>), then apply shared layers to both.
+    engine_router
+        .with_state(state)
+        .merge(comms_with_auth)
         .layer(middleware::from_fn(security::headers))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
-        .with_state(state)
 }
 
 /// Build the internal (plain HTTP) router — health checks only.
