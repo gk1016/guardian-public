@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { HeartPulse, LifeBuoy, Radio, ShieldAlert } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { useSession } from "@/lib/auth";
 import { canManageOperations } from "@/lib/roles";
 import { api } from "@/lib/api";
