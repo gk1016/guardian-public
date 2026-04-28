@@ -2,7 +2,7 @@
 //!
 //! Subscribes to the federation broadcast channel and processes incoming
 //! messages from connected peers:
-//! - Chat → relay to local WebSocket clients
+//! - Chat → persist to comms system + relay to local WebSocket clients
 //! - DataSync/IntelReport → insert into local DB as federated intel
 //! - DataSync/MissionStatus → relay to frontend for situational awareness
 //! - DataSync/QrfStatus → relay to frontend
@@ -188,7 +188,10 @@ pub fn start(state: AppState) -> tokio::task::JoinHandle<()> {
     })
 }
 
-/// Relay a chat message from a federated peer to local WebSocket clients.
+/// Relay a chat message from a federated peer into the comms system.
+/// Persists the message to the matching federated channel and broadcasts
+/// to connected WebSocket clients, then also relays to the legacy event
+/// stream for non-comms consumers (Watch Floor, etc.).
 async fn handle_chat(
     state: &AppState,
     from_instance: &str,
@@ -197,6 +200,25 @@ async fn handle_chat(
     sender_handle: &str,
     text: &str,
 ) {
+    // Ingest into comms system (persists + broadcasts to WS rooms)
+    let msg = guardian_comms::federation::FederatedChatMessage {
+        channel_id: String::new(),
+        channel_name: channel.to_string(),
+        sender_handle: sender_handle.to_string(),
+        text: text.to_string(),
+        classification: "unclass".to_string(),
+        source_instance_id: from_instance.to_string(),
+        source_instance_name: from_name.to_string(),
+    };
+    if let Err(e) = guardian_comms::federation::ingest_inbound(
+        state.comms().pool(),
+        state.comms().registry(),
+        &msg,
+    ).await {
+        warn!(error = %e, "failed to ingest federated chat into comms");
+    }
+
+    // Also relay to legacy event stream for non-comms consumers
     let event_json = serde_json::json!({
         "type": "federation_chat",
         "from_instance": from_instance,
@@ -210,7 +232,7 @@ async fn handle_chat(
         from = %from_name,
         channel = %channel,
         sender = %sender_handle,
-        "federation chat relayed to frontend"
+        "federation chat relayed to comms + frontend"
     );
 }
 

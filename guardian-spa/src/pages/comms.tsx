@@ -21,6 +21,10 @@ import {
   Eye,
   EyeOff,
   X,
+  Ticket,
+  Copy,
+  Clock,
+  Trash2,
 } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { api } from "@/lib/api";
@@ -62,6 +66,18 @@ type Participant = {
   clearance: string;
   role: string;
   online?: boolean;
+};
+
+type InviteToken = {
+  id: string;
+  channelId: string;
+  token: string;
+  clearance: string;
+  handle?: string;
+  maxUses: number;
+  useCount: number;
+  expiresAt: string;
+  createdAt: string;
 };
 
 type WsEvent =
@@ -295,17 +311,195 @@ function CreateChannelDialog({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Invite Management Panel                                            */
+/* ------------------------------------------------------------------ */
+
+function InvitePanel({
+  channelId,
+  onClose,
+}: {
+  channelId: string;
+  onClose: () => void;
+}) {
+  const [invites, setInvites] = useState<InviteToken[]>([]);
+  const [clearance, setClearance] = useState<string>("tactical");
+  const [handle, setHandle] = useState("");
+  const [ttlHours, setTtlHours] = useState(24);
+  const [maxUses, setMaxUses] = useState(1);
+  const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<{ invites: InviteToken[] }>(`/api/comms/channels/${channelId}/invites`)
+      .then((res) => setInvites(res.invites))
+      .catch(() => {});
+  }, [channelId]);
+
+  async function handleCreate() {
+    setCreating(true);
+    try {
+      const res = await api.post<{ ok: boolean; invite: InviteToken }>(
+        `/api/comms/channels/${channelId}/invites`,
+        {
+          clearance,
+          handle: handle.trim() || undefined,
+          ttlHours,
+          maxUses,
+        },
+      );
+      setInvites((prev) => [res.invite, ...prev]);
+      setHandle("");
+    } catch { /* */ }
+    finally { setCreating(false); }
+  }
+
+  async function handleRevoke(tokenId: string) {
+    await api.post(`/api/comms/invites/${tokenId}/revoke`).catch(() => {});
+    setInvites((prev) => prev.filter((t) => t.id !== tokenId));
+  }
+
+  function copyLink(token: string) {
+    const url = `${window.location.origin}/api/comms/join/${token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(token);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
+
+  return (
+    <aside className="flex h-full w-72 shrink-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-panel)]">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-3 py-3">
+        <span className="flex items-center gap-1.5 font-[family:var(--font-display)] text-xs uppercase tracking-[0.12em] text-[var(--color-text-strong)]">
+          <Ticket className="h-3.5 w-3.5" /> Invites
+        </span>
+        <button onClick={onClose} className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Create invite form */}
+      <div className="space-y-2 border-b border-[var(--color-border)] px-3 py-3">
+        <div>
+          <label className="mb-1 block text-[9px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
+            Clearance
+          </label>
+          <div className="flex gap-1">
+            {(["customer", "tactical", "full"] as const).map((c) => (
+              <button
+                key={c}
+                onClick={() => setClearance(c)}
+                className={`rounded-[var(--radius-sm)] border px-2 py-1 text-[9px] uppercase tracking-[0.1em] transition ${
+                  clearance === c
+                    ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                    : "border-[var(--color-border)] text-[var(--color-text-tertiary)]"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+        <input
+          type="text"
+          value={handle}
+          onChange={(e) => setHandle(e.target.value)}
+          placeholder="Handle (optional)"
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1.5 text-xs text-[var(--color-text-strong)] placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-accent)] focus:outline-none"
+        />
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <label className="mb-0.5 block text-[8px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">TTL (hrs)</label>
+            <input
+              type="number"
+              value={ttlHours}
+              onChange={(e) => setTtlHours(Number(e.target.value))}
+              min={1}
+              max={720}
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-xs text-[var(--color-text-strong)] focus:border-[var(--color-accent)] focus:outline-none"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="mb-0.5 block text-[8px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">Max uses</label>
+            <input
+              type="number"
+              value={maxUses}
+              onChange={(e) => setMaxUses(Number(e.target.value))}
+              min={1}
+              max={100}
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-xs text-[var(--color-text-strong)] focus:border-[var(--color-accent)] focus:outline-none"
+            />
+          </div>
+        </div>
+        <button
+          onClick={handleCreate}
+          disabled={creating}
+          className="w-full rounded-[var(--radius-md)] border border-[var(--color-accent)] bg-[var(--color-accent)]/10 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 disabled:opacity-40"
+        >
+          {creating ? "Creating..." : "Generate Invite"}
+        </button>
+      </div>
+
+      {/* Active invites */}
+      <div className="flex-1 overflow-y-auto px-3 py-2">
+        {invites.length === 0 && (
+          <p className="py-4 text-center text-[10px] text-[var(--color-text-tertiary)]">No active invites</p>
+        )}
+        {invites.map((inv) => {
+          const expires = new Date(inv.expiresAt);
+          const remaining = Math.max(0, Math.round((expires.getTime() - Date.now()) / 3600000));
+          return (
+            <div key={inv.id} className="mb-2 rounded-[var(--radius-md)] border border-[var(--color-border)] p-2">
+              <div className="flex items-center justify-between">
+                <ClearanceBadge clearance={inv.clearance} />
+                <span className="flex items-center gap-1 text-[9px] text-[var(--color-text-tertiary)]">
+                  <Clock className="h-2.5 w-2.5" /> {remaining}h
+                </span>
+              </div>
+              {inv.handle && (
+                <p className="mt-1 text-[10px] text-[var(--color-text-secondary)]">
+                  For: {inv.handle}
+                </p>
+              )}
+              <p className="mt-0.5 text-[9px] text-[var(--color-text-tertiary)]">
+                {inv.useCount}/{inv.maxUses} uses
+              </p>
+              <div className="mt-1.5 flex gap-1">
+                <button
+                  onClick={() => copyLink(inv.token)}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] py-1 text-[9px] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]/20"
+                >
+                  <Copy className="h-2.5 w-2.5" />
+                  {copied === inv.token ? "Copied" : "Copy link"}
+                </button>
+                <button
+                  onClick={() => handleRevoke(inv.id)}
+                  className="flex items-center justify-center rounded-[var(--radius-sm)] border border-red-400/30 px-2 py-1 text-[9px] text-red-400/70 hover:bg-red-400/10"
+                >
+                  <Trash2 className="h-2.5 w-2.5" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Channel List Sidebar                                               */
 /* ------------------------------------------------------------------ */
 
 function ChannelSidebar({
   channels,
   activeId,
+  unreadCounts,
   onSelect,
   onCreate,
 }: {
   channels: Channel[];
   activeId: string | null;
+  unreadCounts: Record<string, number>;
   onSelect: (id: string) => void;
   onCreate: () => void;
 }) {
@@ -356,6 +550,7 @@ function ChannelSidebar({
               {list.map((ch) => {
                 const Icon = channelTypeIcons[ch.channelType] ?? Hash;
                 const isActive = ch.id === activeId;
+                const unread = unreadCounts[ch.id] ?? 0;
                 return (
                   <button
                     key={ch.id}
@@ -367,8 +562,15 @@ function ChannelSidebar({
                     }`}
                   >
                     <Icon className="h-3 w-3 shrink-0" />
-                    <span className="truncate text-xs">{ch.name}</span>
+                    <span className={`truncate text-xs ${unread > 0 && !isActive ? "font-semibold text-[var(--color-text-strong)]" : ""}`}>
+                      {ch.name}
+                    </span>
                     {ch.encrypted && <Lock className="ml-auto h-2.5 w-2.5 shrink-0 text-amber-400/60" />}
+                    {unread > 0 && !isActive && (
+                      <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[9px] font-bold text-[var(--color-bg)]">
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -500,6 +702,8 @@ function ChatArea({
   hasMore,
   showParticipants,
   onToggleParticipants,
+  onToggleInvites,
+  showInvites,
 }: {
   channel: Channel;
   messages: Message[];
@@ -511,6 +715,8 @@ function ChatArea({
   hasMore: boolean;
   showParticipants: boolean;
   onToggleParticipants: () => void;
+  onToggleInvites: () => void;
+  showInvites: boolean;
 }) {
   const [draft, setDraft] = useState("");
   const [classification, setClassification] = useState<string>("unclass");
@@ -568,7 +774,18 @@ function ChatArea({
         <span className="text-[9px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
           {channel.channelType} / {channel.scope}
         </span>
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-1">
+          <button
+            onClick={onToggleInvites}
+            className={`rounded-[var(--radius-sm)] border p-1.5 transition ${
+              showInvites
+                ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+                : "border-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+            }`}
+            title="Manage invites"
+          >
+            <Ticket className="h-3.5 w-3.5" />
+          </button>
           <button
             onClick={onToggleParticipants}
             className={`rounded-[var(--radius-sm)] border p-1.5 transition ${
@@ -662,9 +879,11 @@ export function CommsPage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map());
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showInvites, setShowInvites] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const activeChannel = channels.find((c) => c.id === activeChannelId) ?? null;
   const joinedChannels = useRef(new Set<string>());
@@ -683,9 +902,24 @@ export function CommsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Fetch unread counts periodically
+  useEffect(() => {
+    function fetchUnread() {
+      api.get<{ counts: Record<string, number> }>("/api/comms/unread")
+        .then((res) => setUnreadCounts(res.counts))
+        .catch(() => {});
+    }
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Fetch messages + participants when channel changes
   useEffect(() => {
     if (!activeChannelId) return;
+
+    // Close invites panel on channel switch
+    setShowInvites(false);
 
     api
       .get<{ messages: Message[] }>(`/api/comms/channels/${activeChannelId}/messages?limit=50`)
@@ -702,8 +936,13 @@ export function CommsPage() {
 
     setTypingUsers(new Map());
 
-    // Mark read
+    // Mark read + clear unread
     api.post(`/api/comms/channels/${activeChannelId}/read`).catch(() => {});
+    setUnreadCounts((prev) => {
+      const next = { ...prev };
+      delete next[activeChannelId];
+      return next;
+    });
   }, [activeChannelId]);
 
   // WebSocket
@@ -721,6 +960,12 @@ export function CommsPage() {
             });
             // Mark read
             api.post(`/api/comms/channels/${event.channelId}/read`).catch(() => {});
+          } else {
+            // Increment unread for non-active channel
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [event.channelId]: (prev[event.channelId] ?? 0) + 1,
+            }));
           }
           break;
 
@@ -825,6 +1070,7 @@ export function CommsPage() {
       <ChannelSidebar
         channels={channels}
         activeId={activeChannelId}
+        unreadCounts={unreadCounts}
         onSelect={setActiveChannelId}
         onCreate={() => setShowCreate(true)}
       />
@@ -842,12 +1088,26 @@ export function CommsPage() {
             onLoadMore={handleLoadMore}
             hasMore={hasMore}
             showParticipants={showParticipants}
-            onToggleParticipants={() => setShowParticipants((v) => !v)}
+            onToggleParticipants={() => {
+              setShowParticipants((v) => !v);
+              if (!showParticipants) setShowInvites(false);
+            }}
+            onToggleInvites={() => {
+              setShowInvites((v) => !v);
+              if (!showInvites) setShowParticipants(false);
+            }}
+            showInvites={showInvites}
           />
           {showParticipants && (
             <ParticipantsPanel
               participants={participants}
               onClose={() => setShowParticipants(false)}
+            />
+          )}
+          {showInvites && (
+            <InvitePanel
+              channelId={activeChannel.id}
+              onClose={() => setShowInvites(false)}
             />
           )}
         </>

@@ -85,6 +85,7 @@ pub fn build_router(engine: CommsEngine) -> Router<()> {
         .route("/api/comms/channels/{channelId}/invites", get(list_invites_route).post(create_invite_route))
         .route("/api/comms/invites/{tokenId}/revoke", post(revoke_invite_route))
         .route("/api/comms/join/{token}", post(redeem_invite_route))
+        .route("/api/comms/unread", get(batch_unread))
         .route("/ws/comms", get(ws_upgrade))
         .with_state(state)
 }
@@ -460,6 +461,28 @@ async fn redeem_invite_route(
         "channelId": invite_token.channel_id,
         "participant": p,
     })))
+}
+
+/// Batch unread counts for all channels the user is in.
+async fn batch_unread(
+    State(state): State<CommsState>,
+    user: CommsUser,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let channels = channel::list_user_channels(state.engine.pool(), &user.user_id, &user.org_id)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Database error."}))))?;
+
+    let mut counts = serde_json::Map::new();
+    for ch in &channels {
+        let count = message::unread_count(state.engine.pool(), &ch.id, &user.user_id)
+            .await
+            .unwrap_or(0);
+        if count > 0 {
+            counts.insert(ch.id.clone(), json!(count));
+        }
+    }
+
+    Ok(Json(json!({"counts": counts})))
 }
 
 async fn ws_upgrade(

@@ -23,6 +23,7 @@ import {
   Network,
   Sparkles,
   Anchor,
+  Radio,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession, useAuth } from "@/lib/auth";
@@ -36,6 +37,7 @@ const navSections = [
       { href: "/command", label: "Watch Floor", icon: LayoutDashboard },
       { href: "/tactical", label: "Tactical", icon: Monitor },
       { href: "/missions", label: "Missions", icon: Target },
+      { href: "/comms", label: "Comms", icon: Radio },
       { href: "/federation", label: "Federation", icon: Network },
       { href: "/ai", label: "AI", icon: Sparkles },
     ],

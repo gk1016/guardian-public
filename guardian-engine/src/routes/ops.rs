@@ -43,6 +43,52 @@ async fn require_org(pool: &sqlx::PgPool, user_id: &str) -> Result<crate::helper
         .ok_or_else(|| (StatusCode::BAD_REQUEST, Json(json!({"error": "No organization found."}))))
 }
 
+/// Helper: auto-create a comms channel tied to an operational entity.
+async fn auto_create_comms_channel(
+    state: &AppState,
+    org_id: &str,
+    user_id: &str,
+    ref_type: guardian_comms::types::RefType,
+    ref_id: &str,
+    channel_name: &str,
+    system_msg: &str,
+) {
+    let op_handle: String = sqlx::query_scalar(r#"SELECT handle FROM "User" WHERE id = $1"#)
+        .bind(user_id)
+        .fetch_optional(state.pool()).await
+        .ok().flatten()
+        .unwrap_or_else(|| "OPERATOR".to_string());
+
+    match guardian_comms::channel::create_channel(
+        state.pool(),
+        &guardian_comms::types::CreateChannelRequest {
+            org_id: org_id.to_string(),
+            channel_type: guardian_comms::types::ChannelType::Group,
+            scope: guardian_comms::types::ChannelScope::Local,
+            ref_type: Some(ref_type),
+            ref_id: Some(ref_id.to_string()),
+            name: channel_name.to_string(),
+            encrypted: false,
+            parent_channel_id: None,
+        },
+    ).await {
+        Ok(ch) => {
+            let _ = guardian_comms::participant::add_participant(
+                state.pool(), &ch.id, Some(user_id), &op_handle,
+                guardian_comms::types::Clearance::Full,
+                guardian_comms::types::ParticipantRole::Admin,
+            ).await;
+            let _ = guardian_comms::message::send_system_message(
+                state.pool(), &ch.id, system_msg,
+            ).await;
+            tracing::info!(channel_id = %ch.id, name = %channel_name, "auto-created comms channel");
+        }
+        Err(e) => {
+            tracing::warn!(error = %e, name = %channel_name, "failed to auto-create comms channel");
+        }
+    }
+}
+
 // ============ INTEL ============
 
 #[derive(Deserialize)]
@@ -188,6 +234,14 @@ async fn create_rescue(
     .execute(state.pool()).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create rescue request."}))))?;
 
+    // Auto-create CSAR comms channel
+    auto_create_comms_channel(
+        &state, &org.id, &session.user_id,
+        guardian_comms::types::RefType::Csar, &id,
+        &format!("CSAR-{}", handle),
+        "CSAR channel auto-created",
+    ).await;
+
     let severity = if body.urgency == "flash" { "critical" } else { "warning" };
     create_notification(state.pool(), &org.id, Some(&session.user_id), "rescue", severity,
         &format!("New rescue intake / {}", handle),
@@ -290,6 +344,14 @@ async fn create_qrf(
     .bind(body.available_crew).bind(body.notes.as_deref())
     .execute(state.pool()).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create QRF."}))))?;
+
+    // Auto-create QRF comms channel
+    auto_create_comms_channel(
+        &state, &org.id, &session.user_id,
+        guardian_comms::types::RefType::Qrf, &id,
+        &format!("QRF-{}", callsign),
+        "QRF channel auto-created",
+    ).await;
 
     audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "qrf", Some(&id),
         Some(json!({"callsign": callsign, "status": body.status}))).await;
