@@ -23,6 +23,7 @@ import { MissionCloseoutForm } from "@/components/mission-closeout-form";
 import { MissionReopenForm } from "@/components/mission-reopen-form";
 import { MissionQuickActions } from "@/components/mission-quick-actions";
 import { ParticipantAssignForm } from "@/components/participant-assign-form";
+import { ParticipantRosterManager } from "@/components/participant-roster-manager";
 import { LinkedIntelManager } from "@/components/linked-intel-manager";
 import type {
   MissionDetail,
@@ -31,6 +32,7 @@ import type {
   LinkedIntel,
   DoctrineTemplate,
   PackageDiscipline,
+  AvailableCrew,
 } from "@/hooks/use-views";
 
 /* ------------------------------------------------------------------ */
@@ -338,25 +340,52 @@ function LinkedIntelSection({ intel }: { intel: LinkedIntel[] }) {
   );
 }
 
-function ParticipantsSection({ participants }: { participants: Participant[] }) {
+function ParticipantsSection({
+  missionId,
+  participants,
+  availableCrew,
+  isManager,
+  onSuccess,
+}: {
+  missionId: string;
+  participants: Participant[];
+  availableCrew: AvailableCrew[];
+  isManager: boolean;
+  onSuccess: () => void;
+}) {
   return (
     <Card>
       <SectionHeading icon={Users} label="Assigned Package" />
-      {participants.length > 0 ? (
-        <div className="space-y-1">
+      {isManager ? (
+        <ParticipantRosterManager
+          missionId={missionId}
+          participants={participants}
+          availableCrew={availableCrew as any}
+          onSuccess={onSuccess}
+        />
+      ) : participants.length > 0 ? (
+        <div className="space-y-2">
           {participants.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
-              <span className="text-xs font-medium text-[var(--color-text-strong)]">{p.handle}</span>
-              <Label>{p.role}</Label>
-              <Label>{p.platform}</Label>
-              <span className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${statusClasses(p.status)}`}>
-                {p.status}
-              </span>
+            <div key={p.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-medium text-[var(--color-text-strong)]">{p.handle}</span>
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
+                    {p.role} / {p.platform || "Platform pending"}
+                  </span>
+                </div>
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${statusClasses(p.status)}`}>
+                  {p.status}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                {p.notes || "No notes logged."}
+              </p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-xs text-[var(--color-text-tertiary)]">No participants assigned</p>
+        <p className="text-xs text-[var(--color-text-tertiary)]">No package assigned yet.</p>
       )}
     </Card>
   );
@@ -595,7 +624,13 @@ export function MissionDetailPage() {
           <CloseoutSection m={m} />
           <DoctrineSection doc={m.doctrineTemplate} />
           <LinkedIntelSection intel={m.linkedIntel} />
-          <ParticipantsSection participants={m.participants} />
+          <ParticipantsSection
+            missionId={m.id}
+            participants={m.participants}
+            availableCrew={m.availableCrew}
+            isManager={isManager}
+            onSuccess={onSuccess}
+          />
           <TimelineSection logs={m.logs} />
         </div>
 

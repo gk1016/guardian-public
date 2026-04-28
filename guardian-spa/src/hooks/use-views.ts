@@ -164,16 +164,24 @@ export interface DoctrineTemplate {
   escalation: string;
 }
 
+export interface CrewCommitment {
+  missionId: string;
+  callsign: string;
+  missionStatus: string;
+  assignmentStatus: string;
+  role: string;
+}
+
 export interface AvailableCrew {
   handle: string;
-  displayName: string;
+  displayName: string | null;
   orgRole: string;
-  membershipTitle: string;
-  qrfStatus: string;
-  suggestedPlatform: string;
+  membershipTitle: string | null;
+  qrfStatus: string | null;
+  suggestedPlatform: string | null;
   sourceLabel: string;
-  notes: string;
-  commitments: string[];
+  notes: string | null;
+  commitments: CrewCommitment[];
   availabilityLabel: string;
 }
 
