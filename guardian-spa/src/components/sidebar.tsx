@@ -26,6 +26,7 @@ import {
   Radio,
   Crosshair,
   ClipboardList,
+  Brain,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession, useAuth } from "@/lib/auth";
@@ -42,6 +43,7 @@ const navSections = [
       { href: "/comms", label: "Comms", icon: Radio },
       { href: "/federation", label: "Federation", icon: Network },
       { href: "/ai", label: "AI", icon: Sparkles },
+      { href: "/assessments", label: "Analysis", icon: Brain },
     ],
   },
   {

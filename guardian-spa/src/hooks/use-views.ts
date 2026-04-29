@@ -388,6 +388,34 @@ export interface IntelReqsView {
 }
 
 /* ------------------------------------------------------------------ */
+/*  /api/views/assessments                                             */
+/* ------------------------------------------------------------------ */
+
+export interface AssessmentItem {
+  id: string;
+  assessmentType: string;
+  title: string;
+  summary: string;
+  body: string | null;
+  threatActorId: string | null;
+  actorName: string | null;
+  confidence: string;
+  keyFindings: string[];
+  recommendedActions: string[];
+  sourceIntelIds: string[];
+  generatedBy: string;
+  modelUsed: string | null;
+  createdByHandle: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AssessmentsView {
+  orgName: string;
+  items: AssessmentItem[];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Hooks                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -452,5 +480,12 @@ export function useIntelReqs() {
   return useQuery({
     queryKey: ["views", "intel-reqs"],
     queryFn: () => api.get<IntelReqsView>("/api/views/intel-reqs"),
+  });
+}
+
+export function useAssessments() {
+  return useQuery({
+    queryKey: ["views", "assessments"],
+    queryFn: () => api.get<AssessmentsView>("/api/views/assessments"),
   });
 }
