@@ -32,6 +32,7 @@ import { CommsPage } from "@/pages/comms";
 import { ThreatActorsPage } from "@/pages/threat-actors";
 import { IntelReqsPage } from "@/pages/intel-reqs";
 import { AssessmentsPage } from "@/pages/assessments";
+import { TargetingPage } from "@/pages/targeting";
 
 /* ------------------------------------------------------------------ */
 /*  Router                                                             */
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
       { path: "threat-actors", element: <ThreatActorsPage /> },
       { path: "intel-reqs", element: <IntelReqsPage /> },
       { path: "assessments", element: <AssessmentsPage /> },
+      { path: "targeting", element: <TargetingPage /> },
       { path: "doctrine", element: <DoctrinePage /> },
       { path: "rescues", element: <RescuesPage /> },
       { path: "roster", element: <RosterPage /> },

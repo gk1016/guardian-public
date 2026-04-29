@@ -416,6 +416,42 @@ export interface AssessmentsView {
 }
 
 /* ------------------------------------------------------------------ */
+/*  /api/views/targets                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface TargetItem {
+  id: string;
+  targetType: string;
+  name: string;
+  description: string | null;
+  threatActorId: string | null;
+  actorName: string | null;
+  linkedIntelIds: string[];
+  priority: number;
+  status: string;
+  f3eadPhase: string;
+  gridReference: string | null;
+  lastKnownLocation: string | null;
+  starSystem: string | null;
+  approvedByHandle: string | null;
+  approvedAt: string | null;
+  engagementGuidance: string | null;
+  collateralConcerns: string | null;
+  missionId: string | null;
+  missionCallsign: string | null;
+  bdaSummary: string | null;
+  bdaAssessment: string | null;
+  nominatedByHandle: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface TargetsView {
+  orgName: string;
+  items: TargetItem[];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Hooks                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -487,5 +523,12 @@ export function useAssessments() {
   return useQuery({
     queryKey: ["views", "assessments"],
     queryFn: () => api.get<AssessmentsView>("/api/views/assessments"),
+  });
+}
+
+export function useTargets() {
+  return useQuery({
+    queryKey: ["views", "targets"],
+    queryFn: () => api.get<TargetsView>("/api/views/targets"),
   });
 }
