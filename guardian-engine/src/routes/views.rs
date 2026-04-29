@@ -917,7 +917,9 @@ async fn command_overview(
         // Top 4 intel
         sqlx::query_as::<_, IntelRow>(
             r#"SELECT id, title, description, severity, "reportType",
-                      "locationName", "hostileGroup", confidence, tags
+                      "locationName", "starSystem", "hostileGroup", confidence, tags,
+                      "isActive", "isVerified", "sourceReliability", "infoCredibility",
+                      "reportPhase", "observedAt"::text, "createdAt"::text
                FROM "IntelReport"
                WHERE "orgId" = $1 AND "isActive" = true
                ORDER BY severity DESC, "createdAt" DESC
