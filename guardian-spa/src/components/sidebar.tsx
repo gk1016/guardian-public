@@ -25,6 +25,7 @@ import {
   Anchor,
   Radio,
   Crosshair,
+  ClipboardList,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession, useAuth } from "@/lib/auth";
@@ -48,6 +49,7 @@ const navSections = [
     items: [
       { href: "/intel", label: "Intel", icon: Shield },
       { href: "/threat-actors", label: "Threat Actors", icon: Crosshair },
+      { href: "/intel-reqs", label: "Requirements", icon: ClipboardList },
       { href: "/qrf", label: "QRF", icon: Zap },
       { href: "/rescues", label: "CSAR", icon: LifeBuoy },
       { href: "/doctrine", label: "Doctrine", icon: BookCheck },

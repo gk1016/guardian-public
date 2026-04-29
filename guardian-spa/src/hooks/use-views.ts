@@ -356,6 +356,38 @@ export interface ThreatActorsView {
 }
 
 /* ------------------------------------------------------------------ */
+/*  /api/views/intel-reqs                                              */
+/* ------------------------------------------------------------------ */
+
+export interface IntelRequirementItem {
+  id: string;
+  parentId: string | null;
+  requirementType: string;
+  priority: number;
+  title: string;
+  description: string | null;
+  status: string;
+  requestedByHandle: string | null;
+  assignedToHandle: string | null;
+  linkedActorId: string | null;
+  linkedActorName: string | null;
+  linkedIntelId: string | null;
+  linkedIntelTitle: string | null;
+  collectionGuidance: string | null;
+  indicators: string[];
+  ltiov: string | null;
+  answeredAt: string | null;
+  answer: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface IntelReqsView {
+  orgName: string;
+  items: IntelRequirementItem[];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Hooks                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -413,5 +445,12 @@ export function useThreatActors() {
   return useQuery({
     queryKey: ["views", "threat-actors"],
     queryFn: () => api.get<ThreatActorsView>("/api/views/threat-actors"),
+  });
+}
+
+export function useIntelReqs() {
+  return useQuery({
+    queryKey: ["views", "intel-reqs"],
+    queryFn: () => api.get<IntelReqsView>("/api/views/intel-reqs"),
   });
 }

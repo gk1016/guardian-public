@@ -30,6 +30,7 @@ import { AiPage } from "@/pages/ai";
 import { AdminPage } from "@/pages/admin";
 import { CommsPage } from "@/pages/comms";
 import { ThreatActorsPage } from "@/pages/threat-actors";
+import { IntelReqsPage } from "@/pages/intel-reqs";
 
 /* ------------------------------------------------------------------ */
 /*  Router                                                             */
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: "missions/:missionId", element: <MissionDetailPage /> },
       { path: "intel", element: <IntelPage /> },
       { path: "threat-actors", element: <ThreatActorsPage /> },
+      { path: "intel-reqs", element: <IntelReqsPage /> },
       { path: "doctrine", element: <DoctrinePage /> },
       { path: "rescues", element: <RescuesPage /> },
       { path: "roster", element: <RosterPage /> },
