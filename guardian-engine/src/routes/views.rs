@@ -29,6 +29,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/qrf", get(qrf_list))
         .route("/api/views/threat-actors", get(threat_actors_list))
         .route("/api/views/intel-reqs", get(intel_reqs_list))
+        .route("/api/views/assessments", get(assessments_list))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -2413,5 +2414,89 @@ async fn intel_reqs_list(
     Ok(Json(json!({
         "orgName": org.name,
         "items": items,
+    })))
+}
+
+
+// ── Assessments View ────────────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct AssessmentRow {
+    id: String,
+    #[sqlx(rename = "assessmentType")]
+    assessment_type: String,
+    title: String,
+    summary: String,
+    body: Option<String>,
+    #[sqlx(rename = "threatActorId")]
+    threat_actor_id: Option<String>,
+    #[sqlx(rename = "actorName")]
+    actor_name: Option<String>,
+    confidence: String,
+    #[sqlx(rename = "keyFindings")]
+    key_findings: Vec<String>,
+    #[sqlx(rename = "recommendedActions")]
+    recommended_actions: Vec<String>,
+    #[sqlx(rename = "sourceIntelIds")]
+    source_intel_ids: Vec<String>,
+    #[sqlx(rename = "generatedBy")]
+    generated_by: String,
+    #[sqlx(rename = "modelUsed")]
+    model_used: Option<String>,
+    #[sqlx(rename = "createdByHandle")]
+    created_by_handle: Option<String>,
+    #[sqlx(rename = "isActive")]
+    is_active: bool,
+    #[sqlx(rename = "createdAt")]
+    created_at: String,
+}
+
+async fn assessments_list(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let org = get_org_for_user(state.pool(), &session.user_id).await
+        .ok_or_else(|| internal("No org found"))?;
+
+    let rows = sqlx::query_as::<_, AssessmentRow>(
+        r#"SELECT ia.id, ia."assessmentType", ia.title, ia.summary, ia.body,
+                  ia."threatActorId", ta.name as "actorName",
+                  ia.confidence, ia."keyFindings", ia."recommendedActions",
+                  ia."sourceIntelIds", ia."generatedBy", ia."modelUsed",
+                  u.handle as "createdByHandle",
+                  ia."isActive",
+                  TO_CHAR(ia."createdAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "createdAt"
+           FROM "IntelAssessment" ia
+           LEFT JOIN "ThreatActor" ta ON ia."threatActorId" = ta.id
+           LEFT JOIN "User" u ON ia."createdById" = u.id
+           WHERE ia."orgId" = $1
+           ORDER BY ia."createdAt" DESC"#
+    ).bind(&org.id).fetch_all(state.pool()).await
+    .map_err(|e| internal(&format!("assessments query: {e}")))?;
+
+    let items: Vec<Value> = rows.iter().map(|r| {
+        json!({
+            "id": r.id,
+            "assessmentType": r.assessment_type,
+            "title": r.title,
+            "summary": r.summary,
+            "body": r.body,
+            "threatActorId": r.threat_actor_id,
+            "actorName": r.actor_name,
+            "confidence": r.confidence,
+            "keyFindings": r.key_findings,
+            "recommendedActions": r.recommended_actions,
+            "sourceIntelIds": r.source_intel_ids,
+            "generatedBy": r.generated_by,
+            "modelUsed": r.model_used,
+            "createdByHandle": r.created_by_handle,
+            "isActive": r.is_active,
+            "createdAt": r.created_at,
+        })
+    }).collect();
+
+    Ok(Json(json!({
+        "orgName": org.name,
+        "items": items
     })))
 }

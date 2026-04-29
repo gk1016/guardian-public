@@ -28,6 +28,9 @@ pub fn routes() -> Router<AppState> {
         .route("/api/intel-reqs", post(create_intel_req))
         .route("/api/intel-reqs/{reqId}", patch(update_intel_req))
         .route("/api/intel-reqs/{reqId}/answer", post(answer_intel_req))
+        // Intel Assessments
+        .route("/api/intel/analyze", post(generate_assessment))
+        .route("/api/assessments/{assessmentId}", patch(update_assessment))
         // Rescues
         .route("/api/rescues", post(create_rescue))
         .route("/api/rescues/{rescueId}", patch(update_rescue))
@@ -1207,4 +1210,437 @@ async fn answer_intel_req(
         Some(json!({"title": title}))).await;
 
     Ok(Json(json!({"ok": true, "requirement": {"id": req_id, "status": "answered"}})))
+}
+
+
+// ── Intel Assessments ────────────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct AiConfigRow {
+    provider: String,
+    model: String,
+    #[sqlx(rename = "apiKey")]
+    api_key: Option<String>,
+    #[sqlx(rename = "baseUrl")]
+    base_url: Option<String>,
+    #[sqlx(rename = "maxTokens")]
+    max_tokens: i32,
+    temperature: f64,
+}
+
+#[derive(sqlx::FromRow)]
+struct IntelSourceRow {
+    id: String,
+    title: String,
+    description: Option<String>,
+    severity: i32,
+    #[sqlx(rename = "reportType")]
+    report_type: String,
+    #[sqlx(rename = "locationName")]
+    location_name: Option<String>,
+    #[sqlx(rename = "starSystem")]
+    star_system: Option<String>,
+    #[sqlx(rename = "hostileGroup")]
+    hostile_group: Option<String>,
+    confidence: String,
+    tags: Vec<String>,
+    #[sqlx(rename = "observedAt")]
+    observed_at: Option<String>,
+}
+
+#[derive(sqlx::FromRow)]
+struct ThreatActorContextRow {
+    name: String,
+    #[sqlx(rename = "actorType")]
+    actor_type: String,
+    #[sqlx(rename = "capabilityRating")]
+    capability_rating: i32,
+    #[sqlx(rename = "intentRating")]
+    intent_rating: i32,
+    #[sqlx(rename = "opportunityRating")]
+    opportunity_rating: i32,
+    #[sqlx(rename = "threatLevel")]
+    threat_level: String,
+    #[sqlx(rename = "knownTtps")]
+    known_ttps: Vec<String>,
+    #[sqlx(rename = "knownAssets")]
+    known_assets: Vec<String>,
+    #[sqlx(rename = "areaOfOperations")]
+    area_of_operations: Vec<String>,
+    #[sqlx(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+}
+
+fn assessment_get_provider_url(provider: &str, base_url: Option<&str>) -> String {
+    if let Some(base) = base_url {
+        let base = base.trim_end_matches('/');
+        return if provider == "anthropic" {
+            format!("{base}/v1/messages")
+        } else {
+            format!("{base}/v1/chat/completions")
+        };
+    }
+    match provider {
+        "anthropic" => "https://api.anthropic.com/v1/messages".to_string(),
+        "openai" => "https://api.openai.com/v1/chat/completions".to_string(),
+        "ollama" | "ollama_local" => "http://localhost:11434/v1/chat/completions".to_string(),
+        _ => "https://api.openai.com/v1/chat/completions".to_string(),
+    }
+}
+
+fn assessment_get_provider_headers(provider: &str, api_key: &str) -> Vec<(String, String)> {
+    let mut headers = vec![("Content-Type".to_string(), "application/json".to_string())];
+    match provider {
+        "anthropic" => {
+            headers.push(("x-api-key".to_string(), api_key.to_string()));
+            headers.push(("anthropic-version".to_string(), "2023-06-01".to_string()));
+        }
+        _ => {
+            headers.push(("Authorization".to_string(), format!("Bearer {api_key}")));
+        }
+    }
+    headers
+}
+
+fn get_system_prompt(assessment_type: &str) -> &'static str {
+    match assessment_type {
+        "intsum" => "You are a military intelligence analyst. Generate an Intelligence Summary (INTSUM) based on the following intelligence reports. Format your response with clear sections: SITUATION, KEY FINDINGS, THREAT ASSESSMENT, RECOMMENDATIONS. Start with a concise title on the first line. Use bullet points for key findings and recommendations.",
+        "threat_assessment" => "You are a military intelligence analyst. Generate a Threat Assessment for the specified threat actor based on available intelligence. Evaluate CAPABILITY, INTENT, and OPPORTUNITY. Format your response with clear sections: ACTOR PROFILE, CAPABILITY ASSESSMENT, INTENT INDICATORS, OPPORTUNITY ANALYSIS, OVERALL THREAT LEVEL, RECOMMENDED COUNTERMEASURES. Start with a concise title on the first line. Use bullet points for key findings and countermeasures.",
+        "pattern_analysis" => "You are a military intelligence analyst. Analyze the following intelligence reports for patterns, trends, and correlations. Format your response with clear sections: PATTERN SUMMARY, TEMPORAL PATTERNS, SPATIAL PATTERNS, BEHAVIORAL PATTERNS, PREDICTIVE INDICATORS, CONFIDENCE ASSESSMENT. Start with a concise title on the first line. Use bullet points for patterns and indicators.",
+        "coa_prediction" => "You are a military intelligence analyst. Based on available intelligence, predict the most likely enemy Courses of Action (COA). Format your response with clear sections: MOST LIKELY COA, MOST DANGEROUS COA, OTHER POSSIBLE COAs, INDICATORS FOR EACH COA, RECOMMENDED RESPONSE. Start with a concise title on the first line. Use bullet points for COAs and indicators.",
+        _ => "You are a military intelligence analyst. Analyze the following intelligence data and provide a structured assessment. Start with a concise title on the first line.",
+    }
+}
+
+fn build_intel_block(reports: &[IntelSourceRow]) -> String {
+    let mut block = String::from("INTELLIGENCE REPORTS:\n");
+    for (i, r) in reports.iter().enumerate() {
+        block.push_str(&format!("---\nReport {}: {}\n", i + 1, r.title));
+        block.push_str(&format!("Type: {} | Severity: {}/10 | Confidence: {}\n", r.report_type, r.severity, r.confidence));
+        block.push_str(&format!("Location: {} / {}\n",
+            r.location_name.as_deref().unwrap_or("Unknown"),
+            r.star_system.as_deref().unwrap_or("Unknown")));
+        block.push_str(&format!("Hostile Group: {}\n", r.hostile_group.as_deref().unwrap_or("N/A")));
+        block.push_str(&format!("Tags: {}\n", if r.tags.is_empty() { "none".to_string() } else { r.tags.join(", ") }));
+        block.push_str(&format!("Observed: {}\n", r.observed_at.as_deref().unwrap_or("N/A")));
+        block.push_str(&format!("Description: {}\n", r.description.as_deref().unwrap_or("")));
+    }
+    block.push_str("---\n");
+    block
+}
+
+fn build_actor_block(actor: &ThreatActorContextRow) -> String {
+    let mut block = format!("THREAT ACTOR: {}\n", actor.name);
+    block.push_str(&format!("Type: {}\n", actor.actor_type));
+    block.push_str(&format!("Capability: {}/10 | Intent: {}/10 | Opportunity: {}/10\n",
+        actor.capability_rating, actor.intent_rating, actor.opportunity_rating));
+    block.push_str(&format!("Threat Level: {}\n", actor.threat_level));
+    block.push_str(&format!("Known TTPs: {}\n", if actor.known_ttps.is_empty() { "none".to_string() } else { actor.known_ttps.join(", ") }));
+    block.push_str(&format!("Known Assets: {}\n", if actor.known_assets.is_empty() { "none".to_string() } else { actor.known_assets.join(", ") }));
+    block.push_str(&format!("Area of Operations: {}\n", if actor.area_of_operations.is_empty() { "none".to_string() } else { actor.area_of_operations.join(", ") }));
+    block.push_str(&format!("Last Known Location: {}\n", actor.last_known_location.as_deref().unwrap_or("Unknown")));
+    block
+}
+
+/// Extract bullet points from a named section of the AI response.
+fn extract_section_bullets(text: &str, section_names: &[&str]) -> Vec<String> {
+    let mut bullets = Vec::new();
+    let mut in_section = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        let upper = trimmed.to_uppercase();
+        // Check if this line starts a target section
+        if section_names.iter().any(|s| upper.starts_with(&s.to_uppercase())) {
+            in_section = true;
+            continue;
+        }
+        // Check if we've left the section (another header)
+        if in_section && !trimmed.is_empty() && trimmed == trimmed.to_uppercase() && trimmed.len() > 3 && !trimmed.starts_with('-') && !trimmed.starts_with('*') && !trimmed.starts_with("- ") {
+            // Looks like a new section header
+            if section_names.iter().all(|s| !upper.starts_with(&s.to_uppercase())) {
+                in_section = false;
+                continue;
+            }
+        }
+        if in_section {
+            let cleaned = trimmed.trim_start_matches(|c: char| c == '-' || c == '*' || c == '•' || c.is_ascii_digit() || c == '.' || c == ')').trim();
+            if !cleaned.is_empty() {
+                bullets.push(cleaned.to_string());
+            }
+        }
+    }
+    bullets
+}
+
+fn extract_confidence(text: &str) -> &str {
+    let upper = text.to_uppercase();
+    if upper.contains("CONFIRMED") || upper.contains("HIGH CONFIDENCE") { return "confirmed"; }
+    if upper.contains("PROBABLE") || upper.contains("LIKELY") { return "probable"; }
+    if upper.contains("POSSIBLE") || upper.contains("MODERATE CONFIDENCE") { return "possible"; }
+    if upper.contains("DOUBTFUL") || upper.contains("LOW CONFIDENCE") { return "doubtful"; }
+    if upper.contains("IMPROBABLE") { return "improbable"; }
+    "possible"
+}
+
+#[derive(Deserialize)]
+struct GenerateAssessmentRequest {
+    #[serde(rename = "assessmentType")]
+    assessment_type: String,
+    #[serde(rename = "sourceIntelIds")]
+    source_intel_ids: Option<Vec<String>>,
+    #[serde(rename = "threatActorId")]
+    threat_actor_id: Option<String>,
+    #[serde(rename = "additionalContext")]
+    additional_context: Option<String>,
+}
+
+async fn generate_assessment(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Json(body): Json<GenerateAssessmentRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    // Load AI config
+    let ai_config: Option<AiConfigRow> = sqlx::query_as(
+        r#"SELECT provider, model, "apiKey", "baseUrl", "maxTokens", temperature FROM "AiConfig" WHERE "orgId" = $1 AND enabled = true LIMIT 1"#
+    ).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+
+    let ai_config = ai_config.ok_or_else(|| (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(json!({"error": "No AI provider configured. Go to Settings to configure an AI provider."}))
+    ))?;
+
+    let api_key = ai_config.api_key.clone().unwrap_or_default();
+    if api_key.is_empty() && ai_config.provider != "ollama" && ai_config.provider != "ollama_local" {
+        return Err((StatusCode::SERVICE_UNAVAILABLE, Json(json!({"error": "AI API key not configured."}))));
+    }
+
+    // Gather source intel
+    let reports: Vec<IntelSourceRow> = if let Some(ref ids) = body.source_intel_ids {
+        if ids.is_empty() {
+            sqlx::query_as(
+                r#"SELECT id, title, description, severity, "reportType", "locationName", "starSystem", "hostileGroup", confidence, tags, TO_CHAR("observedAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "observedAt"
+                FROM "IntelReport" WHERE "orgId" = $1 AND "isActive" = true ORDER BY "createdAt" DESC LIMIT 20"#
+            ).bind(&org.id).fetch_all(state.pool()).await.unwrap_or_default()
+        } else {
+            sqlx::query_as(
+                r#"SELECT id, title, description, severity, "reportType", "locationName", "starSystem", "hostileGroup", confidence, tags, TO_CHAR("observedAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "observedAt"
+                FROM "IntelReport" WHERE "orgId" = $1 AND id = ANY($2)"#
+            ).bind(&org.id).bind(ids).fetch_all(state.pool()).await.unwrap_or_default()
+        }
+    } else {
+        sqlx::query_as(
+            r#"SELECT id, title, description, severity, "reportType", "locationName", "starSystem", "hostileGroup", confidence, tags, TO_CHAR("observedAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "observedAt"
+            FROM "IntelReport" WHERE "orgId" = $1 AND "isActive" = true ORDER BY "createdAt" DESC LIMIT 20"#
+        ).bind(&org.id).fetch_all(state.pool()).await.unwrap_or_default()
+    };
+
+    if reports.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "No intelligence reports found to analyze."}))));
+    }
+
+    // Gather threat actor if specified
+    let actor: Option<ThreatActorContextRow> = if let Some(ref actor_id) = body.threat_actor_id {
+        sqlx::query_as(
+            r#"SELECT name, "actorType", "capabilityRating", "intentRating", "opportunityRating", "threatLevel", "knownTtps", "knownAssets", "areaOfOperations", "lastKnownLocation"
+            FROM "ThreatActor" WHERE id = $1 AND "orgId" = $2"#
+        ).bind(actor_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None)
+    } else {
+        None
+    };
+
+    // Build prompt
+    let system_prompt = get_system_prompt(&body.assessment_type);
+    let mut user_content = build_intel_block(&reports);
+    if let Some(ref a) = actor {
+        user_content.push_str("\n");
+        user_content.push_str(&build_actor_block(a));
+    }
+    if let Some(ref ctx) = body.additional_context {
+        user_content.push_str(&format!("\nADDITIONAL CONTEXT:\n{}\n", ctx));
+    }
+
+    let source_ids: Vec<String> = reports.iter().map(|r| r.id.clone()).collect();
+
+    // Build LLM request
+    let provider_url = assessment_get_provider_url(&ai_config.provider, ai_config.base_url.as_deref());
+    let provider_headers = assessment_get_provider_headers(&ai_config.provider, &api_key);
+
+    let request_body = if ai_config.provider == "anthropic" {
+        json!({
+            "model": ai_config.model,
+            "max_tokens": ai_config.max_tokens,
+            "temperature": ai_config.temperature,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": user_content}]
+        })
+    } else {
+        json!({
+            "model": ai_config.model,
+            "max_tokens": ai_config.max_tokens,
+            "temperature": ai_config.temperature,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ]
+        })
+    };
+
+    let client = reqwest::Client::new();
+    let mut req = client.post(&provider_url);
+    for (k, v) in &provider_headers {
+        req = req.header(k, v);
+    }
+    let resp = req.json(&request_body).send().await
+        .map_err(|e| (StatusCode::BAD_GATEWAY, Json(json!({"error": format!("AI provider request failed: {e}")}))))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body_text = resp.text().await.unwrap_or_default();
+        tracing::error!("AI provider returned {status}: {body_text}");
+        return Err((StatusCode::BAD_GATEWAY, Json(json!({"error": format!("AI provider returned {status}")}))));
+    }
+
+    let resp_json: Value = resp.json().await
+        .map_err(|e| (StatusCode::BAD_GATEWAY, Json(json!({"error": format!("Failed to parse AI response: {e}")}))))?;
+
+    // Extract generated text and token counts
+    let (generated_text, prompt_tokens, completion_tokens) = if ai_config.provider == "anthropic" {
+        let text = resp_json["content"][0]["text"].as_str().unwrap_or("").to_string();
+        let pt = resp_json["usage"]["input_tokens"].as_i64().unwrap_or(0) as i32;
+        let ct = resp_json["usage"]["output_tokens"].as_i64().unwrap_or(0) as i32;
+        (text, pt, ct)
+    } else {
+        let text = resp_json["choices"][0]["message"]["content"].as_str().unwrap_or("").to_string();
+        let pt = resp_json["usage"]["prompt_tokens"].as_i64().unwrap_or(0) as i32;
+        let ct = resp_json["usage"]["completion_tokens"].as_i64().unwrap_or(0) as i32;
+        (text, pt, ct)
+    };
+
+    if generated_text.is_empty() {
+        return Err((StatusCode::BAD_GATEWAY, Json(json!({"error": "AI returned empty response."}))));
+    }
+
+    // Parse structured fields from the response
+    let lines: Vec<&str> = generated_text.lines().collect();
+    let title = lines.first()
+        .map(|l| l.trim().trim_start_matches('#').trim().to_string())
+        .unwrap_or_else(|| format!("{} Assessment", body.assessment_type.to_uppercase()));
+
+    let summary = generated_text.lines()
+        .filter(|l| !l.trim().is_empty())
+        .skip(1)
+        .take(3)
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars().take(500).collect::<String>();
+
+    let key_findings = extract_section_bullets(&generated_text, &["KEY FINDINGS", "PATTERN SUMMARY", "MOST LIKELY COA"]);
+    let recommended_actions = extract_section_bullets(&generated_text, &["RECOMMENDATIONS", "RECOMMENDED COUNTERMEASURES", "RECOMMENDED RESPONSE"]);
+    let confidence = extract_confidence(&generated_text);
+
+    // Insert into DB
+    let assessment_id = format!("ia_{}", uuid::Uuid::new_v4().to_string().replace('-', ""));
+
+    sqlx::query(
+        r#"INSERT INTO "IntelAssessment" (id, "orgId", "assessmentType", title, summary, body, "threatActorId", confidence, "keyFindings", "recommendedActions", "sourceIntelIds", "generatedBy", "modelUsed", "promptTokens", "completionTokens", "createdById", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'ai', $12, $13, $14, $15, NOW(), NOW())"#
+    )
+    .bind(&assessment_id)
+    .bind(&org.id)
+    .bind(&body.assessment_type)
+    .bind(&title)
+    .bind(&summary)
+    .bind(&generated_text)
+    .bind(&body.threat_actor_id)
+    .bind(confidence)
+    .bind(&key_findings)
+    .bind(&recommended_actions)
+    .bind(&source_ids)
+    .bind(&ai_config.model)
+    .bind(prompt_tokens)
+    .bind(completion_tokens)
+    .bind(&session.user_id)
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!("Failed to insert assessment: {e}");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to save assessment."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "intel_assessment", Some(&assessment_id),
+        Some(json!({"assessmentType": body.assessment_type, "model": ai_config.model}))).await;
+
+    Ok(Json(json!({
+        "ok": true,
+        "assessment": {
+            "id": assessment_id,
+            "title": title,
+            "assessmentType": body.assessment_type,
+            "confidence": confidence
+        }
+    })))
+}
+
+#[derive(Deserialize)]
+struct UpdateAssessmentRequest {
+    title: Option<String>,
+    summary: Option<String>,
+    body: Option<String>,
+    confidence: Option<String>,
+    #[serde(rename = "keyFindings")]
+    key_findings: Option<Vec<String>>,
+    #[serde(rename = "recommendedActions")]
+    recommended_actions: Option<Vec<String>>,
+    #[serde(rename = "isActive")]
+    is_active: Option<bool>,
+}
+
+async fn update_assessment(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(assessment_id): Path<String>,
+    Json(body): Json<UpdateAssessmentRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let exists: Option<String> = sqlx::query_scalar(
+        r#"SELECT id FROM "IntelAssessment" WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&assessment_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Assessment not found."}))));
+    }
+
+    sqlx::query(
+        r#"UPDATE "IntelAssessment" SET
+            title = COALESCE($1, title),
+            summary = COALESCE($2, summary),
+            body = COALESCE($3, body),
+            confidence = COALESCE($4, confidence),
+            "keyFindings" = COALESCE($5, "keyFindings"),
+            "recommendedActions" = COALESCE($6, "recommendedActions"),
+            "isActive" = COALESCE($7, "isActive"),
+            "updatedAt" = NOW()
+        WHERE id = $8 AND "orgId" = $9"#
+    )
+    .bind(&body.title)
+    .bind(&body.summary)
+    .bind(&body.body)
+    .bind(&body.confidence)
+    .bind(&body.key_findings)
+    .bind(&body.recommended_actions)
+    .bind(&body.is_active)
+    .bind(&assessment_id)
+    .bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!("Failed to update assessment: {e}");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Update failed."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "intel_assessment", Some(&assessment_id), None).await;
+
+    Ok(Json(json!({"ok": true, "assessment": {"id": assessment_id}})))
 }
