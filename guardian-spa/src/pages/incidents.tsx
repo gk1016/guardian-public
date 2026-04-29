@@ -84,19 +84,19 @@ export function IncidentsPage() {
               </div>
             </div>
             <div className="mt-4 grid gap-3">
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2.5">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Summary</p>
                 <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.summary}</p>
               </div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2.5">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Lessons</p>
                 <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.lessonsLearned ?? "Not filed."}</p>
               </div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2.5">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Action Items</p>
                 <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.actionItems ?? "None."}</p>
               </div>
-              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-3 py-2.5">
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-3 py-2.5">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">Public Summary</p>
                 <p className="mt-1.5 text-sm leading-6 text-[var(--color-text-secondary)]">{item.publicSummary ?? "Not published."}</p>
               </div>

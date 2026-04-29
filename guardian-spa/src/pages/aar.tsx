@@ -42,7 +42,7 @@ export function AarPage() {
         </p>
       ) : (
         <section className="grid gap-6 xl:grid-cols-2">
-          <article className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+          <article className="rounded-3xl border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-6 panel-elevated">
             <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
               Incident Reviews
             </p>
@@ -55,7 +55,7 @@ export function AarPage() {
                   <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
                     {incident.category} / Updated {incident.updatedAtLabel}
                   </p>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">{incident.summary}</p>
+                  <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{incident.summary}</p>
                 </div>
               ))}
               {(data?.incidents ?? []).length === 0 && (
@@ -64,7 +64,7 @@ export function AarPage() {
             </div>
           </article>
 
-          <article className="rounded-3xl border border-[var(--color-border-bright)] bg-slate-950/60 p-6">
+          <article className="rounded-3xl border border-[var(--color-border-bright)] bg-[var(--color-panel)] p-6 panel-elevated">
             <p className="font-[family:var(--font-display)] text-3xl uppercase tracking-[0.14em] text-[var(--color-text-strong)]">
               Mission AARs
             </p>
@@ -77,7 +77,7 @@ export function AarPage() {
                   <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
                     Updated {mission.updatedAtLabel}
                   </p>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">{mission.aarSummary}</p>
+                  <p className="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]">{mission.aarSummary}</p>
                 </div>
               ))}
               {(data?.missions ?? []).length === 0 && (

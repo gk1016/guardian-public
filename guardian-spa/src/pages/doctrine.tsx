@@ -27,10 +27,10 @@ function ErrorState({ message }: { message: string }) {
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[var(--color-border-bright)] bg-slate-950/70 px-3 py-2 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40";
+  "w-full rounded-lg border border-[var(--color-border-bright)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-accent)]";
 
 const textareaClass =
-  "w-full rounded-lg border border-[var(--color-border-bright)] bg-slate-950/70 px-3 py-2 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-amber-300/40";
+  "w-full rounded-lg border border-[var(--color-border-bright)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-strong)] outline-none transition focus:border-[var(--color-accent)]";
 
 /* ------------------------------------------------------------------ */
 /*  Inline Edit Form                                                   */
@@ -122,7 +122,7 @@ function DoctrineEditForm({
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/35 bg-amber-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 hover:bg-amber-200 disabled:opacity-70"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/35 bg-amber-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-bg)] hover:bg-amber-200 disabled:opacity-70"
         >
           {isPending ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
           Save
@@ -178,7 +178,7 @@ function DoctrineCard({
         <span className="font-[family:var(--font-display)] text-sm uppercase tracking-[0.1em] text-[var(--color-text-strong)]">
           {item.code}
         </span>
-        <span className="rounded-full border border-slate-400/30 bg-slate-400/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-slate-300">
+        <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
           {item.category}
         </span>
         {item.isDefault && (
@@ -239,7 +239,7 @@ function DoctrineCard({
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-md bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase text-white hover:bg-red-500 disabled:opacity-70"
+            className="rounded-md bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase text-[var(--color-text-strong)] hover:bg-red-500 disabled:opacity-70"
           >
             {deleting ? "Deleting..." : "Confirm"}
           </button>
@@ -334,7 +334,7 @@ function DoctrineCreateForm({ onSuccess }: { onSuccess: () => void }) {
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/35 bg-amber-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 hover:bg-amber-200 disabled:opacity-70"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/35 bg-amber-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-bg)] hover:bg-amber-200 disabled:opacity-70"
       >
         {isPending ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
         Create Doctrine
