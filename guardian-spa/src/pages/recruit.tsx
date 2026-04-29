@@ -173,7 +173,7 @@ export function RecruitPage() {
                             value={handle}
                             onChange={(e) => setHandle(e.target.value)}
                             placeholder="Your in-game or org handle"
-                            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
+                            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-accent)] focus:outline-none"
                           />
                         </div>
                         <div>
@@ -187,7 +187,7 @@ export function RecruitPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="What should we call you"
-                            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
+                            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-accent)] focus:outline-none"
                           />
                         </div>
                       </div>
@@ -200,7 +200,7 @@ export function RecruitPage() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="For follow-up contact"
-                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
+                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-accent)] focus:outline-none"
                         />
                       </div>
                       <div>
@@ -213,7 +213,7 @@ export function RecruitPage() {
                           onChange={(e) => setMessage(e.target.value)}
                           rows={4}
                           placeholder="Tell us about yourself, your experience, and why you want to join."
-                          className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-amber-400/40 focus:outline-none"
+                          className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-faint)] focus:border-[var(--color-accent)] focus:outline-none"
                         />
                       </div>
                       {submitError && (
@@ -225,7 +225,7 @@ export function RecruitPage() {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-950 transition hover:bg-amber-200 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-bg)] transition hover:bg-amber-200 disabled:opacity-50"
                       >
                         {submitting ? (
                           <Loader2 size={14} className="animate-spin" />

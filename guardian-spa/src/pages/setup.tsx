@@ -153,7 +153,7 @@ export function SetupPage() {
                   <input type="text" value={orgDescription} onChange={(e) => setOrgDescription(e.target.value)} className={inputClass} placeholder="What does your org do?" />
                 </div>
               </div>
-              <button type="button" onClick={goToAdmin} className="w-full rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-amber-200">
+              <button type="button" onClick={goToAdmin} className="w-full rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-bg)] transition hover:bg-amber-200">
                 Continue
               </button>
             </div>
@@ -214,7 +214,7 @@ export function SetupPage() {
                 <button type="button" onClick={() => { setStep("org"); setError(""); }} className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 py-2.5 text-xs uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] transition hover:text-[var(--color-text-secondary)]">
                   Back
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-amber-200 disabled:opacity-60">
+                <button type="submit" disabled={loading} className="flex-1 rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-bg)] transition hover:bg-amber-200 disabled:opacity-60">
                   {loading ? "Creating..." : "Create Organization"}
                 </button>
               </div>
@@ -233,7 +233,7 @@ export function SetupPage() {
                   Sign in with the admin account you just created.
                 </p>
               </div>
-              <button type="button" onClick={() => navigate("/login")} className="w-full rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-amber-200">
+              <button type="button" onClick={() => navigate("/login")} className="w-full rounded-[var(--radius-md)] border border-amber-300/30 bg-amber-300 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-bg)] transition hover:bg-amber-200">
                 Go to Sign In
               </button>
             </div>

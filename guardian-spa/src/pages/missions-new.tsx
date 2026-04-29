@@ -10,7 +10,7 @@ export function MissionsNewPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white/3 px-4 py-2.5">
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-overlay-subtle)] px-4 py-2.5">
         <span className="text-sm text-[var(--color-text-secondary)]">New sortie creation</span>
         <Link
           to="/missions"
