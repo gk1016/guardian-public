@@ -30,6 +30,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/threat-actors", get(threat_actors_list))
         .route("/api/views/intel-reqs", get(intel_reqs_list))
         .route("/api/views/assessments", get(assessments_list))
+        .route("/api/views/targets", get(targets_list))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -2490,6 +2491,122 @@ async fn assessments_list(
             "generatedBy": r.generated_by,
             "modelUsed": r.model_used,
             "createdByHandle": r.created_by_handle,
+            "isActive": r.is_active,
+            "createdAt": r.created_at,
+        })
+    }).collect();
+
+    Ok(Json(json!({
+        "orgName": org.name,
+        "items": items
+    })))
+}
+
+
+// ── Targets view ────────────────────────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct TargetRow {
+    id: String,
+    #[sqlx(rename = "targetType")]
+    target_type: String,
+    name: String,
+    description: Option<String>,
+    #[sqlx(rename = "threatActorId")]
+    threat_actor_id: Option<String>,
+    #[sqlx(rename = "actorName")]
+    actor_name: Option<String>,
+    #[sqlx(rename = "linkedIntelIds")]
+    linked_intel_ids: Vec<String>,
+    priority: i32,
+    status: String,
+    #[sqlx(rename = "f3eadPhase")]
+    f3ead_phase: String,
+    #[sqlx(rename = "gridReference")]
+    grid_reference: Option<String>,
+    #[sqlx(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[sqlx(rename = "starSystem")]
+    star_system: Option<String>,
+    #[sqlx(rename = "approvedByHandle")]
+    approved_by_handle: Option<String>,
+    #[sqlx(rename = "approvedAt")]
+    approved_at: Option<String>,
+    #[sqlx(rename = "engagementGuidance")]
+    engagement_guidance: Option<String>,
+    #[sqlx(rename = "collateralConcerns")]
+    collateral_concerns: Option<String>,
+    #[sqlx(rename = "missionId")]
+    mission_id: Option<String>,
+    #[sqlx(rename = "missionCallsign")]
+    mission_callsign: Option<String>,
+    #[sqlx(rename = "bdaSummary")]
+    bda_summary: Option<String>,
+    #[sqlx(rename = "bdaAssessment")]
+    bda_assessment: Option<String>,
+    #[sqlx(rename = "nominatedByHandle")]
+    nominated_by_handle: Option<String>,
+    #[sqlx(rename = "isActive")]
+    is_active: bool,
+    #[sqlx(rename = "createdAt")]
+    created_at: String,
+}
+
+async fn targets_list(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let org = get_org_for_user(state.pool(), &session.user_id)
+        .await
+        .ok_or_else(|| internal("No organization found"))?;
+
+    let rows: Vec<TargetRow> = sqlx::query_as(
+        r#"SELECT tn.id, tn."targetType", tn.name, tn.description,
+               tn."threatActorId", ta.name as "actorName",
+               tn."linkedIntelIds", tn.priority, tn.status, tn."f3eadPhase",
+               tn."gridReference", tn."lastKnownLocation", tn."starSystem",
+               au.handle as "approvedByHandle",
+               COALESCE(TO_CHAR(tn."approvedAt", 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS "approvedAt",
+               tn."engagementGuidance", tn."collateralConcerns",
+               tn."missionId", m.callsign as "missionCallsign",
+               tn."bdaSummary", tn."bdaAssessment",
+               nu.handle as "nominatedByHandle",
+               tn."isActive",
+               TO_CHAR(tn."createdAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "createdAt"
+        FROM "TargetNomination" tn
+        LEFT JOIN "ThreatActor" ta ON tn."threatActorId" = ta.id
+        LEFT JOIN "User" au ON tn."approvedById" = au.id
+        LEFT JOIN "User" nu ON tn."nominatedById" = nu.id
+        LEFT JOIN "Mission" m ON tn."missionId" = m.id
+        WHERE tn."orgId" = $1
+        ORDER BY tn.priority ASC, tn."createdAt" DESC"#
+    ).bind(&org.id).fetch_all(state.pool()).await
+    .map_err(|e| internal(&format!("targets query: {e}")))?;
+
+    let items: Vec<Value> = rows.iter().map(|r| {
+        json!({
+            "id": r.id,
+            "targetType": r.target_type,
+            "name": r.name,
+            "description": r.description,
+            "threatActorId": r.threat_actor_id,
+            "actorName": r.actor_name,
+            "linkedIntelIds": r.linked_intel_ids,
+            "priority": r.priority,
+            "status": r.status,
+            "f3eadPhase": r.f3ead_phase,
+            "gridReference": r.grid_reference,
+            "lastKnownLocation": r.last_known_location,
+            "starSystem": r.star_system,
+            "approvedByHandle": r.approved_by_handle,
+            "approvedAt": r.approved_at,
+            "engagementGuidance": r.engagement_guidance,
+            "collateralConcerns": r.collateral_concerns,
+            "missionId": r.mission_id,
+            "missionCallsign": r.mission_callsign,
+            "bdaSummary": r.bda_summary,
+            "bdaAssessment": r.bda_assessment,
+            "nominatedByHandle": r.nominated_by_handle,
             "isActive": r.is_active,
             "createdAt": r.created_at,
         })

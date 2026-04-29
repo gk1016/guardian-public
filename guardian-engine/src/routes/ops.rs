@@ -31,6 +31,11 @@ pub fn routes() -> Router<AppState> {
         // Intel Assessments
         .route("/api/intel/analyze", post(generate_assessment))
         .route("/api/assessments/{assessmentId}", patch(update_assessment))
+        // Targeting
+        .route("/api/targets", post(create_target))
+        .route("/api/targets/{targetId}", patch(update_target))
+        .route("/api/targets/{targetId}/approve", post(approve_target))
+        .route("/api/targets/{targetId}/bda", post(submit_bda))
         // Rescues
         .route("/api/rescues", post(create_rescue))
         .route("/api/rescues/{rescueId}", patch(update_rescue))
@@ -1643,4 +1648,284 @@ async fn update_assessment(
     audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "intel_assessment", Some(&assessment_id), None).await;
 
     Ok(Json(json!({"ok": true, "assessment": {"id": assessment_id}})))
+}
+
+
+// ── Targeting (F3EAD/D3A) ─────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct CreateTargetRequest {
+    name: String,
+    #[serde(rename = "targetType")]
+    target_type: Option<String>,
+    description: Option<String>,
+    #[serde(rename = "threatActorId")]
+    threat_actor_id: Option<String>,
+    #[serde(rename = "linkedIntelIds")]
+    linked_intel_ids: Option<Vec<String>>,
+    priority: Option<i32>,
+    #[serde(rename = "gridReference")]
+    grid_reference: Option<String>,
+    #[serde(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[serde(rename = "starSystem")]
+    star_system: Option<String>,
+    #[serde(rename = "engagementGuidance")]
+    engagement_guidance: Option<String>,
+    #[serde(rename = "collateralConcerns")]
+    collateral_concerns: Option<String>,
+}
+
+async fn create_target(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Json(body): Json<CreateTargetRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let id = cuid2::create_id();
+    let name = body.name.to_uppercase();
+    let target_type = body.target_type.as_deref().unwrap_or("hvt");
+    let priority = body.priority.unwrap_or(3);
+    let linked_intel_ids: Vec<String> = body.linked_intel_ids.unwrap_or_default();
+
+    sqlx::query(
+        r#"INSERT INTO "TargetNomination" (id, "orgId", "targetType", name, description,
+           "threatActorId", "linkedIntelIds", priority, status, "f3eadPhase",
+           "gridReference", "lastKnownLocation", "starSystem",
+           "engagementGuidance", "collateralConcerns",
+           "nominatedById", "isActive", "createdAt", "updatedAt")
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'nominated','find',$9,$10,$11,$12,$13,$14,true,NOW(),NOW())"#
+    )
+    .bind(&id).bind(&org.id).bind(target_type).bind(&name)
+    .bind(body.description.as_deref())
+    .bind(body.threat_actor_id.as_deref())
+    .bind(&linked_intel_ids).bind(priority)
+    .bind(body.grid_reference.as_deref())
+    .bind(body.last_known_location.as_deref())
+    .bind(body.star_system.as_deref())
+    .bind(body.engagement_guidance.as_deref())
+    .bind(body.collateral_concerns.as_deref())
+    .bind(&session.user_id)
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to create target nomination");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create target nomination."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "target_nomination", Some(&id),
+        Some(json!({"name": name, "targetType": target_type}))).await;
+
+    create_notification(state.pool(), &org.id, Some(&session.user_id), "targeting", "warning",
+        &format!("{} nominated for targeting", name),
+        "New target nomination submitted for review.",
+        Some("/targeting")).await;
+
+    Ok(Json(json!({"ok": true, "target": {"id": id, "name": name, "status": "nominated"}})))
+}
+
+#[derive(Deserialize)]
+struct UpdateTargetRequest {
+    name: Option<String>,
+    description: Option<String>,
+    #[serde(rename = "targetType")]
+    target_type: Option<String>,
+    priority: Option<i32>,
+    status: Option<String>,
+    #[serde(rename = "f3eadPhase")]
+    f3ead_phase: Option<String>,
+    #[serde(rename = "gridReference")]
+    grid_reference: Option<String>,
+    #[serde(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[serde(rename = "starSystem")]
+    star_system: Option<String>,
+    #[serde(rename = "engagementGuidance")]
+    engagement_guidance: Option<String>,
+    #[serde(rename = "collateralConcerns")]
+    collateral_concerns: Option<String>,
+    #[serde(rename = "linkedIntelIds")]
+    linked_intel_ids: Option<Vec<String>>,
+    #[serde(rename = "missionId")]
+    mission_id: Option<String>,
+    #[serde(rename = "isActive")]
+    is_active: Option<bool>,
+}
+
+async fn update_target(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(target_id): Path<String>,
+    Json(body): Json<UpdateTargetRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    sqlx::query(
+        r#"UPDATE "TargetNomination" SET
+            name = COALESCE($1, name),
+            description = COALESCE($2, description),
+            "targetType" = COALESCE($3, "targetType"),
+            priority = COALESCE($4, priority),
+            status = COALESCE($5, status),
+            "f3eadPhase" = COALESCE($6, "f3eadPhase"),
+            "gridReference" = COALESCE($7, "gridReference"),
+            "lastKnownLocation" = COALESCE($8, "lastKnownLocation"),
+            "starSystem" = COALESCE($9, "starSystem"),
+            "engagementGuidance" = COALESCE($10, "engagementGuidance"),
+            "collateralConcerns" = COALESCE($11, "collateralConcerns"),
+            "linkedIntelIds" = COALESCE($12, "linkedIntelIds"),
+            "missionId" = COALESCE($13, "missionId"),
+            "isActive" = COALESCE($14, "isActive"),
+            "updatedAt" = NOW()
+        WHERE id = $15 AND "orgId" = $16"#
+    )
+    .bind(body.name.as_deref())
+    .bind(body.description.as_deref())
+    .bind(body.target_type.as_deref())
+    .bind(body.priority)
+    .bind(body.status.as_deref())
+    .bind(body.f3ead_phase.as_deref())
+    .bind(body.grid_reference.as_deref())
+    .bind(body.last_known_location.as_deref())
+    .bind(body.star_system.as_deref())
+    .bind(body.engagement_guidance.as_deref())
+    .bind(body.collateral_concerns.as_deref())
+    .bind(body.linked_intel_ids.as_deref())
+    .bind(body.mission_id.as_deref())
+    .bind(body.is_active)
+    .bind(&target_id)
+    .bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to update target nomination");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Update failed."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "target_nomination", Some(&target_id), None).await;
+
+    Ok(Json(json!({"ok": true, "target": {"id": target_id}})))
+}
+
+#[derive(Deserialize)]
+struct ApproveTargetRequest {
+    #[serde(rename = "engagementGuidance")]
+    engagement_guidance: Option<String>,
+}
+
+async fn approve_target(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(target_id): Path<String>,
+    Json(body): Json<ApproveTargetRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    if !session.can_manage_missions() {
+        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "Commander or director authority required."}))));
+    }
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    // Fetch target name for notification
+    let name: String = sqlx::query_scalar(
+        r#"SELECT name FROM "TargetNomination" WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&target_id).bind(&org.id).fetch_optional(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to look up target");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Lookup failed."})))
+    })?
+    .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": "Target not found."}))))?;
+
+    let mut qb = String::from(r#"UPDATE "TargetNomination" SET status = 'approved', "approvedById" = $1, "approvedAt" = NOW(), "updatedAt" = NOW()"#);
+    if body.engagement_guidance.is_some() {
+        qb.push_str(r#", "engagementGuidance" = $4"#);
+    }
+    qb.push_str(r#" WHERE id = $2 AND "orgId" = $3"#);
+
+    let q = sqlx::query(&qb)
+        .bind(&session.user_id)
+        .bind(&target_id)
+        .bind(&org.id);
+
+    let q = if let Some(ref eg) = body.engagement_guidance {
+        q.bind(eg.as_str())
+    } else {
+        q
+    };
+
+    q.execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to approve target");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Approve failed."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "approve", "target_nomination", Some(&target_id), None).await;
+
+    create_notification(state.pool(), &org.id, Some(&session.user_id), "targeting", "info",
+        &format!("Target {} approved for engagement", name),
+        "Target has been approved and cleared for engagement.",
+        Some("/targeting")).await;
+
+    Ok(Json(json!({"ok": true, "target": {"id": target_id, "status": "approved"}})))
+}
+
+#[derive(Deserialize)]
+struct SubmitBdaRequest {
+    #[serde(rename = "bdaSummary")]
+    bda_summary: String,
+    #[serde(rename = "bdaAssessment")]
+    bda_assessment: Option<String>,
+}
+
+async fn submit_bda(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(target_id): Path<String>,
+    Json(body): Json<SubmitBdaRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let assessment = body.bda_assessment.as_deref().unwrap_or("unknown");
+    let status = match assessment {
+        "destroyed" | "damaged" => "completed",
+        _ => "bda_pending",
+    };
+
+    // Fetch target name for notification
+    let name: String = sqlx::query_scalar(
+        r#"SELECT name FROM "TargetNomination" WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&target_id).bind(&org.id).fetch_optional(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to look up target");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Lookup failed."})))
+    })?
+    .ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": "Target not found."}))))?;
+
+    sqlx::query(
+        r#"UPDATE "TargetNomination" SET
+            status = $1, "f3eadPhase" = 'analyze',
+            "bdaSummary" = $2, "bdaAssessment" = $3,
+            "bdaCompletedAt" = NOW(), "updatedAt" = NOW()
+        WHERE id = $4 AND "orgId" = $5"#
+    )
+    .bind(status)
+    .bind(&body.bda_summary)
+    .bind(assessment)
+    .bind(&target_id)
+    .bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to submit BDA");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "BDA submission failed."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "bda", "target_nomination", Some(&target_id),
+        Some(json!({"bdaAssessment": assessment}))).await;
+
+    create_notification(state.pool(), &org.id, Some(&session.user_id), "targeting", "info",
+        &format!("BDA submitted for target {}", name),
+        &format!("Battle damage assessment: {}. Status: {}", assessment, status),
+        Some("/targeting")).await;
+
+    Ok(Json(json!({"ok": true, "target": {"id": target_id, "status": status}})))
 }
