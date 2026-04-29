@@ -74,9 +74,17 @@ export interface IntelSummary {
   severity: number;
   reportType: string;
   locationName: string;
+  starSystem: string;
   hostileGroup: string;
   confidence: string;
   tags: string[];
+  isActive: boolean;
+  isVerified: boolean;
+  sourceReliability: string;
+  infoCredibility: number;
+  reportPhase: string;
+  observedAt: string | null;
+  createdAt: string;
 }
 
 export interface QrfSummary {
