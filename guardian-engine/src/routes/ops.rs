@@ -18,6 +18,7 @@ pub fn routes() -> Router<AppState> {
         // Intel
         .route("/api/intel", post(create_intel))
         .route("/api/intel/{intelId}", patch(update_intel))
+        .route("/api/intel/{intelId}/archive", post(archive_intel))
         // Rescues
         .route("/api/rescues", post(create_rescue))
         .route("/api/rescues/{rescueId}", patch(update_rescue))
@@ -106,6 +107,10 @@ struct CreateIntelRequest {
     hostile_group: Option<String>,
     confidence: String,
     tags: Option<Vec<String>>,
+    #[serde(rename = "sourceReliability")]
+    source_reliability: Option<String>,
+    #[serde(rename = "infoCredibility")]
+    info_credibility: Option<i32>,
 }
 
 async fn create_intel(
@@ -120,12 +125,16 @@ async fn create_intel(
     let title = body.title.to_uppercase();
     let tags: Vec<String> = body.tags.unwrap_or_default();
 
+    let src_rel = body.source_reliability.as_deref().unwrap_or("F");
+    let info_cred = body.info_credibility.unwrap_or(6);
+
     sqlx::query(
-        r#"INSERT INTO "IntelReport" (id, "orgId", title, "reportType", description, severity, "locationName", "starSystem", "hostileGroup", confidence, tags, "isActive", "observedAt", "createdAt", "updatedAt")
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true, NOW(), NOW(), NOW())"#
+        r#"INSERT INTO "IntelReport" (id, "orgId", title, "reportType", description, severity, "locationName", "starSystem", "hostileGroup", confidence, tags, "sourceReliability", "infoCredibility", "isActive", "observedAt", "createdAt", "updatedAt")
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, true, NOW(), NOW(), NOW())"#
     ).bind(&id).bind(&org.id).bind(&title).bind(&body.report_type).bind(body.description.as_deref())
     .bind(body.severity).bind(body.location_name.as_deref()).bind(body.star_system.as_deref())
     .bind(body.hostile_group.as_deref()).bind(&body.confidence).bind(&tags)
+    .bind(src_rel).bind(info_cred)
     .execute(state.pool()).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create intel report."}))))?;
 
@@ -137,15 +146,29 @@ async fn create_intel(
 
 #[derive(Deserialize)]
 struct UpdateIntelRequest {
+    title: Option<String>,
+    #[serde(rename = "reportType")]
+    report_type: Option<String>,
     severity: Option<i32>,
     confidence: Option<String>,
     #[serde(rename = "isActive")]
     is_active: Option<bool>,
+    #[serde(rename = "isVerified")]
+    is_verified: Option<bool>,
     description: Option<String>,
     #[serde(rename = "hostileGroup")]
     hostile_group: Option<String>,
     #[serde(rename = "locationName")]
     location_name: Option<String>,
+    #[serde(rename = "starSystem")]
+    star_system: Option<String>,
+    tags: Option<Vec<String>>,
+    #[serde(rename = "sourceReliability")]
+    source_reliability: Option<String>,
+    #[serde(rename = "infoCredibility")]
+    info_credibility: Option<i32>,
+    #[serde(rename = "reportPhase")]
+    report_phase: Option<String>,
 }
 
 async fn update_intel(
@@ -164,22 +187,33 @@ async fn update_intel(
         return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Intel report not found."}))));
     }
 
-    // Build dynamic update
-    let mut sets = vec![r#""updatedAt" = NOW()"#.to_string()];
-    let mut idx = 1u32;
-    // We'll use a simpler approach - update all provided fields
+    let title_upper = body.title.as_ref().map(|t| t.to_uppercase());
+
     sqlx::query(
         r#"UPDATE "IntelReport" SET
-           severity = COALESCE($1, severity),
-           confidence = COALESCE($2, confidence),
-           "isActive" = COALESCE($3, "isActive"),
-           description = COALESCE($4, description),
-           "hostileGroup" = COALESCE($5, "hostileGroup"),
-           "locationName" = COALESCE($6, "locationName"),
+           title = COALESCE($1, title),
+           "reportType" = COALESCE($2, "reportType"),
+           severity = COALESCE($3, severity),
+           confidence = COALESCE($4, confidence),
+           "isActive" = COALESCE($5, "isActive"),
+           "isVerified" = COALESCE($6, "isVerified"),
+           description = COALESCE($7, description),
+           "hostileGroup" = COALESCE($8, "hostileGroup"),
+           "locationName" = COALESCE($9, "locationName"),
+           "starSystem" = COALESCE($10, "starSystem"),
+           tags = COALESCE($11, tags),
+           "sourceReliability" = COALESCE($12, "sourceReliability"),
+           "infoCredibility" = COALESCE($13, "infoCredibility"),
+           "reportPhase" = COALESCE($14, "reportPhase"),
            "updatedAt" = NOW()
-           WHERE id = $7"#
-    ).bind(body.severity).bind(body.confidence.as_deref()).bind(body.is_active)
-    .bind(body.description.as_deref()).bind(body.hostile_group.as_deref()).bind(body.location_name.as_deref())
+           WHERE id = $15"#
+    ).bind(title_upper.as_deref()).bind(body.report_type.as_deref())
+    .bind(body.severity).bind(body.confidence.as_deref())
+    .bind(body.is_active).bind(body.is_verified)
+    .bind(body.description.as_deref()).bind(body.hostile_group.as_deref())
+    .bind(body.location_name.as_deref()).bind(body.star_system.as_deref())
+    .bind(body.tags.as_ref()).bind(body.source_reliability.as_deref())
+    .bind(body.info_credibility).bind(body.report_phase.as_deref())
     .bind(&intel_id)
     .execute(state.pool()).await
     .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Update failed."}))))?;
@@ -187,6 +221,31 @@ async fn update_intel(
     audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "intel", Some(&intel_id), None).await;
 
     Ok(Json(json!({"ok": true, "report": {"id": intel_id}})))
+}
+
+
+async fn archive_intel(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(intel_id): Path<String>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let rows = sqlx::query(
+        r#"UPDATE "IntelReport" SET "isActive" = false, "updatedAt" = NOW() WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&intel_id).bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Archive failed."}))))?
+    .rows_affected();
+
+    if rows == 0 {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Intel report not found."}))));
+    }
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "archive", "intel", Some(&intel_id), None).await;
+
+    Ok(Json(json!({"ok": true})))
 }
 
 // ============ RESCUES ============

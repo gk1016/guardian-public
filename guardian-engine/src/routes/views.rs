@@ -654,10 +654,26 @@ struct IntelRow {
     report_type: String,
     #[sqlx(rename = "locationName")]
     location_name: Option<String>,
+    #[sqlx(rename = "starSystem")]
+    star_system: Option<String>,
     #[sqlx(rename = "hostileGroup")]
     hostile_group: Option<String>,
     confidence: String,
     tags: Vec<String>,
+    #[sqlx(rename = "isActive")]
+    is_active: bool,
+    #[sqlx(rename = "isVerified")]
+    is_verified: bool,
+    #[sqlx(rename = "sourceReliability")]
+    source_reliability: String,
+    #[sqlx(rename = "infoCredibility")]
+    info_credibility: i32,
+    #[sqlx(rename = "reportPhase")]
+    report_phase: String,
+    #[sqlx(rename = "observedAt")]
+    observed_at: Option<String>,
+    #[sqlx(rename = "createdAt")]
+    created_at: String,
 }
 
 #[derive(sqlx::FromRow)]
@@ -1671,7 +1687,11 @@ async fn intel_list(
 
     let reports = sqlx::query_as::<_, IntelRow>(
         r#"SELECT id, title, description, severity, "reportType",
-                  "locationName", "hostileGroup", confidence, tags
+                  "locationName", "starSystem", "hostileGroup", confidence, tags,
+                  "isActive", "isVerified", "sourceReliability", "infoCredibility",
+                  "reportPhase",
+                  COALESCE(TO_CHAR("observedAt", 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS "observedAt",
+                  TO_CHAR("createdAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "createdAt"
            FROM "IntelReport"
            WHERE "orgId" = $1
            ORDER BY severity DESC, "createdAt" DESC"#
@@ -1731,9 +1751,17 @@ async fn intel_list(
                 "severity": r.severity,
                 "reportType": r.report_type,
                 "locationName": r.location_name,
+                "starSystem": r.star_system,
                 "hostileGroup": r.hostile_group,
                 "confidence": r.confidence,
                 "tags": r.tags,
+                "isActive": r.is_active,
+                "isVerified": r.is_verified,
+                "sourceReliability": r.source_reliability,
+                "infoCredibility": r.info_credibility,
+                "reportPhase": r.report_phase,
+                "observedAt": if r.observed_at.as_deref() == Some("") { None } else { r.observed_at.as_deref() },
+                "createdAt": r.created_at,
                 "linkedMissions": linked,
             })
         })

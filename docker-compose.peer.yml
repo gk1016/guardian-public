@@ -1,0 +1,56 @@
+# Federation test peer — runs alongside the primary stack
+# Usage: docker compose -f docker-compose.peer.yml up -d --build
+services:
+  peer-postgres:
+    image: postgres:16-bookworm
+    container_name: guardian-peer-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: guardian_peer_test
+      POSTGRES_DB: guardian_peer
+    expose:
+      - "5432"
+    volumes:
+      - peer-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  peer-engine:
+    build:
+      context: ./guardian-engine
+      dockerfile: Dockerfile
+    container_name: guardian-peer-engine
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:3430:3430"
+      - "0.0.0.0:3431:3431"
+    environment:
+      ENGINE_PORT: "3430"
+      FEDERATION_PORT: "3431"
+      DATABASE_URL: "postgresql://guardian:guardian_peer_test@peer-postgres:5432/guardian_peer"
+      GUARDIAN_INSTANCE_NAME: "guardian-bravo"
+      GUARDIAN_CERT_DIR: "/data/guardian/certs"
+      FEDERATION_SEEDS: "host.docker.internal:3421"
+      AUTH_SECRET: "guardian-dev-secret-change-me"
+      RUST_LOG: "guardian_engine=info,tower_http=info"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - peer-engine-certs:/data/guardian/certs
+    depends_on:
+      peer-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3430/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  peer-postgres-data:
+  peer-engine-certs:

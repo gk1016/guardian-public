@@ -1,10 +1,6 @@
 # Nucbox-specific overrides.
-# Caddy removed — engine handles TLS directly.
-# No host network mode needed.
+# Next.js removed - engine serves SPA directly.
 services:
-  guardian:
-    ports:
-      - "127.0.0.1:3000:3000"
   guardian-engine:
     ports:
       - "127.0.0.1:3420:3420"
