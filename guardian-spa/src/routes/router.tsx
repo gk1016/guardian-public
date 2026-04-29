@@ -29,6 +29,7 @@ import { SitrepPage } from "@/pages/sitrep";
 import { AiPage } from "@/pages/ai";
 import { AdminPage } from "@/pages/admin";
 import { CommsPage } from "@/pages/comms";
+import { ThreatActorsPage } from "@/pages/threat-actors";
 
 /* ------------------------------------------------------------------ */
 /*  Router                                                             */
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
       { path: "missions/new", element: <MissionsNewPage /> },
       { path: "missions/:missionId", element: <MissionDetailPage /> },
       { path: "intel", element: <IntelPage /> },
+      { path: "threat-actors", element: <ThreatActorsPage /> },
       { path: "doctrine", element: <DoctrinePage /> },
       { path: "rescues", element: <RescuesPage /> },
       { path: "roster", element: <RosterPage /> },

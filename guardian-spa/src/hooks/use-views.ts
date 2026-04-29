@@ -315,6 +315,47 @@ export interface RescuesView {
 }
 
 /* ------------------------------------------------------------------ */
+/*  /api/views/threat-actors                                           */
+/* ------------------------------------------------------------------ */
+
+export interface ThreatActorSummary {
+  id: string;
+  name: string;
+  actorType: string;
+  description: string | null;
+  aliases: string[];
+  capabilityRating: number;
+  intentRating: number;
+  opportunityRating: number;
+  threatLevel: string;
+  knownTtps: string[];
+  knownAssets: string[];
+  areaOfOperations: string[];
+  lastKnownLocation: string | null;
+  lastActivityAt: string | null;
+  isActive: boolean;
+  firstObserved: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface ActorIntelLink {
+  intelId: string;
+  intelTitle: string;
+  intelSeverity: number;
+  linkType: string;
+}
+
+export interface ThreatActorItem extends ThreatActorSummary {
+  linkedIntel: ActorIntelLink[];
+}
+
+export interface ThreatActorsView {
+  orgName: string;
+  items: ThreatActorItem[];
+}
+
+/* ------------------------------------------------------------------ */
 /*  Hooks                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -365,5 +406,12 @@ export function useRescues() {
   return useQuery({
     queryKey: ["views", "rescues"],
     queryFn: () => api.get<RescuesView>("/api/views/rescues"),
+  });
+}
+
+export function useThreatActors() {
+  return useQuery({
+    queryKey: ["views", "threat-actors"],
+    queryFn: () => api.get<ThreatActorsView>("/api/views/threat-actors"),
   });
 }
