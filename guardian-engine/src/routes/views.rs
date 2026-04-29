@@ -27,6 +27,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/rescues", get(rescues_list))
         .route("/api/views/settings", get(settings_profile))
         .route("/api/views/qrf", get(qrf_list))
+        .route("/api/views/threat-actors", get(threat_actors_list))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -2185,4 +2186,138 @@ struct RescueChannelRow {
     id: String,
     #[sqlx(rename = "refId")]
     ref_id: String,
+}
+
+// ─── Threat Actors View ──────────────────────────────────────────────────────
+
+#[derive(sqlx::FromRow)]
+struct ThreatActorRow {
+    id: String,
+    name: String,
+    #[sqlx(rename = "actorType")]
+    actor_type: String,
+    description: Option<String>,
+    aliases: Vec<String>,
+    #[sqlx(rename = "capabilityRating")]
+    capability_rating: i32,
+    #[sqlx(rename = "intentRating")]
+    intent_rating: i32,
+    #[sqlx(rename = "opportunityRating")]
+    opportunity_rating: i32,
+    #[sqlx(rename = "threatLevel")]
+    threat_level: String,
+    #[sqlx(rename = "knownTtps")]
+    known_ttps: Vec<String>,
+    #[sqlx(rename = "knownAssets")]
+    known_assets: Vec<String>,
+    #[sqlx(rename = "areaOfOperations")]
+    area_of_operations: Vec<String>,
+    #[sqlx(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[sqlx(rename = "lastActivityAt")]
+    last_activity_at: Option<String>,
+    #[sqlx(rename = "isActive")]
+    is_active: bool,
+    #[sqlx(rename = "firstObserved")]
+    first_observed: Option<String>,
+    notes: Option<String>,
+    #[sqlx(rename = "createdAt")]
+    created_at: String,
+}
+
+#[derive(sqlx::FromRow)]
+struct ActorIntelLinkRow {
+    #[sqlx(rename = "actorId")]
+    actor_id: String,
+    #[sqlx(rename = "intelId")]
+    intel_id: String,
+    #[sqlx(rename = "intelTitle")]
+    intel_title: String,
+    #[sqlx(rename = "intelSeverity")]
+    intel_severity: i32,
+    #[sqlx(rename = "linkType")]
+    link_type: String,
+}
+
+async fn threat_actors_list(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let org = get_org_for_user(state.pool(), &session.user_id).await
+        .ok_or_else(|| internal("No org found"))?;
+
+    let actors = sqlx::query_as::<_, ThreatActorRow>(
+        r#"SELECT id, name, "actorType", description, aliases,
+               "capabilityRating", "intentRating", "opportunityRating",
+               "threatLevel", "knownTtps", "knownAssets", "areaOfOperations",
+               "lastKnownLocation",
+               COALESCE(TO_CHAR("lastActivityAt", 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS "lastActivityAt",
+               "isActive",
+               COALESCE(TO_CHAR("firstObserved", 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS "firstObserved",
+               notes,
+               TO_CHAR("createdAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "createdAt"
+           FROM "ThreatActor"
+           WHERE "orgId" = $1
+           ORDER BY "threatLevel" DESC, "capabilityRating" DESC, "createdAt" DESC"#
+    ).bind(&org.id).fetch_all(state.pool()).await
+    .map_err(|e| { tracing::error!(error = %e, "threat actors query failed"); internal("Failed to load threat actors") })?;
+
+    let actor_ids: Vec<String> = actors.iter().map(|a| a.id.clone()).collect();
+
+    let links = if !actor_ids.is_empty() {
+        sqlx::query_as::<_, ActorIntelLinkRow>(
+            r#"SELECT ital."actorId", ir.id as "intelId", ir.title as "intelTitle",
+                   ir.severity as "intelSeverity", ital."linkType"
+               FROM "IntelThreatActorLink" ital
+               JOIN "IntelReport" ir ON ital."intelId" = ir.id
+               WHERE ital."actorId" = ANY($1)
+               ORDER BY ir.severity DESC"#
+        ).bind(&actor_ids).fetch_all(state.pool()).await
+        .unwrap_or_default()
+    } else {
+        vec![]
+    };
+
+    let mut link_map: std::collections::HashMap<String, Vec<&ActorIntelLinkRow>> = std::collections::HashMap::new();
+    for link in &links {
+        link_map.entry(link.actor_id.clone()).or_default().push(link);
+    }
+
+    let items: Vec<Value> = actors.iter().map(|a| {
+        let linked_intel: Vec<Value> = link_map.get(&a.id).map(|ls| {
+            ls.iter().map(|l| json!({
+                "intelId": l.intel_id,
+                "intelTitle": l.intel_title,
+                "intelSeverity": l.intel_severity,
+                "linkType": l.link_type,
+            })).collect()
+        }).unwrap_or_default();
+
+        json!({
+            "id": a.id,
+            "name": a.name,
+            "actorType": a.actor_type,
+            "description": a.description,
+            "aliases": a.aliases,
+            "capabilityRating": a.capability_rating,
+            "intentRating": a.intent_rating,
+            "opportunityRating": a.opportunity_rating,
+            "threatLevel": a.threat_level,
+            "knownTtps": a.known_ttps,
+            "knownAssets": a.known_assets,
+            "areaOfOperations": a.area_of_operations,
+            "lastKnownLocation": a.last_known_location,
+            "lastActivityAt": if a.last_activity_at.as_deref() == Some("") { None } else { a.last_activity_at.clone() },
+            "isActive": a.is_active,
+            "firstObserved": if a.first_observed.as_deref() == Some("") { None } else { a.first_observed.clone() },
+            "notes": a.notes,
+            "createdAt": a.created_at,
+            "linkedIntel": linked_intel,
+        })
+    }).collect();
+
+    Ok(Json(json!({
+        "orgName": org.name,
+        "items": items,
+    })))
 }

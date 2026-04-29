@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, State},
-    routing::{patch, post},
+    routing::{delete, patch, post},
     Json, Router,
 };
 use axum::http::StatusCode;
@@ -19,6 +19,11 @@ pub fn routes() -> Router<AppState> {
         .route("/api/intel", post(create_intel))
         .route("/api/intel/{intelId}", patch(update_intel))
         .route("/api/intel/{intelId}/archive", post(archive_intel))
+        // Threat Actors
+        .route("/api/threat-actors", post(create_threat_actor))
+        .route("/api/threat-actors/{actorId}", patch(update_threat_actor))
+        .route("/api/threat-actors/{actorId}/archive", post(archive_threat_actor))
+        .route("/api/intel/{intelId}/actors/{actorId}", post(link_intel_actor).delete(unlink_intel_actor))
         // Rescues
         .route("/api/rescues", post(create_rescue))
         .route("/api/rescues/{rescueId}", patch(update_rescue))
@@ -748,4 +753,256 @@ async fn update_incident(
         Some(json!({"status": body.status}))).await;
 
     Ok(Json(json!({"ok": true, "incident": {"id": incident_id, "status": body.status}})))
+}
+
+// ============ THREAT ACTORS ============
+
+#[derive(Deserialize)]
+struct CreateThreatActorRequest {
+    name: String,
+    #[serde(rename = "actorType")]
+    actor_type: Option<String>,
+    description: Option<String>,
+    aliases: Option<Vec<String>>,
+    #[serde(rename = "capabilityRating")]
+    capability_rating: Option<i32>,
+    #[serde(rename = "intentRating")]
+    intent_rating: Option<i32>,
+    #[serde(rename = "opportunityRating")]
+    opportunity_rating: Option<i32>,
+    #[serde(rename = "threatLevel")]
+    threat_level: Option<String>,
+    #[serde(rename = "knownTtps")]
+    known_ttps: Option<Vec<String>>,
+    #[serde(rename = "knownAssets")]
+    known_assets: Option<Vec<String>>,
+    #[serde(rename = "areaOfOperations")]
+    area_of_operations: Option<Vec<String>>,
+    #[serde(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[serde(rename = "firstObserved")]
+    first_observed: Option<String>,
+    notes: Option<String>,
+}
+
+async fn create_threat_actor(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Json(body): Json<CreateThreatActorRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let id = cuid2::create_id();
+    let name = body.name.to_uppercase();
+    let actor_type = body.actor_type.as_deref().unwrap_or("unknown");
+    let aliases: Vec<String> = body.aliases.unwrap_or_default();
+    let cap = body.capability_rating.unwrap_or(1);
+    let intent = body.intent_rating.unwrap_or(1);
+    let opp = body.opportunity_rating.unwrap_or(1);
+    let threat_level = body.threat_level.as_deref().unwrap_or("low");
+    let ttps: Vec<String> = body.known_ttps.unwrap_or_default();
+    let assets: Vec<String> = body.known_assets.unwrap_or_default();
+    let aoo: Vec<String> = body.area_of_operations.unwrap_or_default();
+
+    sqlx::query(
+        r#"INSERT INTO "ThreatActor" (id, "orgId", name, "actorType", description, aliases,
+           "capabilityRating", "intentRating", "opportunityRating", "threatLevel",
+           "knownTtps", "knownAssets", "areaOfOperations", "lastKnownLocation",
+           "firstObserved", notes, "isActive", "createdAt", "updatedAt")
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+           CASE WHEN $15 != '' THEN $15::TIMESTAMPTZ ELSE NULL END, $16, true, NOW(), NOW())"#
+    ).bind(&id).bind(&org.id).bind(&name).bind(actor_type)
+    .bind(body.description.as_deref()).bind(&aliases)
+    .bind(cap).bind(intent).bind(opp).bind(threat_level)
+    .bind(&ttps).bind(&assets).bind(&aoo)
+    .bind(body.last_known_location.as_deref())
+    .bind(body.first_observed.as_deref().unwrap_or(""))
+    .bind(body.notes.as_deref())
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to create threat actor");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create threat actor."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "threat_actor", Some(&id),
+        Some(json!({"name": name}))).await;
+
+    Ok(Json(json!({"ok": true, "actor": {"id": id, "name": name}})))
+}
+
+#[derive(Deserialize)]
+struct UpdateThreatActorRequest {
+    name: Option<String>,
+    #[serde(rename = "actorType")]
+    actor_type: Option<String>,
+    description: Option<String>,
+    aliases: Option<Vec<String>>,
+    #[serde(rename = "capabilityRating")]
+    capability_rating: Option<i32>,
+    #[serde(rename = "intentRating")]
+    intent_rating: Option<i32>,
+    #[serde(rename = "opportunityRating")]
+    opportunity_rating: Option<i32>,
+    #[serde(rename = "threatLevel")]
+    threat_level: Option<String>,
+    #[serde(rename = "knownTtps")]
+    known_ttps: Option<Vec<String>>,
+    #[serde(rename = "knownAssets")]
+    known_assets: Option<Vec<String>>,
+    #[serde(rename = "areaOfOperations")]
+    area_of_operations: Option<Vec<String>>,
+    #[serde(rename = "lastKnownLocation")]
+    last_known_location: Option<String>,
+    #[serde(rename = "firstObserved")]
+    first_observed: Option<String>,
+    notes: Option<String>,
+}
+
+async fn update_threat_actor(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(actor_id): Path<String>,
+    Json(body): Json<UpdateThreatActorRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let exists: Option<String> = sqlx::query_scalar(r#"SELECT id FROM "ThreatActor" WHERE id = $1 AND "orgId" = $2"#)
+        .bind(&actor_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Threat actor not found."}))));
+    }
+
+    let name_upper = body.name.as_ref().map(|n| n.to_uppercase());
+
+    sqlx::query(
+        r#"UPDATE "ThreatActor" SET
+           name = COALESCE($1, name),
+           "actorType" = COALESCE($2, "actorType"),
+           description = COALESCE($3, description),
+           aliases = COALESCE($4, aliases),
+           "capabilityRating" = COALESCE($5, "capabilityRating"),
+           "intentRating" = COALESCE($6, "intentRating"),
+           "opportunityRating" = COALESCE($7, "opportunityRating"),
+           "threatLevel" = COALESCE($8, "threatLevel"),
+           "knownTtps" = COALESCE($9, "knownTtps"),
+           "knownAssets" = COALESCE($10, "knownAssets"),
+           "areaOfOperations" = COALESCE($11, "areaOfOperations"),
+           "lastKnownLocation" = COALESCE($12, "lastKnownLocation"),
+           notes = COALESCE($13, notes),
+           "updatedAt" = NOW()
+           WHERE id = $14 AND "orgId" = $15"#
+    ).bind(name_upper.as_deref()).bind(body.actor_type.as_deref())
+    .bind(body.description.as_deref()).bind(body.aliases.as_ref())
+    .bind(body.capability_rating).bind(body.intent_rating)
+    .bind(body.opportunity_rating).bind(body.threat_level.as_deref())
+    .bind(body.known_ttps.as_ref()).bind(body.known_assets.as_ref())
+    .bind(body.area_of_operations.as_ref()).bind(body.last_known_location.as_deref())
+    .bind(body.notes.as_deref())
+    .bind(&actor_id).bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Update failed."}))))?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "threat_actor", Some(&actor_id), None).await;
+
+    Ok(Json(json!({"ok": true, "actor": {"id": actor_id}})))
+}
+
+async fn archive_threat_actor(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(actor_id): Path<String>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let rows = sqlx::query(
+        r#"UPDATE "ThreatActor" SET "isActive" = false, "updatedAt" = NOW() WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&actor_id).bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Archive failed."}))))?
+    .rows_affected();
+
+    if rows == 0 {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Threat actor not found."}))));
+    }
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "archive", "threat_actor", Some(&actor_id), None).await;
+
+    Ok(Json(json!({"ok": true})))
+}
+
+#[derive(Deserialize)]
+struct LinkIntelActorRequest {
+    #[serde(rename = "linkType")]
+    link_type: Option<String>,
+    notes: Option<String>,
+}
+
+async fn link_intel_actor(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path((intel_id, actor_id)): Path<(String, String)>,
+    Json(body): Json<LinkIntelActorRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    // Validate both belong to same org
+    let intel_exists: Option<String> = sqlx::query_scalar(r#"SELECT id FROM "IntelReport" WHERE id = $1 AND "orgId" = $2"#)
+        .bind(&intel_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if intel_exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Intel report not found in org."}))));
+    }
+    let actor_exists: Option<String> = sqlx::query_scalar(r#"SELECT id FROM "ThreatActor" WHERE id = $1 AND "orgId" = $2"#)
+        .bind(&actor_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if actor_exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Threat actor not found in org."}))));
+    }
+
+    let link_type = body.link_type.as_deref().unwrap_or("associated");
+
+    sqlx::query(
+        r#"INSERT INTO "IntelThreatActorLink" ("intelId", "actorId", "linkType", notes, "createdAt")
+           VALUES ($1, $2, $3, $4, NOW())
+           ON CONFLICT ("intelId", "actorId") DO UPDATE SET "linkType" = $3, notes = $4"#
+    ).bind(&intel_id).bind(&actor_id).bind(link_type).bind(body.notes.as_deref())
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to link intel to actor."}))))?;
+
+    // Update lastActivityAt on the actor
+    sqlx::query(r#"UPDATE "ThreatActor" SET "lastActivityAt" = NOW(), "updatedAt" = NOW() WHERE id = $1"#)
+        .bind(&actor_id).execute(state.pool()).await.ok();
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "link", "intel_threat_actor",
+        Some(&intel_id), Some(json!({"actorId": actor_id, "linkType": link_type}))).await;
+
+    Ok(Json(json!({"ok": true})))
+}
+
+async fn unlink_intel_actor(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path((intel_id, actor_id)): Path<(String, String)>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    // Verify actor belongs to org
+    let actor_exists: Option<String> = sqlx::query_scalar(r#"SELECT id FROM "ThreatActor" WHERE id = $1 AND "orgId" = $2"#)
+        .bind(&actor_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if actor_exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Threat actor not found in org."}))));
+    }
+
+    sqlx::query(r#"DELETE FROM "IntelThreatActorLink" WHERE "intelId" = $1 AND "actorId" = $2"#)
+        .bind(&intel_id).bind(&actor_id)
+        .execute(state.pool()).await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to unlink."}))))?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "unlink", "intel_threat_actor",
+        Some(&intel_id), Some(json!({"actorId": actor_id}))).await;
+
+    Ok(Json(json!({"ok": true})))
 }
