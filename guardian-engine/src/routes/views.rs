@@ -28,6 +28,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/views/settings", get(settings_profile))
         .route("/api/views/qrf", get(qrf_list))
         .route("/api/views/threat-actors", get(threat_actors_list))
+        .route("/api/views/intel-reqs", get(intel_reqs_list))
 }
 
 // ── Error helper ────────────────────────────────────────────────────────────
@@ -2313,6 +2314,99 @@ async fn threat_actors_list(
             "notes": a.notes,
             "createdAt": a.created_at,
             "linkedIntel": linked_intel,
+        })
+    }).collect();
+
+    Ok(Json(json!({
+        "orgName": org.name,
+        "items": items,
+    })))
+}
+
+// ============ INTEL REQUIREMENTS ============
+
+#[derive(sqlx::FromRow)]
+struct IntelReqRow {
+    id: String,
+    #[sqlx(rename = "parentId")] parent_id: Option<String>,
+    #[sqlx(rename = "requirementType")] requirement_type: String,
+    priority: i32,
+    title: String,
+    description: Option<String>,
+    status: String,
+    #[sqlx(rename = "requestedByHandle")] requested_by_handle: Option<String>,
+    #[sqlx(rename = "assignedToHandle")] assigned_to_handle: Option<String>,
+    #[sqlx(rename = "linkedActorId")] linked_actor_id: Option<String>,
+    #[sqlx(rename = "linkedActorName")] linked_actor_name: Option<String>,
+    #[sqlx(rename = "linkedIntelId")] linked_intel_id: Option<String>,
+    #[sqlx(rename = "linkedIntelTitle")] linked_intel_title: Option<String>,
+    #[sqlx(rename = "collectionGuidance")] collection_guidance: Option<String>,
+    indicators: Vec<String>,
+    ltiov: Option<String>,
+    #[sqlx(rename = "answeredAt")] answered_at: Option<String>,
+    answer: Option<String>,
+    #[sqlx(rename = "isActive")] is_active: bool,
+    #[sqlx(rename = "createdAt")] created_at: String,
+}
+
+async fn intel_reqs_list(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    let org = get_org_for_user(state.pool(), &session.user_id).await
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, Json(json!({"error": "No organization found."}))))?;
+
+    let rows = sqlx::query_as::<_, IntelReqRow>(
+        r#"SELECT ir.id, ir."parentId", ir."requirementType", ir.priority, ir.title,
+               ir.description, ir.status,
+               ru.handle as "requestedByHandle",
+               au.handle as "assignedToHandle",
+               ir."linkedActorId",
+               ta.name as "linkedActorName",
+               ir."linkedIntelId",
+               intel.title as "linkedIntelTitle",
+               ir."collectionGuidance",
+               ir.indicators,
+               COALESCE(TO_CHAR(ir.ltiov, 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS ltiov,
+               COALESCE(TO_CHAR(ir."answeredAt", 'YYYY-MM-DD"T"HH24:MI:SS'), '') AS "answeredAt",
+               ir.answer,
+               ir."isActive",
+               TO_CHAR(ir."createdAt", 'YYYY-MM-DD"T"HH24:MI:SS') AS "createdAt"
+           FROM "IntelRequirement" ir
+           LEFT JOIN "User" ru ON ir."requestedById" = ru.id
+           LEFT JOIN "User" au ON ir."assignedToId" = au.id
+           LEFT JOIN "ThreatActor" ta ON ir."linkedActorId" = ta.id
+           LEFT JOIN "IntelReport" intel ON ir."linkedIntelId" = intel.id
+           WHERE ir."orgId" = $1
+           ORDER BY ir.priority ASC, ir."createdAt" DESC"#
+    ).bind(&org.id).fetch_all(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to fetch intel requirements");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to fetch intel requirements."})))
+    })?;
+
+    let items: Vec<Value> = rows.iter().map(|r| {
+        json!({
+            "id": r.id,
+            "parentId": r.parent_id,
+            "requirementType": r.requirement_type,
+            "priority": r.priority,
+            "title": r.title,
+            "description": r.description,
+            "status": r.status,
+            "requestedByHandle": r.requested_by_handle,
+            "assignedToHandle": r.assigned_to_handle,
+            "linkedActorId": r.linked_actor_id,
+            "linkedActorName": r.linked_actor_name,
+            "linkedIntelId": r.linked_intel_id,
+            "linkedIntelTitle": r.linked_intel_title,
+            "collectionGuidance": r.collection_guidance,
+            "indicators": r.indicators,
+            "ltiov": if r.ltiov.as_deref() == Some("") { None } else { r.ltiov.clone() },
+            "answeredAt": if r.answered_at.as_deref() == Some("") { None } else { r.answered_at.clone() },
+            "answer": r.answer,
+            "isActive": r.is_active,
+            "createdAt": r.created_at,
         })
     }).collect();
 

@@ -24,6 +24,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/threat-actors/{actorId}", patch(update_threat_actor))
         .route("/api/threat-actors/{actorId}/archive", post(archive_threat_actor))
         .route("/api/intel/{intelId}/actors/{actorId}", post(link_intel_actor).delete(unlink_intel_actor))
+        // Intel Requirements
+        .route("/api/intel-reqs", post(create_intel_req))
+        .route("/api/intel-reqs/{reqId}", patch(update_intel_req))
+        .route("/api/intel-reqs/{reqId}/answer", post(answer_intel_req))
         // Rescues
         .route("/api/rescues", post(create_rescue))
         .route("/api/rescues/{rescueId}", patch(update_rescue))
@@ -1005,4 +1009,202 @@ async fn unlink_intel_actor(
         Some(&intel_id), Some(json!({"actorId": actor_id}))).await;
 
     Ok(Json(json!({"ok": true})))
+}
+
+// ============ INTEL REQUIREMENTS ============
+
+#[derive(Deserialize)]
+struct CreateIntelReqRequest {
+    #[serde(rename = "requirementType")]
+    requirement_type: Option<String>,
+    priority: Option<i32>,
+    title: String,
+    description: Option<String>,
+    #[serde(rename = "parentId")]
+    parent_id: Option<String>,
+    #[serde(rename = "linkedActorId")]
+    linked_actor_id: Option<String>,
+    #[serde(rename = "linkedIntelId")]
+    linked_intel_id: Option<String>,
+    #[serde(rename = "collectionGuidance")]
+    collection_guidance: Option<String>,
+    indicators: Option<Vec<String>>,
+    ltiov: Option<String>,
+}
+
+async fn create_intel_req(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Json(body): Json<CreateIntelReqRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let id = cuid2::create_id();
+    let title = body.title.to_uppercase();
+    let req_type = body.requirement_type.as_deref().unwrap_or("ir");
+    let priority = body.priority.unwrap_or(3);
+    let indicators: Vec<String> = body.indicators.unwrap_or_default();
+
+    // Validate parentId if provided
+    if let Some(ref pid) = body.parent_id {
+        let exists: Option<String> = sqlx::query_scalar(
+            r#"SELECT id FROM "IntelRequirement" WHERE id = $1 AND "orgId" = $2"#
+        ).bind(pid).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+        if exists.is_none() {
+            return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Parent requirement not found."}))));
+        }
+    }
+
+    // Validate linkedActorId if provided
+    if let Some(ref aid) = body.linked_actor_id {
+        let exists: Option<String> = sqlx::query_scalar(
+            r#"SELECT id FROM "ThreatActor" WHERE id = $1 AND "orgId" = $2"#
+        ).bind(aid).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+        if exists.is_none() {
+            return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Linked threat actor not found."}))));
+        }
+    }
+
+    // Validate linkedIntelId if provided
+    if let Some(ref iid) = body.linked_intel_id {
+        let exists: Option<String> = sqlx::query_scalar(
+            r#"SELECT id FROM "IntelReport" WHERE id = $1 AND "orgId" = $2"#
+        ).bind(iid).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+        if exists.is_none() {
+            return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Linked intel report not found."}))));
+        }
+    }
+
+    sqlx::query(
+        r#"INSERT INTO "IntelRequirement" (id, "orgId", "parentId", "requirementType", priority, title, description, status, "requestedById", "linkedActorId", "linkedIntelId", "collectionGuidance", indicators, ltiov, "isActive", "createdAt", "updatedAt")
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10, $11, $12, CASE WHEN $13 != '' THEN $13::TIMESTAMPTZ ELSE NULL END, true, NOW(), NOW())"#
+    ).bind(&id).bind(&org.id).bind(body.parent_id.as_deref())
+    .bind(req_type).bind(priority).bind(&title)
+    .bind(body.description.as_deref())
+    .bind(&session.user_id)
+    .bind(body.linked_actor_id.as_deref())
+    .bind(body.linked_intel_id.as_deref())
+    .bind(body.collection_guidance.as_deref())
+    .bind(&indicators)
+    .bind(body.ltiov.as_deref().unwrap_or(""))
+    .execute(state.pool()).await
+    .map_err(|e| {
+        tracing::error!(error = %e, "Failed to create intel requirement");
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Failed to create intel requirement."})))
+    })?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "create", "intel_requirement", Some(&id),
+        Some(json!({"title": title, "requirementType": req_type}))).await;
+
+    Ok(Json(json!({"ok": true, "requirement": {"id": id, "title": title, "requirementType": req_type}})))
+}
+
+#[derive(Deserialize)]
+struct UpdateIntelReqRequest {
+    title: Option<String>,
+    description: Option<String>,
+    priority: Option<i32>,
+    status: Option<String>,
+    #[serde(rename = "assignedToId")]
+    assigned_to_id: Option<String>,
+    #[serde(rename = "parentId")]
+    parent_id: Option<String>,
+    #[serde(rename = "linkedActorId")]
+    linked_actor_id: Option<String>,
+    #[serde(rename = "linkedIntelId")]
+    linked_intel_id: Option<String>,
+    #[serde(rename = "collectionGuidance")]
+    collection_guidance: Option<String>,
+    indicators: Option<Vec<String>>,
+    ltiov: Option<String>,
+    #[serde(rename = "isActive")]
+    is_active: Option<bool>,
+    #[serde(rename = "requirementType")]
+    requirement_type: Option<String>,
+}
+
+async fn update_intel_req(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(req_id): Path<String>,
+    Json(body): Json<UpdateIntelReqRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let exists: Option<String> = sqlx::query_scalar(
+        r#"SELECT id FROM "IntelRequirement" WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&req_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    if exists.is_none() {
+        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Intel requirement not found."}))));
+    }
+
+    let title_upper = body.title.as_ref().map(|t| t.to_uppercase());
+
+    sqlx::query(
+        r#"UPDATE "IntelRequirement" SET
+           title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           priority = COALESCE($3, priority),
+           status = COALESCE($4, status),
+           "assignedToId" = COALESCE($5, "assignedToId"),
+           "parentId" = COALESCE($6, "parentId"),
+           "linkedActorId" = COALESCE($7, "linkedActorId"),
+           "linkedIntelId" = COALESCE($8, "linkedIntelId"),
+           "collectionGuidance" = COALESCE($9, "collectionGuidance"),
+           indicators = COALESCE($10, indicators),
+           "isActive" = COALESCE($11, "isActive"),
+           "requirementType" = COALESCE($12, "requirementType"),
+           "updatedAt" = NOW()
+           WHERE id = $13 AND "orgId" = $14"#
+    ).bind(title_upper.as_deref()).bind(body.description.as_deref())
+    .bind(body.priority).bind(body.status.as_deref())
+    .bind(body.assigned_to_id.as_deref()).bind(body.parent_id.as_deref())
+    .bind(body.linked_actor_id.as_deref()).bind(body.linked_intel_id.as_deref())
+    .bind(body.collection_guidance.as_deref()).bind(body.indicators.as_ref())
+    .bind(body.is_active).bind(body.requirement_type.as_deref())
+    .bind(&req_id).bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Update failed."}))))?;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "update", "intel_requirement", Some(&req_id), None).await;
+
+    Ok(Json(json!({"ok": true, "requirement": {"id": req_id}})))
+}
+
+#[derive(Deserialize)]
+struct AnswerIntelReqRequest {
+    answer: String,
+}
+
+async fn answer_intel_req(
+    State(state): State<AppState>,
+    AuthSession(session): AuthSession,
+    Path(req_id): Path<String>,
+    Json(body): Json<AnswerIntelReqRequest>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    require_ops(&session)?;
+    let org = require_org(state.pool(), &session.user_id).await?;
+
+    let title: Option<String> = sqlx::query_scalar(
+        r#"SELECT title FROM "IntelRequirement" WHERE id = $1 AND "orgId" = $2"#
+    ).bind(&req_id).bind(&org.id).fetch_optional(state.pool()).await.unwrap_or(None);
+    let title = title.ok_or_else(|| (StatusCode::NOT_FOUND, Json(json!({"error": "Intel requirement not found."}))))?;
+
+    sqlx::query(
+        r#"UPDATE "IntelRequirement" SET status = 'answered', "answeredAt" = NOW(), answer = $1, "updatedAt" = NOW() WHERE id = $2 AND "orgId" = $3"#
+    ).bind(&body.answer).bind(&req_id).bind(&org.id)
+    .execute(state.pool()).await
+    .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": "Answer failed."}))))?;
+
+    create_notification(state.pool(), &org.id, Some(&session.user_id), "intel_requirement", "info",
+        &format!("Requirement answered / {}", title),
+        &format!("Intel requirement {} has been answered.", title),
+        Some("/intel-reqs")).await;
+
+    audit_log(state.pool(), &session.user_id, Some(&org.id), "answer", "intel_requirement", Some(&req_id),
+        Some(json!({"title": title}))).await;
+
+    Ok(Json(json!({"ok": true, "requirement": {"id": req_id, "status": "answered"}})))
 }
