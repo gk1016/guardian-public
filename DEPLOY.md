@@ -56,27 +56,30 @@ DATABASE_URL=postgresql://guardian:my-secure-db-password@guardian-postgres:5432/
 
 Everything else can stay at the defaults. See the comments in `.env.example` for what each variable does.
 
-### 4. Create the database and seed demo data
-
-```bash
-docker compose --profile tools run guardian-tools
-```
-
-The first time you run this, Docker will download base images and build the application. **This will take 5-15 minutes** depending on your internet speed and machine — the Rust engine compiles from source. You'll see a lot of build output. Wait until you see:
-
-```
-Guardian seed complete.
-```
-
-That means the database is set up and loaded with demo data.
-
-### 5. Start Guardian
+### 4. Start Guardian
 
 ```bash
 docker compose up -d
 ```
 
-This starts all services in the background. Give it about 10 seconds to fully boot.
+The first time you run this, Docker will download base images and build the application. **This will take 5–15 minutes** depending on your internet speed and machine — the Rust engine compiles from source and the React SPA is built during the Docker build. You'll see build output in the logs.
+
+The engine automatically creates the database tables on first boot. No separate migration step is needed.
+
+### 5. Seed demo data (optional)
+
+If you want the demo users (REAPER11, SABER1, VIKING2), sample org, and manual entries:
+
+```bash
+npm install --prefix prisma
+npx --prefix prisma prisma db seed
+```
+
+You should see:
+
+```
+Guardian seed complete.
+```
 
 ### 6. Open Guardian
 
@@ -93,7 +96,7 @@ This is safe — you're connecting to your own machine.
 
 ### 7. Log in
 
-Use any of the demo accounts:
+Use any of the demo accounts (if you ran the seed step):
 
 | Handle   | Email                    | Role                  |
 |----------|--------------------------|------------------------|
@@ -103,9 +106,13 @@ Use any of the demo accounts:
 
 The password for all three is `GuardianDemo!2026` (unless you changed `GUARDIAN_DEMO_PASSWORD` in `.env`).
 
-## TLS and Custom Domain
+## TLS Configuration
 
-Guardian uses Caddy for TLS. The default config generates a self-signed certificate for `localhost`.
+Guardian's engine handles TLS directly — there is no reverse proxy. TLS mode is controlled by the `TLS_MODE` variable in `.env`.
+
+**Self-signed (default):**
+
+No configuration needed. The engine generates a self-signed certificate for `SITE_ADDRESS` (default: `localhost`) on first boot. Browsers will show a certificate warning.
 
 **Access from another device on your LAN (e.g. 192.168.1.50):**
 
@@ -115,21 +122,34 @@ Set `SITE_ADDRESS=192.168.1.50` in `.env` and restart with `docker compose up -d
 
 Set `HTTPS_PORT=3411` in `.env` and restart. Access at `https://localhost:3411`.
 
-**Public domain with automatic Let's Encrypt:**
+**Automatic Let's Encrypt (ACME):**
 
-Set `SITE_ADDRESS=guardian.example.com` in `.env`, then edit the `Caddyfile` in the repo root and remove the `tls internal` line. Caddy will automatically get a real certificate from Let's Encrypt. Your server must be reachable from the internet on ports 80 and 443.
+Set the following in `.env`:
+
+```
+TLS_MODE=acme
+SITE_ADDRESS=guardian.example.com
+ACME_EMAIL=you@example.com
+ACME_PRODUCTION=true
+```
+
+The engine will automatically obtain and renew a certificate from Let's Encrypt using TLS-ALPN-01 validation. Your server must be reachable from the internet on ports 443 (HTTPS) and 80 (HTTP redirect). Certificates are stored in a Docker volume and persist across restarts.
+
+Set `ACME_PRODUCTION=false` (the default) to use Let's Encrypt's staging environment for testing.
+
+**Manual certificate:**
+
+Set `TLS_MODE=manual` and mount your certificate and key files into the engine container at the paths specified in `GUARDIAN_CERT_DIR`.
 
 ## Services
 
-Guardian runs five Docker containers:
+Guardian runs three Docker containers:
 
 | Container         | What it does                                                    |
 |-------------------|-----------------------------------------------------------------|
-| guardian          | The web application (Next.js) — serves all pages and API routes |
-| guardian-engine   | Rust sidecar that runs threat correlation, alert generation, and ops summary every 30 seconds, then pushes updates to browsers via WebSocket |
+| guardian-engine   | The entire application — TLS proxy, SPA host, REST API, compute engine, WebSocket, federation listener |
 | guardian-postgres | The database (PostgreSQL 16)                                    |
-| guardian-tools    | One-shot container that creates database tables and seeds demo data — only runs when you explicitly start it |
-| caddy             | Reverse proxy that handles HTTPS and routes traffic to the frontend and engine |
+| guardian-backup   | Sidecar that runs automated `pg_dump` backups (default: every 24h, 7-day retention) |
 
 ## Stopping and Starting
 
@@ -152,8 +172,10 @@ To wipe the database and start completely fresh:
 ```bash
 docker compose down
 docker volume rm guardian-public_guardian-postgres-data
-docker compose --profile tools run guardian-tools
 docker compose up -d
+# Wait for engine to create tables, then re-seed:
+npm install --prefix prisma
+npx --prefix prisma prisma db seed
 ```
 
 Note: the volume name includes your project directory name. If you cloned into a different folder, replace `guardian-public` with that folder name.
@@ -161,16 +183,19 @@ Note: the volume name includes your project directory name. If you cloned into a
 ## Troubleshooting
 
 **Build fails or takes forever:**
-The Rust engine compiles from source, which is CPU-intensive. On a low-powered machine, the first build can take 20+ minutes. Subsequent builds are cached and much faster.
-
-**"guardian-tools" exits without "Guardian seed complete":**
-Check that the database started: `docker compose logs guardian-postgres`. If it shows errors, the most common cause is port 5432 already in use by another Postgres installation.
+The Rust engine compiles from source, which is CPU-intensive. On a low-powered machine, the first build can take 20+ minutes. Subsequent builds use Docker layer caching and are much faster.
 
 **Can't connect after starting:**
-Wait 10-15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. All five should show "Up" (guardian-tools will show "Exited" — that's normal, it only runs once).
+Wait 10–15 seconds after `docker compose up -d`. Check that all containers are running: `docker compose ps`. You should see `guardian-engine`, `guardian-postgres`, and `guardian-backup` all showing "Up".
 
 **Certificate warning on every visit:**
-This is expected with self-signed certificates. To eliminate it, either use Let's Encrypt with a real domain, or import Caddy's root CA from the `caddy_data` Docker volume into your browser's trust store.
+This is expected with self-signed certificates. To eliminate it, either use Let's Encrypt with a real domain (`TLS_MODE=acme`), or extract the self-signed CA from the `guardian-engine-certs` Docker volume and import it into your browser's trust store.
 
-**Engine WebSocket not connecting:**
-The status bar in the app may show "Engine: disconnected". Check that the engine is running: `docker compose logs guardian-engine`. You should see "listening addr=0.0.0.0:3420" and periodic "compute tick complete" messages.
+**Engine not starting — "database connection" errors:**
+The engine waits for PostgreSQL to be healthy before starting, but if the database is slow to initialize on first boot, the engine may retry. Check logs with `docker compose logs guardian-engine`. You should see "external HTTPS listener ready" when it's fully up.
+
+**WebSocket not connecting:**
+The status bar in the app may show "Engine: disconnected". Check that the engine is running: `docker compose logs guardian-engine`. You should see "external HTTPS listener ready" and periodic "compute tick complete" messages.
+
+**Port 443 already in use:**
+Set `HTTPS_PORT=3411` (or any available port) in `.env` and restart. Access Guardian at `https://localhost:3411`.
