@@ -20,6 +20,7 @@ import {
   Sparkles,
   MonitorDot,
   Cog,
+  Github,
 } from "lucide-react";
 import { PublicNav } from "@/components/public-nav";
 
@@ -361,6 +362,17 @@ export function HomePage() {
             <div><span className="text-[var(--color-text-tertiary)]">Engine</span> — Rust (Axum), all API routes, AI orchestration, Discord bot</div>
             <div><span className="text-[var(--color-text-tertiary)]">Database</span> — PostgreSQL + sqlx, nightly backups</div>
             <div><span className="text-[var(--color-text-tertiary)]">Deploy</span> — Docker Compose, self-hosted, air-gap ready</div>
+          </div>
+          <div className="mt-4 border-t border-[var(--color-border)] pt-4">
+            <a
+              href="https://github.com/gk1016/guardian-public"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[13px] text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
+            >
+              <Github size={14} />
+              Open source under AGPLv3 — view on GitHub
+            </a>
           </div>
         </section>
       </div>

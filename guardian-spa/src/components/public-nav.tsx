@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Github } from "lucide-react";
 
 const navItems = [
   { href: "/about", label: "About" },
@@ -61,6 +61,15 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
             {item.label}
           </Link>
         ))}
+        <a
+          href="https://github.com/gk1016/guardian-public"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 transition hover:text-[var(--color-text-strong)]"
+        >
+          <Github size={14} />
+          GitHub
+        </a>
         <Link to="/login" className="transition hover:text-[var(--color-text-strong)]">
           Sign In
         </Link>
@@ -89,6 +98,16 @@ export function PublicNav({ variant = "subpage" }: PublicNavProps) {
                 {item.label}
               </Link>
             ))}
+            <a
+              href="https://github.com/gk1016/guardian-public"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center gap-1.5 text-sm uppercase tracking-[0.16em] text-[var(--color-text-secondary)] transition hover:text-[var(--color-text-strong)]"
+            >
+              <Github size={14} />
+              GitHub
+            </a>
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}
