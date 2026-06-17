@@ -3,8 +3,10 @@ import * as Sentry from "@sentry/react";
 // Guardian SPA Sentry init. Browser DSN is public by design (ships in the
 // bundle). VITE_SENTRY_DSN overrides the fallback; the fallback is filled with
 // the guardian-spa project's public DSN once the Sentry project exists.
-// Privacy posture: no Session Replay, no performance tracing (would capture
-// URLs/payloads), sendDefaultPii off, and a beforeSend hook that strips request
+// Privacy posture: SDK default integrations (incl. global error/rejection
+// handlers for auto-capture) are kept so unhandled errors are actually reported.
+// Session Replay is NOT a default (stays off); performance tracing is disabled
+// via tracesSampleRate:0; sendDefaultPii off; a beforeSend hook strips request
 // bodies / cookies / query strings / auth headers before send.
 const DSN =
   (import.meta.env.VITE_SENTRY_DSN as string | undefined) ??
@@ -18,7 +20,6 @@ export function initObservability(): void {
     environment: import.meta.env.MODE,
     sendDefaultPii: false,
     tracesSampleRate: 0,
-    integrations: [],
     beforeSend(event) {
       if (event.request) {
         delete event.request.data;
