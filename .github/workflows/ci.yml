@@ -48,12 +48,10 @@ jobs:
       - name: install deps
         working-directory: guardian-spa
         run: npm ci
-      # Advisory: pre-existing type errors in some pages. The production image
-      # builds with `vite build` (esbuild), not tsc, so types do not gate deploys.
+      # Blocking: the SPA type-checks clean as of the review fixes; keep it that way.
       - name: type-check
         working-directory: guardian-spa
         run: npx tsc -b
-        continue-on-error: true
       # Blocking: must bundle (this is exactly what guardian-engine/Dockerfile runs).
       - name: build SPA
         working-directory: guardian-spa
