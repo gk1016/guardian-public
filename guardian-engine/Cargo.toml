@@ -88,4 +88,4 @@ sentry = { version = "0.34", default-features = false, features = ["backtrace", 
 [profile.release]
 lto = true
 strip = true
-opt-level = "z"
+opt-level = 3
