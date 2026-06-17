@@ -27,7 +27,7 @@ jobs:
       rust: ${{ steps.f.outputs.rust }}
       frontend: ${{ steps.f.outputs.frontend }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: f
         with:
@@ -46,7 +46,7 @@ jobs:
       run:
         working-directory: guardian-engine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # guardian-engine is NON-FIPS (rustls + ring). Build deps for ring / -sys
       # crates; golang/nasm intentionally omitted (those are aws-lc-rs only).
       - name: Install build deps
@@ -83,7 +83,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         if: needs.changes.outputs.frontend == 'true'
         with:
@@ -110,7 +110,7 @@ jobs:
     needs: [changes, rust]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Compute image tag
         id: tag
         run: echo "sha=git-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
