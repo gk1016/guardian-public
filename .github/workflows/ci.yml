@@ -13,7 +13,29 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # Detect which side changed so rust/frontend can skip their heavy steps.
+  # The jobs still RUN (so the required checks always report), they just no-op
+  # the expensive work when their area is untouched.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.f.outputs.rust }}
+      frontend: ${{ steps.f.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            rust:
+              - 'guardian-engine/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'guardian-spa/**'
+              - '.github/workflows/ci.yml'
+
   rust:
+    needs: changes
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -23,52 +45,64 @@ jobs:
       # guardian-engine is NON-FIPS (rustls + ring). Build deps for ring / -sys
       # crates; golang/nasm intentionally omitted (those are aws-lc-rs only).
       - name: Install build deps
+        if: needs.changes.outputs.rust == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake clang libclang-dev pkg-config libssl-dev perl
       - uses: dtolnay/rust-toolchain@stable
+        if: needs.changes.outputs.rust == 'true'
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+        if: needs.changes.outputs.rust == 'true'
         with:
           workspaces: guardian-engine
       # Blocking: must compile + tests must pass (workspace covers engine + comms).
       - name: cargo check
+        if: needs.changes.outputs.rust == 'true'
         run: cargo check --locked
       - name: cargo test
+        if: needs.changes.outputs.rust == 'true'
         run: cargo test --locked
-      # Advisory for now.
+      # Advisory.
       - name: cargo fmt --check
+        if: needs.changes.outputs.rust == 'true'
         run: cargo fmt --check
         continue-on-error: true
       - name: cargo clippy
+        if: needs.changes.outputs.rust == 'true'
         run: cargo clippy --all-targets
         continue-on-error: true
 
   frontend:
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
+        if: needs.changes.outputs.frontend == 'true'
         with:
           node-version: "22"
       - name: install deps
+        if: needs.changes.outputs.frontend == 'true'
         working-directory: guardian-spa
         run: npm ci
       # Blocking: the SPA type-checks clean as of the review fixes; keep it that way.
       - name: type-check
+        if: needs.changes.outputs.frontend == 'true'
         working-directory: guardian-spa
         run: npx tsc -b
       # Blocking: must bundle (this is exactly what guardian-engine/Dockerfile runs).
       - name: build SPA
+        if: needs.changes.outputs.frontend == 'true'
         working-directory: guardian-spa
         run: npx vite build
 
-  # Build the image and push to Docker Hub — ONLY on main, ONLY after rust
-  # check/test pass. nucbox no longer builds; it just pulls this image.
+  # Build the image and push to Docker Hub — ONLY on main, ONLY when code
+  # changed, ONLY after rust passes. nucbox no longer builds; it just pulls.
   docker:
-    if: github.ref == 'refs/heads/main'
-    needs: [rust]
+    if: github.ref == 'refs/heads/main' && (needs.changes.outputs.rust == 'true' || needs.changes.outputs.frontend == 'true')
+    needs: [changes, rust]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
