@@ -1,9 +1,16 @@
 name: ci
 on:
   push:
-    branches: [main, "**"]
+    branches: [main]
   pull_request:
     branches: [main]
+
+# PR branches are validated via the pull_request event (no duplicate push run).
+# Supersede stale runs for the same ref, but never cancel main runs so every
+# merge still produces its image.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   rust:
