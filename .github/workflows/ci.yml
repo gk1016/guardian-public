@@ -18,6 +18,11 @@ jobs:
   # the expensive work when their area is untouched.
   changes:
     runs-on: ubuntu-latest
+    # dorny/paths-filter queries the PR's changed files via the API on
+    # pull_request events; without this it fails "Resource not accessible".
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       rust: ${{ steps.f.outputs.rust }}
       frontend: ${{ steps.f.outputs.frontend }}
