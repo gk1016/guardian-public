@@ -86,6 +86,6 @@ guardian-comms = { path = "comms" }
 sentry = { version = "0.34", default-features = false, features = ["backtrace", "contexts", "panic"] }
 
 [profile.release]
-lto = true
+lto = "thin"
 strip = true
 opt-level = 3
