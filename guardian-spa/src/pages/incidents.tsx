@@ -49,7 +49,7 @@ export function IncidentsPage() {
 
   const { data, isLoading } = useQuery<IncidentView>({
     queryKey: ["views", "incidents"],
-    queryFn: () => api("/api/views/incidents"),
+    queryFn: () => api.get<IncidentView>("/api/views/incidents"),
   });
 
   const refetch = () => queryClient.invalidateQueries({ queryKey: ["views", "incidents"] });

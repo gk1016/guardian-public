@@ -27,7 +27,7 @@ interface AarView {
 export function AarPage() {
   const { data, isLoading } = useQuery<AarView>({
     queryKey: ["views", "aar"],
-    queryFn: () => api("/api/views/aar"),
+    queryFn: () => api.get<AarView>("/api/views/aar"),
   });
 
   return (

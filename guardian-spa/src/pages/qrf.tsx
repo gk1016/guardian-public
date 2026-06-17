@@ -52,7 +52,7 @@ export function QrfPage() {
 
   const { data, isLoading } = useQuery<QrfView>({
     queryKey: ["views", "qrf"],
-    queryFn: () => api("/api/views/qrf"),
+    queryFn: () => api.get<QrfView>("/api/views/qrf"),
   });
 
   const refetch = () => queryClient.invalidateQueries({ queryKey: ["views", "qrf"] });
