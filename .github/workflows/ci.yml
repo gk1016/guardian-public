@@ -121,7 +121,7 @@ jobs:
           username: grahamkyle18
           password: ${{ secrets.DOCKERHUB_SECRET }}
       - name: Build and push guardian-engine image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: guardian-engine/Dockerfile
