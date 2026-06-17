@@ -160,7 +160,9 @@ export function Sidebar({
         return (
           <div key={section.title}>
             <button
+              type="button"
               onClick={() => toggleSection(section.title)}
+              aria-expanded={!isCollapsed}
               className="flex w-full items-center justify-between px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-tertiary)] transition hover:text-[var(--color-text-strong)]"
             >
               <span>{section.title}</span>
@@ -184,6 +186,7 @@ export function Sidebar({
                       <li key={item.href}>
                         <Link
                           to={item.href}
+                          aria-current={isActive ? "page" : undefined}
                           className={`flex items-center gap-2 rounded-[var(--radius-md)] px-2.5 py-1.5 text-sm transition ${
                             isActive
                               ? "bg-[var(--color-overlay-medium)] font-medium text-[var(--color-text-strong)]"
@@ -279,7 +282,9 @@ export function Sidebar({
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
+                aria-label="Close navigation"
                 className="text-[var(--color-text-secondary)]"
               >
                 <X size={18} />
@@ -333,6 +338,8 @@ export function Sidebar({
                       <Link
                         key={item.href}
                         to={item.href}
+                        aria-label={item.label}
+                        aria-current={isActive ? "page" : undefined}
                         className={`flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] transition ${
                           isActive
                             ? "bg-[var(--color-overlay-medium)] text-[var(--color-accent)]"

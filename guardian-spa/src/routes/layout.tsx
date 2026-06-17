@@ -65,11 +65,17 @@ export function AppLayout() {
   return (
     <EngineProvider>
       <div className="flex min-h-screen">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-[var(--radius-md)] focus:bg-[var(--color-panel)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--color-text-strong)]"
+        >
+          Skip to content
+        </a>
         <Sidebar
           desktopCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
         />
-        <main className="min-h-screen flex-1 bg-[var(--color-bg)]">
+        <main id="main-content" className="min-h-screen flex-1 bg-[var(--color-bg)]">
           <div className="mx-auto max-w-[1400px] px-4 py-4">
             <header className="mb-4 border-b border-[var(--color-border)] pb-3 pl-10 md:pl-0">
               <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-tertiary)]">
