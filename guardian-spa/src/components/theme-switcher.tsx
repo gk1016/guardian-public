@@ -38,7 +38,9 @@ export function ThemeSwitcher() {
 
   return (
     <button
+      type="button"
       onClick={cycle}
+      aria-label={`Switch theme (current: ${current})`}
       className="flex items-center gap-2 rounded-[var(--radius-md)] px-1.5 py-1 text-[10px] text-[var(--color-text-faint)] transition hover:bg-[var(--color-overlay-subtle)] hover:text-[var(--color-text-strong)]"
       title={`Theme: ${current}`}
     >

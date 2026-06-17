@@ -28,6 +28,7 @@ export function CollapsibleCard({
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={expanded}
         className="flex w-full cursor-pointer items-center justify-between gap-4 text-left"
       >
         <div className="min-w-0 flex-1">{header(expanded)}</div>

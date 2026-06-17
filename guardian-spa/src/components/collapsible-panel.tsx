@@ -31,6 +31,7 @@ export function CollapsiblePanel({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         className={`flex w-full items-center gap-2 text-left transition-colors hover:bg-[var(--color-hover)] ${
           isPrimary
             ? "rounded-[var(--radius-lg)] px-5 py-3.5"
