@@ -28,5 +28,13 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: "hidden",
+    rollupOptions: {
+      output: {
+        // Split node_modules into a long-lived vendor chunk; pages are
+        // already split per-route via React.lazy.
+        manualChunks: (id) =>
+          id.includes("node_modules") ? "vendor" : undefined,
+      },
+    },
   },
 });

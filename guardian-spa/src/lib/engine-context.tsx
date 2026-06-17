@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   useRef,
   type ReactNode,
 } from "react";
@@ -94,11 +95,12 @@ export function EngineProvider({ children }: { children: ReactNode }) {
 
   const { state } = useEngineWS(onEvent);
 
+  const value = useMemo(
+    () => ({ connectionState: state, opsSummary, lastTick, subscribeAlerts }),
+    [state, opsSummary, lastTick, subscribeAlerts],
+  );
+
   return (
-    <EngineContext.Provider
-      value={{ connectionState: state, opsSummary, lastTick, subscribeAlerts }}
-    >
-      {children}
-    </EngineContext.Provider>
+    <EngineContext.Provider value={value}>{children}</EngineContext.Provider>
   );
 }
