@@ -4,6 +4,7 @@
 # SPA
 guardian-spa/node_modules
 guardian-spa/dist
+guardian-spa/*.tsbuildinfo
 
 # Environment
 .env*

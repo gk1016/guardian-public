@@ -83,6 +83,7 @@ serenity = { version = "0.12", default-features = false, features = ["client", "
 
 # Tactical comms crate
 guardian-comms = { path = "comms" }
+sentry = { version = "0.34", default-features = false, features = ["backtrace", "contexts", "panic"] }
 
 [profile.release]
 lto = true

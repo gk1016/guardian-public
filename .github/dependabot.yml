@@ -1,0 +1,18 @@
+version: 2
+updates:
+  # Rust workspace (guardian-engine + comms member share one Cargo.lock)
+  - package-ecosystem: cargo
+    directory: "/guardian-engine"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  # Vite/React SPA
+  - package-ecosystem: npm
+    directory: "/guardian-spa"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

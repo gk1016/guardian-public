@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: guardian-engine/Dockerfile
-    image: ghcr.io/gk1016/guardian-engine:latest
+    image: grahamkyle18/guardian-engine:${GUARDIAN_TAG:-latest}
     container_name: guardian-engine
     restart: unless-stopped
     ports:
@@ -26,6 +26,8 @@ services:
       GUARDIAN_CERT_DIR: "/data/guardian/certs"
       RUST_LOG: "guardian_engine=info,tower_http=info"
       AUTH_SECRET: "${AUTH_SECRET}"
+      SENTRY_DSN: "${SENTRY_DSN:-}"
+      SENTRY_ENVIRONMENT: "${SENTRY_ENVIRONMENT:-production}"
     volumes:
       - guardian-engine-certs:/data/guardian/certs
       - guardian-ship-images:/data/ship-images

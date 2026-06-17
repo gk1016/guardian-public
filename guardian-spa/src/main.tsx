@@ -6,6 +6,9 @@ import { AuthProvider } from "@/lib/auth";
 import { queryClient } from "@/lib/query";
 import { router } from "@/routes/router";
 import "@/globals.css";
+import { initObservability } from "@/lib/observability";
+
+initObservability();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

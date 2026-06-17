@@ -6,6 +6,20 @@ RUN npm ci
 COPY guardian-spa/ ./
 RUN npx vite build
 
+# Inject Sentry debug IDs + upload SPA sourcemaps (project guardian-spa). Token
+# via BuildKit secret; best-effort, no-op if absent; .map files stripped after so
+# they are never served.
+RUN --mount=type=secret,id=sentry_auth_token \
+    sh -c 'TOKEN=$(cat /run/secrets/sentry_auth_token 2>/dev/null || true); \
+      if [ -n "$TOKEN" ]; then \
+        npm install -g @sentry/cli >/dev/null 2>&1 || true; \
+        SENTRY_AUTH_TOKEN="$TOKEN" SENTRY_ORG=bts-llc-aviationwarfighter SENTRY_PROJECT=guardian-spa \
+          sentry-cli sourcemaps inject dist && \
+        SENTRY_AUTH_TOKEN="$TOKEN" SENTRY_ORG=bts-llc-aviationwarfighter SENTRY_PROJECT=guardian-spa \
+          sentry-cli sourcemaps upload dist || true; \
+      fi; \
+      find dist -name "*.map" -delete'
+
 # ---- Rust Builder ----
 FROM rust:1.95 AS builder
 

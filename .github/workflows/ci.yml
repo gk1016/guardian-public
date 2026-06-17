@@ -1,0 +1,91 @@
+name: ci
+on:
+  push:
+    branches: [main, "**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: guardian-engine
+    steps:
+      - uses: actions/checkout@v4
+      # guardian-engine is NON-FIPS (rustls + ring). Build deps for ring / -sys
+      # crates; golang/nasm intentionally omitted (those are aws-lc-rs only).
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake clang libclang-dev pkg-config libssl-dev perl
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: guardian-engine
+      # Blocking: must compile + tests must pass (workspace covers engine + comms).
+      - name: cargo check
+        run: cargo check --locked
+      - name: cargo test
+        run: cargo test --locked
+      # Advisory for now.
+      - name: cargo fmt --check
+        run: cargo fmt --check
+        continue-on-error: true
+      - name: cargo clippy
+        run: cargo clippy --all-targets
+        continue-on-error: true
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: install deps
+        working-directory: guardian-spa
+        run: npm ci
+      # Advisory: pre-existing type errors in some pages. The production image
+      # builds with `vite build` (esbuild), not tsc, so types do not gate deploys.
+      - name: type-check
+        working-directory: guardian-spa
+        run: npx tsc -b
+        continue-on-error: true
+      # Blocking: must bundle (this is exactly what guardian-engine/Dockerfile runs).
+      - name: build SPA
+        working-directory: guardian-spa
+        run: npx vite build
+
+  # Build the image and push to Docker Hub — ONLY on main, ONLY after rust
+  # check/test pass. nucbox no longer builds; it just pulls this image.
+  docker:
+    if: github.ref == 'refs/heads/main'
+    needs: [rust]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute image tag
+        id: tag
+        run: echo "sha=git-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: grahamkyle18
+          password: ${{ secrets.DOCKERHUB_SECRET }}
+      - name: Build and push guardian-engine image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: guardian-engine/Dockerfile
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+          tags: |
+            grahamkyle18/guardian-engine:latest
+            grahamkyle18/guardian-engine:${{ steps.tag.outputs.sha }}

@@ -12,6 +12,7 @@ mod tls;
 mod proxy;
 mod spa;
 mod security;
+mod observability;
 
 use tracing::info;
 use tokio_rustls::TlsAcceptor;
@@ -28,6 +29,10 @@ async fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|_| "guardian_engine=info,tower_http=info".into()),
         )
         .init();
+
+    // Error observability (Sentry). No-op unless SENTRY_DSN is set; held for the
+    // process lifetime.
+    let _sentry_guard = observability::init_sentry();
 
     // Install rustls crypto provider (required before any TLS config is built)
     rustls::crypto::ring::default_provider()
