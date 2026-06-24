@@ -49,7 +49,7 @@ futures-util = "0.3"
 # TLS / Crypto for federation + edge
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 tokio-rustls = "0.26"
-rcgen = "0.13"
+rcgen = "0.14"
 rustls-pemfile = "2"
 sha2 = "0.11"
 hex = "0.4"
