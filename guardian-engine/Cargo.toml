@@ -68,7 +68,7 @@ thiserror = "2"
 anyhow = "1"
 
 # Auth
-jsonwebtoken = "9"
+jsonwebtoken = "10"
 bcrypt = "0.19"
 hmac = "0.12"
 sha-1 = "0.10"
