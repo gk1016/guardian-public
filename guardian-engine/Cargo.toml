@@ -69,7 +69,7 @@ anyhow = "1"
 
 # Auth
 jsonwebtoken = "9"
-bcrypt = "0.16"
+bcrypt = "0.19"
 hmac = "0.12"
 sha-1 = "0.10"
 rand = "0.8"
