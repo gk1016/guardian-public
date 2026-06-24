@@ -72,7 +72,7 @@ jsonwebtoken = "10"
 bcrypt = "0.19"
 hmac = "0.12"
 sha-1 = "0.10"
-rand = "0.8"
+rand = "0.10"
 data-encoding = "2"
 
 # ID generation (cuid-compatible)
