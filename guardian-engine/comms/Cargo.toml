@@ -31,7 +31,7 @@ dashmap = "6"
 
 # Encryption at rest (AES-256-GCM)
 aes-gcm = "0.10"
-rand = "0.8"
+rand = "0.10"
 
 # ID generation
 cuid2 = "0.1"
